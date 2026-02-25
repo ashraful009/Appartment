@@ -1,19 +1,30 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { Mail, Lock, Eye, EyeOff, AlertCircle } from "lucide-react";
+import axios from "axios";
+import { Mail, Lock, Eye, EyeOff, AlertCircle, CheckCircle } from "lucide-react";
+
+// ── Small Toast for the pending-request success ────────────────────────────────
+const Toast = ({ msg, onClose }) => (
+  <div className="fixed bottom-6 right-6 z-50 flex items-start gap-3 px-5 py-4 rounded-2xl shadow-xl text-sm font-medium max-w-sm bg-emerald-50 border border-emerald-200 text-emerald-800">
+    <CheckCircle size={18} className="flex-shrink-0 mt-0.5" />
+    <span className="flex-1">{msg}</span>
+    <button onClick={onClose} className="opacity-60 hover:opacity-100">✕</button>
+  </div>
+);
 
 const Login = () => {
   const { login } = useAuth();
   const navigate  = useNavigate();
 
-  const [form, setForm]         = useState({ email: "", password: "" });
-  const [errors, setErrors]     = useState({});
+  const [form, setForm] = useState({ email: "", password: "" });
+  const [errors, setErrors] = useState({});
   const [serverError, setServerError] = useState("");
-  const [loading, setLoading]   = useState(false);
+  const [loading, setLoading] = useState(false);
   const [showPass, setShowPass] = useState(false);
+  const [successToast, setSuccessToast] = useState("");
 
-  // ── Validation ───────────────────────────────────────────────────────
+  // ── Validation ───────────────────────────────────────────────────────────
   const validate = () => {
     const newErrors = {};
     if (!form.email.trim()) {
@@ -33,19 +44,38 @@ const Login = () => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
-    // Clear specific error on change
     if (errors[name]) setErrors((prev) => ({ ...prev, [name]: "" }));
     if (serverError) setServerError("");
   };
 
-  // ── Submit ───────────────────────────────────────────────────────────
+  // ── Submit ───────────────────────────────────────────────────────────────
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validate()) return;
     setLoading(true);
+
     try {
       await login({ email: form.email, password: form.password });
-      navigate("/");
+
+      // ── Pending request auto-trigger ─────────────────────────────────────
+      const pendingPropertyId = sessionStorage.getItem("pendingRequest");
+
+      if (pendingPropertyId) {
+        sessionStorage.removeItem("pendingRequest");
+        try {
+          await axios.post("/api/requests", { propertyId: pendingPropertyId });
+          setSuccessToast("Request sent! A seller will contact you shortly.");
+          // Wait briefly so the toast is visible, then navigate to the property
+          setTimeout(() => {
+            navigate(`/property/${pendingPropertyId}`);
+          }, 2000);
+        } catch {
+          // If duplicate or any error, still go back to the property page
+          navigate(`/property/${pendingPropertyId}`);
+        }
+      } else {
+        navigate("/");
+      }
     } catch (err) {
       const msg = err?.response?.data?.message || "Login failed. Please try again.";
       setServerError(msg);
@@ -56,8 +86,9 @@ const Login = () => {
 
   return (
     <div className="min-h-[calc(100vh-120px)] flex items-center justify-center px-4 py-12">
+      {successToast && <Toast msg={successToast} onClose={() => setSuccessToast("")} />}
+
       <div className="w-full max-w-md">
-        {/* Card */}
         <div className="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
           {/* Header */}
           <div className="bg-gradient-to-br from-brand-600 to-brand-800 px-8 py-8 text-center">
@@ -68,7 +99,6 @@ const Login = () => {
 
           {/* Form */}
           <div className="px-8 py-8">
-            {/* Server error */}
             {serverError && (
               <div className="mb-5 flex items-start gap-3 bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm">
                 <AlertCircle size={17} className="mt-0.5 flex-shrink-0" />
@@ -79,18 +109,12 @@ const Login = () => {
             <form onSubmit={handleSubmit} noValidate className="space-y-5">
               {/* Email */}
               <div>
-                <label className="form-label" htmlFor="email">
-                  Email Address
-                </label>
+                <label className="form-label" htmlFor="email">Email Address</label>
                 <div className="relative">
                   <Mail size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
                   <input
-                    id="email"
-                    type="email"
-                    name="email"
-                    value={form.email}
-                    onChange={handleChange}
-                    placeholder="you@example.com"
+                    id="email" type="email" name="email" value={form.email}
+                    onChange={handleChange} placeholder="you@example.com"
                     className={`input-field pl-10 ${errors.email ? "border-red-400 focus:ring-red-300" : ""}`}
                   />
                 </div>
@@ -103,23 +127,16 @@ const Login = () => {
 
               {/* Password */}
               <div>
-                <label className="form-label" htmlFor="password">
-                  Password
-                </label>
+                <label className="form-label" htmlFor="password">Password</label>
                 <div className="relative">
                   <Lock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
                   <input
-                    id="password"
-                    type={showPass ? "text" : "password"}
-                    name="password"
-                    value={form.password}
-                    onChange={handleChange}
-                    placeholder="••••••••"
+                    id="password" type={showPass ? "text" : "password"} name="password"
+                    value={form.password} onChange={handleChange} placeholder="••••••••"
                     className={`input-field pl-10 pr-10 ${errors.password ? "border-red-400 focus:ring-red-300" : ""}`}
                   />
                   <button
-                    type="button"
-                    onClick={() => setShowPass((v) => !v)}
+                    type="button" onClick={() => setShowPass((v) => !v)}
                     className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
                   >
                     {showPass ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -134,8 +151,7 @@ const Login = () => {
 
               {/* Submit */}
               <button
-                type="submit"
-                disabled={loading}
+                type="submit" disabled={loading}
                 className="w-full btn-primary py-3.5 text-base flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 {loading ? (

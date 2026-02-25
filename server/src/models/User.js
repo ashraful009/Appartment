@@ -24,12 +24,14 @@ const userSchema = new mongoose.Schema(
       minlength: [6, "Password must be at least 6 characters"],
       select: false,
     },
-    avatar: {
+    phone: {
       type: String,
-      default: null,
+      required: [true, "Phone number is required"],
+      trim: true,
     },
-    avatarPublicId: {
+    referralCode: {
       type: String,
+      trim: true,
       default: null,
     },
     // ── Roles — array of strings ──────────────────────────────────

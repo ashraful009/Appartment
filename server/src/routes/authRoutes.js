@@ -1,13 +1,12 @@
 const express = require("express");
 const router  = express.Router();
 const { login, logout, getMe, register } = require("../controllers/authController");
-const { protect }       = require("../middleware/authMiddleware");
-const { uploadAvatar }  = require("../middleware/uploadMiddleware");
+const { protect } = require("../middleware/authMiddleware");
 
 // @route  POST /api/auth/register
-// @desc   Register a new user (optional avatar upload to Cloudinary)
+// @desc   Register a new user
 // @access Public
-router.post("/register", uploadAvatar, register);
+router.post("/register", register);
 
 // @route  POST /api/auth/login
 // @desc   Login user and set HttpOnly cookie

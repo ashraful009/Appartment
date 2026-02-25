@@ -28,10 +28,10 @@ const sendTokenCookie = (res, user) => {
 // ─────────────────────────────────────────────
 const register = async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password, phone, referralCode } = req.body;
 
-    if (!name || !email || !password) {
-      return res.status(400).json({ message: "All fields are required." });
+    if (!name || !email || !password || !phone) {
+      return res.status(400).json({ message: "Name, email, phone, and password are required." });
     }
 
     // Check if user already exists
@@ -42,15 +42,14 @@ const register = async (req, res) => {
         .json({ message: "An account with this email already exists." });
     }
 
-    // Build user data — include avatar if a file was uploaded via multer/Cloudinary
-    const userData = { name, email, password };
-    if (req.file) {
-      userData.avatar        = req.file.path;      // Cloudinary secure URL
-      userData.avatarPublicId = req.file.filename;  // Cloudinary public_id
-    }
-
     // Create user (password hashed via pre-save hook)
-    const user = await User.create(userData);
+    const user = await User.create({
+      name,
+      email,
+      password,
+      phone,
+      referralCode: referralCode || null,
+    });
 
     // Generate token and set HttpOnly cookie
     sendTokenCookie(res, user);
@@ -58,11 +57,12 @@ const register = async (req, res) => {
     res.status(201).json({
       message: "Registration successful.",
       user: {
-        _id:    user._id,
-        name:   user.name,
-        email:  user.email,
-        avatar: user.avatar,
-        roles:  user.roles,
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        referralCode: user.referralCode,
+        roles: user.roles,
       },
     });
   } catch (error) {

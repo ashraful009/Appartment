@@ -122,8 +122,8 @@ const Navbar = () => {
                   {/* My Profile */}
                   <DropItem icon={<User size={15} />} label="My Profile" to="/profile" onClick={() => setDropOpen(false)} />
 
-                  {/* Customer Panel — only if role.customer */}
-                  {user?.role?.customer && (
+                    {/* Customer Panel — only if roles includes 'customer' */}
+                    {user?.roles?.includes("customer") && (
                     <DropItem
                       icon={<LayoutDashboard size={15} />}
                       label="Customer Panel"
@@ -132,8 +132,8 @@ const Navbar = () => {
                     />
                   )}
 
-                  {/* Seller Panel — only if role.seller */}
-                  {user?.role?.seller && (
+                    {/* Seller Panel — only if roles includes 'seller' */}
+                    {user?.roles?.includes("seller") && (
                     <DropItem
                       icon={<Store size={15} />}
                       label="Seller Panel"
@@ -142,8 +142,8 @@ const Navbar = () => {
                     />
                   )}
 
-                  {/* Admin Panel — only if role.admin */}
-                  {user?.role?.admin && (
+                    {/* Admin Panel — only if roles includes 'admin' */}
+                    {user?.roles?.includes("admin") && (
                     <DropItem
                       icon={<ShieldCheck size={15} />}
                       label="Admin Panel"
@@ -208,9 +208,9 @@ const Navbar = () => {
                   </div>
                 </div>
                 <MobileLink to="/profile" label="My Profile" onClick={() => setMobileOpen(false)} />
-                {user?.role?.customer && <MobileLink to="/customer-panel" label="Customer Panel" onClick={() => setMobileOpen(false)} />}
-                {user?.role?.seller   && <MobileLink to="/seller-panel"   label="Seller Panel"   onClick={() => setMobileOpen(false)} />}
-                {user?.role?.admin    && <MobileLink to="/admin-panel"    label="Admin Panel"    onClick={() => setMobileOpen(false)} />}
+                  {user?.roles?.includes("customer") && <MobileLink to="/customer-panel" label="Customer Panel" onClick={() => setMobileOpen(false)} />}
+                  {user?.roles?.includes("seller") && <MobileLink to="/seller-panel" label="Seller Panel" onClick={() => setMobileOpen(false)} />}
+                  {user?.roles?.includes("admin") && <MobileLink to="/admin-panel" label="Admin Panel" onClick={() => setMobileOpen(false)} />}
                 <button
                   onClick={async () => { await logout(); setMobileOpen(false); navigate("/"); }}
                   className="mt-1 flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm text-red-500 hover:bg-red-50 font-medium transition-colors"

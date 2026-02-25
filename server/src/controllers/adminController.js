@@ -29,7 +29,7 @@ const getStats = async (req, res) => {
 const getUsers = async (req, res) => {
   try {
     const users = await User.find()
-      .select("_id name email avatar roles createdAt")
+      .select("_id name email phone avatar roles createdAt")
       .sort({ createdAt: -1 });
 
     res.status(200).json({ users });
@@ -74,7 +74,7 @@ const updateUserRoles = async (req, res) => {
     const user = await User.findByIdAndUpdate(
       id,
       { $set: { roles } },
-      { new: true, select: "_id name email roles" }
+      { new: true, select: "_id name email phone roles" }
     );
 
     if (!user) return res.status(404).json({ message: "User not found." });

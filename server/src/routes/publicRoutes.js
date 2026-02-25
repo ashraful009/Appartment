@@ -2,7 +2,7 @@ const express = require("express");
 const router  = express.Router();
 
 const { getBanners, getActiveBanner } = require("../controllers/bannerController");
-const { getProperties }               = require("../controllers/propertyController");
+const { getProperties, getPropertyById } = require("../controllers/propertyController");
 
 // ── Public banner routes ────────────────────────────────────────────────────
 // GET /api/banners/active  — most recent active banner (for hero carousel)
@@ -15,4 +15,8 @@ router.get("/banners", getBanners);
 // GET /api/properties       — all properties
 router.get("/properties", getProperties);
 
+// GET /api/properties/:id   — single property by ID
+router.get("/properties/:id", getPropertyById);
+
 module.exports = router;
+

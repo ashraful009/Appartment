@@ -14,6 +14,14 @@ import BannerManagement from "./pages/admin/BannerManagement";
 import AddBuilding     from "./pages/admin/AddBuilding";
 import UserManagement  from "./pages/admin/UserManagement";
 
+// Seller Panel
+import SellerLayout from "./pages/seller/SellerLayout";
+import SellerDashboard from "./pages/seller/SellerDashboard";
+import PendingRequests from "./pages/seller/PendingRequests";
+import ClaimedUsers from "./pages/seller/ClaimedUsers";
+
+import PropertyDetails from "./pages/PropertyDetails";
+
 // Simple placeholder for non-admin panel routes
 const Placeholder = ({ title }) => (
   <div className="min-h-[60vh] flex items-center justify-center">
@@ -48,9 +56,16 @@ function App() {
               </Route>
 
               {/* Other placeholder routes */}
+              <Route path="/property/:id" element={<PropertyDetails />} />
               <Route path="/profile"        element={<Placeholder title="My Profile" />} />
               <Route path="/customer-panel" element={<Placeholder title="Customer Panel" />} />
-              <Route path="/seller-panel"   element={<Placeholder title="Seller Panel" />} />
+              {/* Seller Panel — nested routes inside SellerLayout */}
+              <Route path="/seller-panel" element={<SellerLayout />}>
+                <Route index element={<SellerDashboard />} />
+                <Route path="pending" element={<PendingRequests />} />
+                <Route path="claimed" element={<ClaimedUsers />} />
+              </Route>
+
               <Route path="/properties"     element={<Placeholder title="Properties" />} />
               <Route path="/about"          element={<Placeholder title="About Us" />} />
               <Route path="/contact"        element={<Placeholder title="Contact Us" />} />
