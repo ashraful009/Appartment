@@ -36,7 +36,7 @@ const PropertyGrid = ({ properties, loading }) => {
       </div>
 
       {/* Responsive wrapping grid of fixed-size cards */}
-      <div className="flex flex-wrap gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {properties.map((property, i) => (
           <PropertyCard key={property._id} property={property} index={i} />
         ))}

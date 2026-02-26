@@ -109,25 +109,6 @@ const Home = () => {
         </div>
       </section>
 
-      {/* ── Features ─────────────────────────────────────────────────── */}
-      <section className="py-20 px-6 bg-white">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-14">
-            <h2 className="text-3xl sm:text-4xl font-extrabold text-gray-900">Why Choose Us?</h2>
-            <p className="text-gray-500 mt-3 max-w-xl mx-auto">Everything you need to buy, rent, or sell property — in one place.</p>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {features.map((f) => (
-              <div key={f.title}
-                className="bg-gray-50 rounded-2xl p-8 shadow-sm border border-gray-100 hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
-                <div className="text-4xl mb-4">{f.icon}</div>
-                <h3 className="text-xl font-bold text-gray-800 mb-2">{f.title}</h3>
-                <p className="text-gray-500 text-sm leading-relaxed">{f.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
 
       {/* ── CTA ──────────────────────────────────────────────────────── */}
       {!isAuthenticated && (

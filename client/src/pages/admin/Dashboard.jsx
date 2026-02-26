@@ -46,12 +46,6 @@ const Dashboard = () => {
 
   return (
     <div className="p-8">
-      {/* Page header */}
-      <div className="mb-8">
-        <h1 className="text-2xl font-extrabold text-gray-800">Dashboard</h1>
-        <p className="text-gray-500 text-sm mt-1">Overview of your real estate platform</p>
-      </div>
-
       {error && (
         <div className="mb-6 bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm">
           {error}
@@ -61,18 +55,9 @@ const Dashboard = () => {
       {/* Stat Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
         {cards.map((card) => (
+
           <StatCard key={card.label} {...card} loading={loading} />
         ))}
-      </div>
-
-      {/* Quick Info */}
-      <div className="mt-10 bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-        <h2 className="text-base font-bold text-gray-700 mb-3">Quick Links</h2>
-        <ul className="text-sm text-gray-500 space-y-1.5 list-disc list-inside">
-          <li>Go to <strong>Manage Banners</strong> to upload homepage banners.</li>
-          <li>Go to <strong>Add Building</strong> to list a new property.</li>
-          <li>Go to <strong>Manage Users</strong> to promote users to seller or admin.</li>
-        </ul>
       </div>
     </div>
   );

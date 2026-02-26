@@ -17,7 +17,7 @@ const PropertyCard = ({ property, index = 0 }) => {
   return (
     <div
       onClick={() => navigate(`/property/${property._id}`)}
-      className="group relative w-[400px] h-[560px] flex-shrink-0 rounded-3xl overflow-hidden cursor-pointer shadow-lg hover:shadow-2xl transition-shadow duration-500"
+      className="group relative w-[300px] h-[630px] flex-shrink-0 rounded-3xl overflow-hidden cursor-pointer shadow-lg hover:shadow-2xl transition-shadow duration-500"
     >
       {/* ── Full-card image with "fill-up" zoom ── */}
       {property.mainImage ? (

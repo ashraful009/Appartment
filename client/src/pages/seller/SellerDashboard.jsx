@@ -54,19 +54,6 @@ const ReferralCodeCard = ({ userId }) => {
 
       <div className="relative">
         {/* Header */}
-        <div className="flex items-center gap-2.5 mb-4">
-          <div className="w-9 h-9 rounded-xl bg-amber-500/20 flex items-center justify-center">
-            <QrCode size={18} className="text-amber-400" />
-          </div>
-          <div>
-            <p className="text-xs font-bold uppercase tracking-widest text-amber-400">Share This</p>
-            <p className="text-base font-extrabold text-white leading-tight">My Referral Code</p>
-          </div>
-        </div>
-
-        <p className="text-xs text-gray-400 mb-3 leading-relaxed">
-          Share your unique ID with customers. When they register using your code and request a property, the lead is automatically assigned to you.
-        </p>
 
         {/* Code box + copy button */}
         <div className="flex items-center gap-2">
@@ -118,15 +105,6 @@ const SellerDashboard = () => {
 
   return (
     <div className="p-8">
-      {/* Header */}
-      <div className="mb-8">
-        <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-1">Seller Panel</p>
-        <h1 className="text-3xl font-extrabold text-gray-900">Dashboard</h1>
-        <p className="text-gray-500 text-sm mt-1">
-          Overview of incoming leads and your claimed contacts.
-        </p>
-      </div>
-
       {/* ── Referral Code Card ─────────────────────────────────────────────── */}
       {user?._id && <ReferralCodeCard userId={user._id} />}
 
@@ -152,31 +130,6 @@ const SellerDashboard = () => {
           color="bg-brand-600"
           loading={loading}
         />
-      </div>
-
-      {/* Quick Actions */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <Link
-          to="/seller-panel/pending"
-          className="group flex items-center justify-between bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-2xl px-6 py-5 transition-colors"
-        >
-          <div>
-            <p className="font-bold text-amber-800">View Pending Leads</p>
-            <p className="text-sm text-amber-600 mt-0.5">Claim new user requests</p>
-          </div>
-          <ArrowRight size={20} className="text-amber-600 group-hover:translate-x-1 transition-transform" />
-        </Link>
-
-        <Link
-          to="/seller-panel/claimed"
-          className="group flex items-center justify-between bg-brand-50 hover:bg-brand-100 border border-brand-200 rounded-2xl px-6 py-5 transition-colors"
-        >
-          <div>
-            <p className="font-bold text-brand-800">View My Claimed Users</p>
-            <p className="text-sm text-brand-600 mt-0.5">Contact your leads</p>
-          </div>
-          <ArrowRight size={20} className="text-brand-600 group-hover:translate-x-1 transition-transform" />
-        </Link>
       </div>
     </div>
   );
