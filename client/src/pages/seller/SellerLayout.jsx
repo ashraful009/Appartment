@@ -2,13 +2,13 @@ import React from "react";
 import { NavLink, Outlet, Navigate, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import {
-  LayoutDashboard, Users, UserCheck, LogOut, ChevronRight,
+  LayoutDashboard, UserCheck, LogOut, ChevronRight, Users2,
 } from "lucide-react";
 
 const navItems = [
-  { to: "/seller-panel",         label: "Dashboard",      icon: LayoutDashboard, end: true },
-  { to: "/seller-panel/pending", label: "Pending Leads",  icon: Users },
-  { to: "/seller-panel/claimed", label: "My Claimed Users", icon: UserCheck },
+  { to: "/seller-panel", label: "Dashboard", icon: LayoutDashboard, end: true },
+  { to: "/seller-panel/assigned", label: "Assigned Leads", icon: UserCheck },
+  { to: "/seller-panel/my-team", label: "My Team", icon: Users2 },
 ];
 
 const SellerLayout = () => {

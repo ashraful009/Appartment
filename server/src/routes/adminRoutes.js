@@ -5,36 +5,66 @@ const { protect }        = require("../middleware/authMiddleware");
 const { authorizeRoles } = require("../middleware/authMiddleware");
 const { uploadBannerImages, uploadPropertyImages } = require("../middleware/uploadMiddleware");
 
-const { getStats, getUsers, updateUserRoles } = require("../controllers/adminController");
-const { createBanner, getBanners }            = require("../controllers/bannerController");
-const { createProperty, getProperties }       = require("../controllers/propertyController");
+const {
+    getStats,
+    getUsers,
+    updateUserRoles,
+    getAdminPendingRequests,
+    getSellersList,
+    assignRequest,
+    getSellersPerformance,
+    getConversionStats,
+    approveConversion,
+    rejectConversion,
+    rejectSellerConversion,
+    getSellerAnalytics,
+    approveSellerConversion,
+} = require("../controllers/adminController");
+const { createBanner, getBanners } = require("../controllers/bannerController");
+const { createProperty, getProperties } = require("../controllers/propertyController");
 
 // All routes below require a valid JWT + admin role
 const adminGuard = [protect, authorizeRoles("admin")];
 
 // ─── Admin Stats ───────────────────────────────────────────────────────────
-// GET /api/admin/stats
 router.get("/stats", adminGuard, getStats);
 
 // ─── User Management ──────────────────────────────────────────────────────
-// GET /api/admin/users
 router.get("/users", adminGuard, getUsers);
-
-// PUT /api/admin/users/:id/roles
 router.put("/users/:id/roles", adminGuard, updateUserRoles);
 
 // ─── Banners ──────────────────────────────────────────────────────────────
-// POST /api/admin/banners   (admin only, uploads to Cloudinary)
 router.post("/banners", adminGuard, uploadBannerImages, createBanner);
-
-// GET /api/admin/banners    (also aliased publicly — see index.js)
 router.get("/banners", getBanners);
 
 // ─── Properties / Buildings ───────────────────────────────────────────────
-// POST /api/admin/properties
 router.post("/properties", adminGuard, uploadPropertyImages, createProperty);
-
-// GET /api/admin/properties
 router.get("/properties", getProperties);
+
+// ─── Lead Assignment Workflow ─────────────────────────────────────────────
+// GET /api/admin/requests/pending   — all unassigned leads for admin to review
+router.get("/requests/pending", adminGuard, getAdminPendingRequests);
+
+// GET /api/admin/sellers-list       — sellers with their current active lead count
+router.get("/sellers-list", adminGuard, getSellersList);
+
+// PUT /api/admin/requests/:id/assign — admin assigns a lead to a chosen seller
+router.put("/requests/:id/assign", adminGuard, assignRequest);
+
+// ─── Conversion Workflow ──────────────────────────────────────────────────
+router.get("/sellers-performance", adminGuard, getSellersPerformance);
+router.get("/conversion-stats", adminGuard, getConversionStats);
+router.put("/requests/:id/approve-conversion", adminGuard, approveConversion);
+router.put("/requests/:id/reject-conversion", adminGuard, rejectConversion);
+
+// ─── Seller Analytics ───────────────────────────────────────────────────
+// GET /api/admin/seller-analytics   — 3-dataset analytics for dashboard
+router.get("/seller-analytics", adminGuard, getSellerAnalytics);
+
+// PUT /api/admin/requests/:id/approve-seller-conversion
+router.put("/requests/:id/approve-seller-conversion", adminGuard, approveSellerConversion);
+
+// PUT /api/admin/requests/:id/reject-seller-conversion
+router.put("/requests/:id/reject-seller-conversion", adminGuard, rejectSellerConversion);
 
 module.exports = router;

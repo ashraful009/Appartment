@@ -1,28 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
 import axios from "axios";
 import { useAuth } from "../../context/AuthContext";
-import {
-  Users, UserCheck, ArrowRight, Copy, CheckCheck, QrCode,
-} from "lucide-react";
-
-// ── Stat Card ─────────────────────────────────────────────────────────────────
-const StatCard = ({ icon: Icon, label, value, color, loading }) => (
-  <div className="relative overflow-hidden bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex items-center gap-5">
-    <div className={`w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0 ${color}`}>
-      <Icon size={26} className="text-white" />
-    </div>
-    <div>
-      <p className="text-sm font-medium text-gray-500 mb-0.5">{label}</p>
-      {loading ? (
-        <div className="h-8 w-16 bg-gray-200 animate-pulse rounded-lg" />
-      ) : (
-        <p className="text-3xl font-extrabold text-gray-900">{value ?? 0}</p>
-      )}
-    </div>
-    <div className={`absolute -right-4 -top-4 w-24 h-24 rounded-full opacity-10 ${color}`} />
-  </div>
-);
+import { Copy, CheckCheck } from "lucide-react";
 
 // ── Referral Code Card ────────────────────────────────────────────────────────
 const ReferralCodeCard = ({ userId }) => {
@@ -31,31 +10,26 @@ const ReferralCodeCard = ({ userId }) => {
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(userId);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2500);
     } catch {
-      // Fallback for older browsers
       const el = document.createElement("textarea");
       el.value = userId;
       document.body.appendChild(el);
       el.select();
       document.execCommand("copy");
       document.body.removeChild(el);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2500);
     }
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2500);
   };
 
   return (
     <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl p-6 mb-8 shadow-lg relative overflow-hidden">
-      {/* Decorative circles */}
       <div className="absolute -right-6 -bottom-6 w-32 h-32 rounded-full bg-amber-500/10" />
       <div className="absolute -right-2 -top-8 w-24 h-24 rounded-full bg-amber-500/5" />
 
       <div className="relative">
-        {/* Header */}
-
-        {/* Code box + copy button */}
+        <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-1">Your Referral Code</p>
+        <p className="text-sm text-gray-300 mb-4">Share this code so new users are auto-assigned to you.</p>
         <div className="flex items-center gap-2">
           <div className="flex-1 bg-gray-950/60 border border-gray-700 rounded-xl px-4 py-3 min-w-0">
             <p className="font-mono text-sm text-amber-300 truncate select-all tracking-wide">
@@ -70,11 +44,7 @@ const ReferralCodeCard = ({ userId }) => {
                 : "bg-amber-500 hover:bg-amber-400 text-gray-900"
             }`}
           >
-            {copied ? (
-              <><CheckCheck size={15} /> Copied!</>
-            ) : (
-              <><Copy size={15} /> Copy</>
-            )}
+            {copied ? <><CheckCheck size={15} /> Copied!</> : <><Copy size={15} /> Copy</>}
           </button>
         </div>
       </div>
@@ -85,52 +55,19 @@ const ReferralCodeCard = ({ userId }) => {
 // ── Main ──────────────────────────────────────────────────────────────────────
 const SellerDashboard = () => {
   const { user } = useAuth();
-  const [stats, setStats]     = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError]     = useState("");
-
-  useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        const { data } = await axios.get("/api/requests/stats");
-        setStats(data);
-      } catch (err) {
-        setError(err?.response?.data?.message || "Failed to load stats.");
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchStats();
-  }, []);
 
   return (
     <div className="p-8">
-      {/* ── Referral Code Card ─────────────────────────────────────────────── */}
-      {user?._id && <ReferralCodeCard userId={user._id} />}
-
-      {error && (
-        <div className="mb-6 bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm">
-          {error}
-        </div>
-      )}
-
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-8">
-        <StatCard
-          icon={Users}
-          label="Pending User Requests"
-          value={stats?.pendingCount}
-          color="bg-amber-500"
-          loading={loading}
-        />
-        <StatCard
-          icon={UserCheck}
-          label="My Claimed Users"
-          value={stats?.myClaimedCount}
-          color="bg-brand-600"
-          loading={loading}
-        />
+      <div className="mb-8">
+        <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-1">Seller Panel</p>
+        <h1 className="text-3xl font-extrabold text-gray-900">Dashboard</h1>
+        <p className="text-gray-500 text-sm mt-1">
+          Welcome back, {user?.name}! Share your referral code to grow your leads.
+        </p>
       </div>
+
+      {/* Referral Code — the only card kept as per Task-2 requirement */}
+      {user?._id && <ReferralCodeCard userId={user._id} />}
     </div>
   );
 };

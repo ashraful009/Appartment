@@ -8,13 +8,19 @@ import {
   Users,
   LogOut,
   ChevronRight,
+  ClipboardList,
+  Store,
+  BarChart2,
 } from "lucide-react";
 
 const navItems = [
-  { to: "/admin-panel",           label: "Dashboard",       icon: LayoutDashboard, end: true },
-  { to: "/admin-panel/banners",   label: "Manage Banners",  icon: ImagePlay },
-  { to: "/admin-panel/buildings", label: "Add Building",    icon: Building2 },
-  { to: "/admin-panel/users",     label: "Manage Users",    icon: Users },
+  { to: "/admin-panel", label: "Dashboard", icon: LayoutDashboard, end: true },
+  { to: "/admin-panel/pending-leads", label: "Pending Leads", icon: ClipboardList },
+  { to: "/admin-panel/sellers-performance", label: "Sellers", icon: Store },
+  { to: "/admin-panel/sellers-analytics", label: "Analytics", icon: BarChart2 },
+  { to: "/admin-panel/banners", label: "Manage Banners", icon: ImagePlay },
+  { to: "/admin-panel/buildings", label: "Add Building", icon: Building2 },
+  { to: "/admin-panel/users", label: "Manage Users", icon: Users },
 ];
 
 const AdminLayout = () => {

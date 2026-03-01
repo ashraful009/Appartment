@@ -34,6 +34,12 @@ const userSchema = new mongoose.Schema(
       trim: true,
       default: null,
     },
+    // The seller whose referral link this user registered through
+    referredBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
     // ── Roles — array of strings ──────────────────────────────────
     // Possible values: "user", "customer", "seller", "admin"
     // Every new account gets ["user"] by default.

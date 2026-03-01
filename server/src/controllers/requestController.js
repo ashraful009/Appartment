@@ -2,7 +2,7 @@ const PriceRequest = require("../models/PriceRequest");
 const User         = require("../models/User");
 
 // ─────────────────────────────────────────────────────────────
-// @desc   Create a new price request (Customer)
+// @desc   Create a new price request
 // @route  POST /api/requests
 // @access Private (any authenticated user)
 // ─────────────────────────────────────────────────────────────
@@ -24,39 +24,39 @@ const createRequest = async (req, res) => {
         .json({ message: "You have already requested pricing for this property." });
     }
 
-    // ── Auto-claim via Referral Code ────────────────────────────────────────
-    // Fetch the full requesting user to read their referralCode field
+    // ── Auto-Assign via Referral Code ───────────────────────────────────────
+    // If the requesting user registered with a seller's referral code,
+    // automatically assign this lead to that seller.
     const requestingUser = await User.findById(req.user._id).select("referralCode");
-    let autoClaimedBy = null;
+    let autoAssignedTo = null;
 
     if (requestingUser?.referralCode) {
-      // referralCode is stored as a seller's _id string — validate it's a valid ObjectId
       const mongoose = require("mongoose");
       const isValidId = mongoose.Types.ObjectId.isValid(requestingUser.referralCode);
 
       if (isValidId) {
-        // Confirm the referenced user actually exists and holds the "seller" role
         const seller = await User.findOne({
           _id: requestingUser.referralCode,
           roles: "seller",
         }).select("_id");
 
         if (seller) {
-          autoClaimedBy = seller._id;
+          autoAssignedTo = seller._id;
         }
       }
     }
 
     const requestData = {
-      property:  propertyId,
-      user:      req.user._id,
-      status:    autoClaimedBy ? "claimed" : "pending",
-      claimedBy: autoClaimedBy,
+      property: propertyId,
+      user: req.user._id,
+      status: autoAssignedTo ? "assigned" : "pending",
+      assignedTo: autoAssignedTo,
+      assignedAt: autoAssignedTo ? new Date() : null,
     };
 
     const request = await PriceRequest.create(requestData);
 
-    const message = autoClaimedBy
+    const message = autoAssignedTo
       ? "Price request submitted and automatically assigned to your referral seller."
       : "Price request submitted successfully.";
 
@@ -73,18 +73,18 @@ const createRequest = async (req, res) => {
 };
 
 // ─────────────────────────────────────────────────────────────
-// @desc   Get stats — pending count + seller's claimed count
+// @desc   Get stats — pending count + seller's assigned count
 // @route  GET /api/requests/stats
 // @access Private (admin or seller)
 // ─────────────────────────────────────────────────────────────
 const getStats = async (req, res) => {
   try {
-    const [pendingCount, myClaimedCount] = await Promise.all([
+    const [pendingCount, myAssignedCount] = await Promise.all([
       PriceRequest.countDocuments({ status: "pending" }),
-      PriceRequest.countDocuments({ claimedBy: req.user._id }),
+      PriceRequest.countDocuments({ assignedTo: req.user._id }),
     ]);
 
-    res.status(200).json({ pendingCount, myClaimedCount });
+    res.status(200).json({ pendingCount, myAssignedCount });
   } catch (error) {
     console.error("getStats error:", error);
     res.status(500).json({ message: "Failed to fetch stats." });
@@ -92,74 +92,65 @@ const getStats = async (req, res) => {
 };
 
 // ─────────────────────────────────────────────────────────────
-// @desc   Get all pending requests (Seller — shows name only)
-// @route  GET /api/requests/pending
-// @access Private (seller / admin)
+// @desc   Get this seller's assigned leads (full contact info)
+// @route  GET /api/requests/assigned
+// @access Private (seller)
 // ─────────────────────────────────────────────────────────────
-const getPendingRequests = async (req, res) => {
+const getAssignedRequests = async (req, res) => {
   try {
-    const requests = await PriceRequest.find({ status: "pending" })
+    const requests = await PriceRequest.find({ assignedTo: req.user._id })
       .populate("property", "name address mainImage")
-      .populate("user", "name")          // only name — no phone/email revealed here
-      .sort({ createdAt: -1 });
+      .populate("user", "name email phone")
+      .sort({ assignedAt: -1, updatedAt: -1 });
 
     res.status(200).json({ requests });
   } catch (error) {
-    console.error("getPendingRequests error:", error);
-    res.status(500).json({ message: "Failed to fetch pending requests." });
+    console.error("getAssignedRequests error:", error);
+    res.status(500).json({ message: "Failed to fetch assigned leads." });
   }
 };
 
 // ─────────────────────────────────────────────────────────────
-// @desc   Claim a pending request (Seller)
-// @route  PUT /api/requests/:id/claim
-// @access Private (seller / admin)
+// @desc   Seller requests conversion of an assigned lead to customer
+// @route  PUT /api/requests/:id/request-conversion
+// @access Private (seller only)
 // ─────────────────────────────────────────────────────────────
-const claimRequest = async (req, res) => {
+const requestConversion = async (req, res) => {
   try {
-    const request = await PriceRequest.findById(req.params.id);
+    // Security: find only if this seller is assigned to the request
+    const request = await PriceRequest.findOne({
+      _id: req.params.id,
+      assignedTo: req.user._id,
+    });
 
     if (!request) {
-      return res.status(404).json({ message: "Request not found." });
-    }
-    if (request.status === "claimed") {
-      return res.status(400).json({ message: "This request has already been claimed." });
+      return res.status(404).json({
+        message: "Request not found or you do not have permission to convert it.",
+      });
     }
 
-    request.status    = "claimed";
-    request.claimedBy = req.user._id;
+    if (request.conversionStatus !== "none") {
+      return res.status(400).json({
+        message: `Conversion already ${request.conversionStatus}. Cannot re-submit.`,
+      });
+    }
+
+    request.conversionStatus = "pending_approval";
     await request.save();
 
-    res.status(200).json({ message: "Request claimed successfully.", request });
+    res.status(200).json({
+      message: "Conversion request submitted. Awaiting admin approval.",
+      request,
+    });
   } catch (error) {
-    console.error("claimRequest error:", error);
-    res.status(500).json({ message: "Failed to claim request." });
-  }
-};
-
-// ─────────────────────────────────────────────────────────────
-// @desc   Get This Seller's claimed requests (full contact info)
-// @route  GET /api/requests/claimed
-// @access Private (seller / admin)
-// ─────────────────────────────────────────────────────────────
-const getClaimedRequests = async (req, res) => {
-  try {
-    const requests = await PriceRequest.find({ claimedBy: req.user._id })
-      .populate("property", "name address mainImage")
-      .populate("user", "name email phone")   // full contact now unlocked
-      .sort({ updatedAt: -1 });
-
-    res.status(200).json({ requests });
-  } catch (error) {
-    console.error("getClaimedRequests error:", error);
-    res.status(500).json({ message: "Failed to fetch claimed requests." });
+    console.error("requestConversion error:", error);
+    res.status(500).json({ message: "Failed to submit conversion request." });
   }
 };
 
 module.exports = {
   createRequest,
   getStats,
-  getPendingRequests,
-  claimRequest,
-  getClaimedRequests,
+  getAssignedRequests,
+  requestConversion,
 };

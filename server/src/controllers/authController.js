@@ -34,7 +34,6 @@ const register = async (req, res) => {
       return res.status(400).json({ message: "Name, email, phone, and password are required." });
     }
 
-    // Check if user already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res
@@ -42,16 +41,25 @@ const register = async (req, res) => {
         .json({ message: "An account with this email already exists." });
     }
 
-    // Create user (password hashed via pre-save hook)
+    // ── Validate referral code → resolve to a seller ObjectId ────────────────
+    let referredBy = null;
+    if (referralCode) {
+      const mongoose = require("mongoose");
+      if (mongoose.Types.ObjectId.isValid(referralCode)) {
+        const seller = await User.findOne({ _id: referralCode, roles: "seller" }).select("_id");
+        if (seller) referredBy = seller._id;
+      }
+    }
+
     const user = await User.create({
       name,
       email,
       password,
       phone,
       referralCode: referralCode || null,
+      referredBy,
     });
 
-    // Generate token and set HttpOnly cookie
     sendTokenCookie(res, user);
 
     res.status(201).json({

@@ -8,6 +8,7 @@ const authRoutes = require("./src/routes/authRoutes");
 const adminRoutes = require("./src/routes/adminRoutes");
 const publicRoutes = require("./src/routes/publicRoutes");
 const requestRoutes = require("./src/routes/requestRoutes");
+const sellerRoutes = require("./src/routes/sellerRoutes");
 
 const app  = express();
 const PORT = process.env.PORT || 5000;
@@ -39,6 +40,7 @@ app.use(cookieParser());
 app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/requests", requestRoutes);
+app.use("/api/seller", sellerRoutes);
 app.use("/api", publicRoutes); // Public: /api/banners/active, /api/banners, /api/properties
 
 // Health check
