@@ -5,7 +5,7 @@ import {
   Mail, Phone, Building2, Loader2,
   CheckCircle2, XCircle, Store, UserCheck,
 } from "lucide-react";
-import Avatar from "./Avatar";
+import Avatar from "../../common/Avatar";
 
 // ── Type Badge ────────────────────────────────────────────────────────────────
 const TypeBadge = ({ type }) =>

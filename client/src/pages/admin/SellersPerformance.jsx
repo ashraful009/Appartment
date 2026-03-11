@@ -2,8 +2,8 @@ import React, { useEffect, useState, useCallback } from "react";
 import axios from "axios";
 import { User2, TrendingUp, Clock, InboxIcon, Loader2 } from "lucide-react";
 
-import SellerRow from "../../components/SellerRow";
-import SellerProfileModal from "../../components/SellerProfileModal";
+import SellerRow from "../../components/admin/sellers/SellerRow";
+import SellerProfileModal from "../../components/admin/sellers/SellerProfileModal";
 
 // ── Main Page ─────────────────────────────────────────────────────────────────
 const SellersPerformance = () => {

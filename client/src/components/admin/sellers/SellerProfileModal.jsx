@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { X, Mail, Phone, ExternalLink, Linkedin } from "lucide-react";
-import { formatDate } from "../utils/helpers";
+import { formatDate } from "../../../utils/helpers";
 
 /**
  * Seller Profile Modal — read-only "Digital Visiting Card".

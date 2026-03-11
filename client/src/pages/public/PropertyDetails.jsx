@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../../context/AuthContext";
 import {
   MapPin, Building2, Layers, LayoutGrid, Clock, Car, Home,
   ChevronLeft, ImageOff, CheckCircle, AlertCircle, Loader2, User, Mail, Phone,

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { toast } from "react-hot-toast";
 import { Camera, Mail, Phone, MapPin, Briefcase, Clock, Loader2, User, Facebook, Linkedin, Code } from "lucide-react";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../../context/AuthContext";
 
 const CustomerProfile = () => {
   useAuth(); // ensures page is rendered in an authenticated context

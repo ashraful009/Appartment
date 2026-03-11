@@ -7,42 +7,7 @@ import {
   Tooltip, CartesianGrid,
 } from "recharts";
 import { TrendingUp, Phone, User2, Trophy, BarChart2, List, InboxIcon } from "lucide-react";
-
-// ── Ratio Badge ───────────────────────────────────────────────────────────────
-const RatioBadge = ({ ratio }) => {
-  const pct  = Math.round((ratio ?? 0) * 100);
-  const color = pct >= 70 ? "emerald" : pct >= 40 ? "amber" : "red";
-  return (
-    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold
-                      bg-${color}-100 text-${color}-700`}>
-      {pct}%
-    </span>
-  );
-};
-
-// ── Custom Tooltip for chart ──────────────────────────────────────────────────
-const ChartTooltip = ({ active, payload, label }) => {
-  if (!active || !payload?.length) return null;
-  return (
-    <div className="bg-gray-900 text-white rounded-xl px-4 py-2.5 shadow-xl text-sm">
-      <p className="font-bold mb-1">{label}</p>
-      <p className="text-brand-400 font-semibold">{payload[0].value} conversions</p>
-    </div>
-  );
-};
-
-// ── Section Header ────────────────────────────────────────────────────────────
-const SectionHeader = ({ icon: Icon, title, subtitle, iconBg }) => (
-  <div className="flex items-center gap-3 mb-5">
-    <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${iconBg}`}>
-      <Icon size={18} className="text-white" />
-    </div>
-    <div>
-      <h2 className="text-lg font-extrabold text-gray-900">{title}</h2>
-      {subtitle && <p className="text-xs text-gray-400">{subtitle}</p>}
-    </div>
-  </div>
-);
+import { RatioBadge, SectionHeader, ChartTooltip } from "../../components/admin/analytics/SellersShared";
 
 // ── Main Component ────────────────────────────────────────────────────────────
 const SellersAnalytics = () => {

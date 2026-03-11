@@ -2,11 +2,11 @@ import React from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
 import { AuthProvider } from "./context/AuthContext";
-import TopBar from "./components/TopBar";
-import Navbar from "./components/Navbar";
-import Home from "./pages/Home";
-import Login from "./pages/Login";
-import Register from "./pages/Register";
+import TopBar from "./components/common/TopBar";
+import Navbar from "./components/common/Navbar";
+import Home from "./pages/public/Home";
+import Login from "./pages/public/Login";
+import Register from "./pages/public/Register";
 
 // Admin Panel
 import AdminLayout from "./pages/admin/AdminLayout";
@@ -27,8 +27,8 @@ import AssignedLeads from "./pages/seller/AssignedLeads";
 import MyTeam from "./pages/seller/MyTeam";
 import SellerProfile from "./pages/seller/SellerProfile";
 
-import CustomerProfile from "./pages/CustomerProfile";
-import PropertyDetails from "./pages/PropertyDetails";
+import CustomerProfile from "./pages/public/CustomerProfile";
+import PropertyDetails from "./pages/public/PropertyDetails";
 
 const Placeholder = ({ title }) => (
   <div className="min-h-[60vh] flex items-center justify-center">

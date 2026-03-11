@@ -8,9 +8,9 @@ import {
     ChevronUp,
 } from "lucide-react";
 
-import Avatar from "./Avatar";
+import Avatar from "../../common/Avatar";
 import PendingUserCard from "./PendingUserCard";
-import { buildPendingCards } from "../utils/helpers";
+import { buildPendingCards } from "../../../utils/helpers";
 
 const SellerRow = ({ sellerData, onAction, onViewProfile }) => {
     const [open, setOpen] = useState(false);

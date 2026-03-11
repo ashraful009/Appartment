@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import axios from "axios";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../../context/AuthContext";
 import { ArrowRight, AlertCircle } from "lucide-react";
-import HeroBanner    from "../components/HeroBanner";
-import FilterSidebar from "../components/FilterSidebar";
-import PropertyGrid  from "../components/PropertyGrid";
+import HeroBanner    from "../../components/common/HeroBanner";
+import FilterSidebar from "../../components/common/FilterSidebar";
+import PropertyGrid  from "../../components/common/PropertyGrid";
 
 const stats = [
   { label: "Properties Listed", value: "1,200+" },

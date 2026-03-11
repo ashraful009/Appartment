@@ -5,16 +5,18 @@ import {
   BarChart, Bar,
   XAxis, YAxis,
   Tooltip, CartesianGrid,
-  FunnelChart, Funnel, LabelList, Tooltip as FunnelTooltip,
-  PieChart, Pie, Cell, Legend,
+  FunnelChart, Funnel, LabelList,
+  PieChart, Pie, Cell,
 } from "recharts";
 import {
   TrendingUp, TrendingDown, PieChart as PieIcon,
-  InboxIcon, Trophy, Network, Users, ChevronDown,
-  ChevronRight as ChevronRightIcon, BarChart2, List, Phone, LayoutDashboard,
+  InboxIcon, Trophy, Network, Users,
+  BarChart2, List, Phone, LayoutDashboard,
 } from "lucide-react";
+import { RatioBadge, CardHeader, SkeletonCard, Empty, BarTip } from "../../components/admin/analytics/SellersShared";
+import { FunnelTip, PieTip, TreeNode } from "../../components/admin/analytics/AnalyticsShared";
 
-// ── Colour palettes ─────────────────────────────────────────────────────────
+// ── Colour palettes ──────────────────────────────────────────────────────────
 const FUNNEL_COLORS = ["#6366f1","#3b82f6","#8b5cf6","#f59e0b","#10b981","#ef4444"];
 const SOURCE_COLORS = {
   "Website": "#6366f1", "Facebook": "#3b82f6",
@@ -30,112 +32,6 @@ const ROW_BORDER = [
   "border-l-4 border-amber-400", "border-l-4 border-gray-400",
   "border-l-4 border-orange-400",
 ];
-
-// ── Shared mini helpers ──────────────────────────────────────────────────────
-const RatioBadge = ({ ratio }) => {
-  const pct = Math.round((ratio ?? 0) * 100);
-  const color = pct >= 70 ? "emerald" : pct >= 40 ? "amber" : "red";
-  return (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-${color}-100 text-${color}-700`}>
-      {pct}%
-    </span>
-  );
-};
-
-const CardHeader = ({ icon: Icon, iconBg, title, subtitle }) => (
-  <div className="flex items-center gap-3 mb-4">
-    <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${iconBg}`}>
-      <Icon size={16} className="text-white" />
-    </div>
-    <div>
-      <h2 className="text-sm font-extrabold text-gray-900 uppercase tracking-wide">{title}</h2>
-      {subtitle && <p className="text-xs text-gray-400">{subtitle}</p>}
-    </div>
-  </div>
-);
-
-const SkeletonCard = ({ h = "h-64" }) => (
-  <div className={`bg-white rounded-2xl border border-gray-100 shadow-sm p-5 animate-pulse ${h}`}>
-    <div className="h-4 bg-gray-200 rounded w-40 mb-4" />
-    <div className="h-full bg-gray-100 rounded-xl" />
-  </div>
-);
-
-const Empty = ({ label }) => (
-  <div className="flex flex-col items-center justify-center py-10 text-center">
-    <InboxIcon size={32} className="text-gray-200 mb-2" />
-    <p className="text-xs text-gray-400">{label}</p>
-  </div>
-);
-
-// ── Custom Tooltips ──────────────────────────────────────────────────────────
-const FunnelTip = ({ active, payload }) => {
-  if (!active || !payload?.length) return null;
-  const d = payload[0].payload;
-  return (
-    <div className="bg-gray-900 text-white rounded-xl px-3 py-2 shadow-xl text-xs">
-      <p className="font-bold mb-0.5">{d.stage}</p>
-      <p className="text-indigo-300 font-semibold">{d.count} leads</p>
-    </div>
-  );
-};
-
-const PieTip = ({ active, payload }) => {
-  if (!active || !payload?.length) return null;
-  const d = payload[0].payload;
-  return (
-    <div className="bg-gray-900 text-white rounded-xl px-3 py-2 shadow-xl text-xs">
-      <p className="font-bold mb-0.5">{d.source}</p>
-      <p className="font-semibold" style={{ color: payload[0].color }}>{d.count} leads ({d.pct}%)</p>
-    </div>
-  );
-};
-
-const BarTip = ({ active, payload, label }) => {
-  if (!active || !payload?.length) return null;
-  return (
-    <div className="bg-gray-900 text-white rounded-xl px-3 py-2 shadow-xl text-xs">
-      <p className="font-bold mb-0.5">{label}</p>
-      <p className="text-indigo-300 font-semibold">{payload[0].value} conversions</p>
-    </div>
-  );
-};
-
-// ── Genealogy TreeNode ───────────────────────────────────────────────────────
-const ROLE_BADGE = {
-  admin: "bg-red-100 text-red-700", seller: "bg-indigo-100 text-indigo-700",
-  user: "bg-gray-100 text-gray-500", customer: "bg-emerald-100 text-emerald-700",
-};
-const TreeNode = ({ node, depth = 0 }) => {
-  const [open, setOpen] = useState(depth < 2);
-  const hasChildren = node.children?.length > 0;
-  const primaryRole = node.roles?.find(r => r !== "user") ?? node.roles?.[0] ?? "user";
-  return (
-    <div className={`relative ${depth > 0 ? "ml-6 pl-4 border-l-2 border-dashed border-gray-200" : ""}`}>
-      <div className="flex items-center gap-2 mb-1">
-        {hasChildren ? (
-          <button onClick={() => setOpen(o => !o)}
-            className="w-5 h-5 rounded flex items-center justify-center text-gray-400 hover:bg-gray-100 flex-shrink-0 transition-colors">
-            {open ? <ChevronDown size={12} /> : <ChevronRightIcon size={12} />}
-          </button>
-        ) : <span className="w-5 h-5 flex-shrink-0" />}
-        <div className="w-6 h-6 rounded-full flex-shrink-0 flex items-center justify-center text-xs font-bold bg-gradient-to-br from-indigo-500 to-purple-500 text-white shadow-sm">
-          {node.name?.[0]?.toUpperCase() ?? "?"}
-        </div>
-        <span className="text-xs font-semibold text-gray-800">{node.name}</span>
-        <span className={`text-[10px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-full ${ROLE_BADGE[primaryRole] ?? "bg-gray-100 text-gray-500"}`}>
-          {primaryRole}
-        </span>
-        {hasChildren && <span className="text-[10px] text-gray-400">{node.children.length} direct</span>}
-      </div>
-      {open && hasChildren && (
-        <div className="mt-1 mb-2">
-          {node.children.map(child => <TreeNode key={child._id} node={child} depth={depth + 1} />)}
-        </div>
-      )}
-    </div>
-  );
-};
 
 // ── Main Component ───────────────────────────────────────────────────────────
 const MasterAnalytics = () => {
