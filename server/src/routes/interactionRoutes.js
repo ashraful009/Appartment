@@ -5,7 +5,7 @@ const { protect }        = require("../middleware/authMiddleware");
 const { authorizeRoles } = require("../middleware/authMiddleware");
 const Interaction        = require("../models/Interaction");
 
-const { addInteraction, getInteractionsByLead, requestMentorHelp, setAdminNote } = require("../controllers/interactionController");
+const { addInteraction, getInteractionsByLead, requestMentorHelp, setAdminNote, updateFollowUpStatus } = require("../controllers/interactionController");
 
 const sellerGuard = [protect, authorizeRoles("seller")];
 const adminGuard  = [protect, authorizeRoles("admin")];
@@ -28,6 +28,9 @@ router.get("/admin/:leadId", adminGuard, async (req, res) => {
 
 // GET /api/interactions/:leadId — Fetch all interactions for a specific lead (seller)
 router.get("/:leadId", sellerGuard, getInteractionsByLead);
+
+// PUT /api/interactions/:id/followup-status — Seller updates a task's follow-up status
+router.put("/:id/followup-status", sellerGuard, updateFollowUpStatus);
 
 // PUT /api/interactions/:id/request-mentor — Flag interaction for mentor help
 router.put("/:id/request-mentor", sellerGuard, requestMentorHelp);

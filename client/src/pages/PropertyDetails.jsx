@@ -4,7 +4,7 @@ import axios from "axios";
 import { useAuth } from "../context/AuthContext";
 import {
   MapPin, Building2, Layers, LayoutGrid, Clock, Car, Home,
-  ChevronLeft, ImageOff, CheckCircle, AlertCircle, Loader2,
+  ChevronLeft, ImageOff, CheckCircle, AlertCircle, Loader2, User, Mail, Phone,
 } from "lucide-react";
 
 // ── Toast ─────────────────────────────────────────────────────────────────────
@@ -48,15 +48,20 @@ const DetailRow = ({ icon: Icon, label, value }) => {
 const PropertyDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuth();
+  const { user, isAuthenticated } = useAuth();
 
-  const [property, setProperty]   = useState(null);
-  const [loading, setLoading]     = useState(true);
-  const [error, setError]         = useState("");
-  const [lightbox, setLightbox]   = useState(null);
+  const [property, setProperty] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [lightbox, setLightbox] = useState(null);
   const [requesting, setRequesting] = useState(false);
   const [requested, setRequested] = useState(false);
-  const [toast, setToast]         = useState(null);
+  const [toast, setToast] = useState(null);
+
+  // ── Guest form state ──────────────────────────────────────────────────────
+  const [showGuestForm, setShowGuestForm] = useState(false);
+  const [guestSubmitting, setGuestSubmitting] = useState(false);
+  const [guestData, setGuestData] = useState({ name: "", email: "", phone: "" });
 
   const showToast = (type, msg) => {
     setToast({ type, msg });
@@ -86,9 +91,8 @@ const PropertyDetails = () => {
     if (requested || requesting) return;
 
     if (!isAuthenticated) {
-      // Save intent and redirect to login
-      sessionStorage.setItem("pendingRequest", id);
-      navigate("/login");
+      // Guest flow: reveal the inline form instead of redirecting
+      setShowGuestForm(true);
       return;
     }
 
@@ -102,6 +106,29 @@ const PropertyDetails = () => {
       showToast("error", msg);
     } finally {
       setRequesting(false);
+    }
+  };
+
+  // ── Guest form submit ─────────────────────────────────────────────────────
+  const handleGuestSubmit = async (e) => {
+    e.preventDefault();
+    const { name, email, phone } = guestData;
+    if (!name.trim() || !email.trim() || !phone.trim()) {
+      showToast("error", "Please fill in all fields.");
+      return;
+    }
+
+    setGuestSubmitting(true);
+    try {
+      await axios.post("/api/requests", { propertyId: id, name: name.trim(), email: email.trim(), phone: phone.trim() });
+      setRequested(true);
+      setShowGuestForm(false);
+      showToast("success", "Request submitted successfully! Our agent will contact you soon.");
+    } catch (err) {
+      const msg = err?.response?.data?.message || "Failed to submit request. Please try again.";
+      showToast("error", msg);
+    } finally {
+      setGuestSubmitting(false);
     }
   };
 
@@ -217,6 +244,8 @@ const PropertyDetails = () => {
                   ? "bg-emerald-600 cursor-default"
                   : requesting
                     ? "bg-gray-700 cursor-not-allowed opacity-80"
+                  : showGuestForm
+                    ? "bg-gray-800 cursor-default"
                     : "bg-gray-900 hover:bg-black hover:shadow-xl"
               }`}
             >
@@ -228,6 +257,84 @@ const PropertyDetails = () => {
                   : "Contact for Pricing"
               }
             </button>
+
+            {/* ── Inline Guest Form ─────────────────────────────────── */}
+            {showGuestForm && !requested && (
+              <form
+                onSubmit={handleGuestSubmit}
+                className="mt-4 border border-gray-200 rounded-xl p-5 bg-gray-50 space-y-3 animate-[fadeInDown_0.25s_ease]"
+              >
+                <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-1">Your Details</p>
+
+                {/* Full Name */}
+                <div className="relative">
+                  <User size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                  <input
+                    type="text"
+                    placeholder="Full Name"
+                    value={guestData.name}
+                    onChange={e => setGuestData(prev => ({ ...prev, name: e.target.value }))}
+                    className="w-full pl-9 pr-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 bg-white placeholder-gray-400"
+                    required
+                    disabled={guestSubmitting}
+                  />
+                </div>
+
+                {/* Email Address */}
+                <div className="relative">
+                  <Mail size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                  <input
+                    type="email"
+                    placeholder="Email Address"
+                    value={guestData.email}
+                    onChange={e => setGuestData(prev => ({ ...prev, email: e.target.value }))}
+                    className="w-full pl-9 pr-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 bg-white placeholder-gray-400"
+                    required
+                    disabled={guestSubmitting}
+                  />
+                </div>
+
+                {/* Phone Number */}
+                <div className="relative">
+                  <Phone size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                  <input
+                    type="tel"
+                    placeholder="Phone Number"
+                    value={guestData.phone}
+                    onChange={e => setGuestData(prev => ({ ...prev, phone: e.target.value }))}
+                    className="w-full pl-9 pr-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 bg-white placeholder-gray-400"
+                    required
+                    disabled={guestSubmitting}
+                  />
+                </div>
+
+                {/* Actions */}
+                <div className="flex gap-2 pt-1">
+                  <button
+                    type="submit"
+                    disabled={guestSubmitting}
+                    className="flex-1 py-2.5 rounded-lg bg-gray-900 hover:bg-black text-white text-sm font-bold uppercase tracking-widest transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+                  >
+                    {guestSubmitting
+                      ? <><Loader2 size={14} className="animate-spin" /> Submitting…</>
+                      : "Submit Request"
+                    }
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowGuestForm(false)}
+                    disabled={guestSubmitting}
+                    className="px-4 py-2.5 rounded-lg border border-gray-300 text-sm text-gray-600 hover:bg-gray-100 transition-colors disabled:opacity-50"
+                  >
+                    Cancel
+                  </button>
+                </div>
+
+                <p className="text-xs text-gray-400 text-center pt-1">
+                  We'll never share your details without your consent.
+                </p>
+              </form>
+            )}
           </div>
         </div>
 

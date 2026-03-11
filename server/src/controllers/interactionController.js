@@ -172,4 +172,44 @@ const setAdminNote = async (req, res) => {
   }
 };
 
-module.exports = { addInteraction, getInteractionsByLead, requestMentorHelp, setAdminNote };
+// ─────────────────────────────────────────────────────────────
+// @desc   Update the follow-up status of a specific interaction
+// @route  PUT /api/interactions/:id/followup-status
+// @access Private (seller)
+// ─────────────────────────────────────────────────────────────
+const VALID_FOLLOWUP_STATUSES = ["Pending", "Completed", "Unable to Contact"];
+
+const updateFollowUpStatus = async (req, res) => {
+  try {
+    const { status } = req.body;
+
+    if (!status || !VALID_FOLLOWUP_STATUSES.includes(status)) {
+      return res.status(400).json({
+        message: `status must be one of: ${VALID_FOLLOWUP_STATUSES.join(", ")}.`,
+      });
+    }
+
+    // Security: seller can only update interactions that belong to them
+    const interaction = await Interaction.findOne({
+      _id: req.params.id,
+      sellerId: req.user._id,
+    });
+
+    if (!interaction) {
+      return res.status(404).json({ message: "Interaction not found or not yours." });
+    }
+
+    interaction.followUpStatus = status;
+    await interaction.save();
+
+    res.status(200).json({
+      message: `Follow-up status updated to "${status}".`,
+      interaction,
+    });
+  } catch (error) {
+    console.error("updateFollowUpStatus error:", error);
+    res.status(500).json({ message: "Failed to update follow-up status." });
+  }
+};
+
+module.exports = { addInteraction, getInteractionsByLead, requestMentorHelp, setAdminNote, updateFollowUpStatus };

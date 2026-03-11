@@ -5,7 +5,7 @@ import {
   MapPin, Mail, Phone, Building2, InboxIcon, CheckCircle2, Loader2,
   ChevronDown, ChevronUp, Phone as PhoneIcon, MessageCircle, Users,
   FileText, StickyNote, Calendar, Clock, Send, AlertCircle, X,
-  UserCheck, GitBranch, AlertTriangle, HelpCircle,
+  UserCheck, GitBranch, AlertTriangle, HelpCircle, CheckCheck,
 } from "lucide-react";
 
 // ── Delegation Modal ───────────────────────────────────────────────────────────
@@ -803,25 +803,150 @@ const AssignedRow = ({ req, expanded, onToggle, onStatusChange, onUpdate, onDele
   );
 };
 
+// ── Follow-up Task Card ───────────────────────────────────────────────────────
+const FollowUpTaskCard = ({ task, isOverdue, onUpdateStatus, onExpandLead }) => {
+  const leadUser = task.leadId?.user;
+  const date = task.nextMeetingDate ? new Date(task.nextMeetingDate) : null;
+  const [updating, setUpdating] = useState(false);
+
+  const handleAction = async (status) => {
+    setUpdating(true);
+    try { await onUpdateStatus(task._id, status); }
+    finally { setUpdating(false); }
+  };
+
+  return (
+    <div className={`rounded-xl border p-3.5 transition-all ${
+      isOverdue ? "bg-red-50 border-red-200" : "bg-emerald-50 border-emerald-200"
+    }`}>
+      {/* Top row */}
+      <div className="flex items-start gap-3">
+        <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5 ${
+          isOverdue ? "bg-red-100" : "bg-emerald-100"
+        }`}>
+          {isOverdue
+            ? <AlertCircle size={16} className="text-red-500" />
+            : <Calendar size={16} className="text-emerald-600" />}
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center justify-between gap-2">
+            {/* Clickable name → expands matching lead row */}
+            <button
+              onClick={() => onExpandLead(task.leadId?._id)}
+              className={`font-semibold text-sm text-left truncate hover:underline ${
+                isOverdue ? "text-red-700" : "text-emerald-800"
+              }`}
+            >
+              {leadUser?.name || "Unknown Lead"}
+            </button>
+            {task.followUpStatus === "Unable to Contact" && (
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-orange-100 text-orange-600 flex-shrink-0">
+                Try again later
+              </span>
+            )}
+          </div>
+          {task.nextMeetingAgenda && (
+            <p className="text-xs text-gray-500 mt-0.5 line-clamp-1">{task.nextMeetingAgenda}</p>
+          )}
+          {date && (
+            <p className={`text-xs font-medium mt-1 flex items-center gap-1 ${
+              isOverdue ? "text-red-500" : "text-emerald-600"
+            }`}>
+              <Clock size={10} />
+              {date.toLocaleDateString("en-GB", { day: "2-digit", month: "short" })}
+              {" · "}
+              {date.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}
+            </p>
+          )}
+        </div>
+      </div>
+      {/* Action Buttons */}
+      <div className="flex items-center gap-2 mt-2.5 ml-11">
+        <button
+          onClick={() => handleAction("Completed")}
+          disabled={updating}
+          className="flex items-center gap-1 px-3 py-1.5 bg-emerald-100 text-emerald-700 hover:bg-emerald-200 rounded-lg text-xs font-semibold transition-colors disabled:opacity-50"
+        >
+          {updating ? <Loader2 size={12} className="animate-spin" /> : <CheckCheck size={12} />}
+          Complete
+        </button>
+        <button
+          onClick={() => handleAction("Unable to Contact")}
+          disabled={updating || task.followUpStatus === "Unable to Contact"}
+          className="flex items-center gap-1 px-3 py-1.5 bg-orange-100 text-orange-700 hover:bg-orange-200 rounded-lg text-xs font-semibold transition-colors disabled:opacity-50"
+        >
+          {updating ? <Loader2 size={12} className="animate-spin" /> : <AlertCircle size={12} />}
+          Unable to contact
+        </button>
+      </div>
+    </div>
+  );
+};
+
 // ── Main Component ────────────────────────────────────────────────────────────
 const AssignedLeads = () => {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [expandedId, setExpandedId] = useState(null);
-  const [delegateTarget, setDelegateTarget] = useState(null); // lead object
+  const [delegateTarget, setDelegateTarget] = useState(null);
+  const [todayTasks, setTodayTasks] = useState([]);
+  const [previousTasks, setPreviousTasks] = useState([]);
+  const [tasksLoading, setTasksLoading] = useState(true);
 
   useEffect(() => {
-    const fetchAssigned = async () => {
+    const fetchAll = async () => {
       try {
-        const { data } = await axios.get("/api/requests/assigned", { withCredentials: true });
-        setRequests(data.requests);
+        const [leadsRes, tasksRes] = await Promise.all([
+          axios.get("/api/requests/assigned", { withCredentials: true }),
+          axios.get("/api/seller/tasks", { withCredentials: true }),
+        ]);
+        setRequests(leadsRes.data.requests || []);
+        setTodayTasks(tasksRes.data.todayTasks || []);
+        setPreviousTasks(tasksRes.data.previousTasks || []);
       } catch (err) {
-        setError(err?.response?.data?.message || "Failed to load assigned leads.");
-      } finally { setLoading(false); }
+        setError(err?.response?.data?.message || "Failed to load data.");
+      } finally {
+        setLoading(false);
+        setTasksLoading(false);
+      }
     };
-    fetchAssigned();
+    fetchAll();
   }, []);
+
+  const handleUpdateTaskStatus = async (interactionId, newStatus) => {
+    try {
+      await axios.put(
+        `/api/interactions/${interactionId}/followup-status`,
+        { status: newStatus },
+        { withCredentials: true }
+      );
+      if (newStatus === "Completed") {
+        setTodayTasks(prev => prev.filter(t => t._id !== interactionId));
+        setPreviousTasks(prev => prev.filter(t => t._id !== interactionId));
+      } else {
+        const mark = (list) => list.map(t =>
+          t._id === interactionId ? { ...t, followUpStatus: newStatus } : t
+        );
+        setTodayTasks(prev => mark(prev));
+        setPreviousTasks(prev => mark(prev));
+      }
+    } catch (err) {
+      toast.error("Failed to update task status.");
+    }
+  };
+
+  // Bonus UX: clicking a task card name auto-expands the matching lead row
+  const handleExpandByLeadId = (leadId) => {
+    if (!leadId) return;
+    setExpandedId(prev => (prev === leadId ? null : leadId));
+    // Scroll to table smoothly
+    setTimeout(() => {
+      document.getElementById(`lead-row-${leadId}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 100);
+  };
+
+  const hasTasks = todayTasks.length > 0 || previousTasks.length > 0;
 
   const handleStatusChange = (requestId, newStatus, statusKey) => {
     setRequests(prev =>
@@ -846,11 +971,7 @@ const AssignedLeads = () => {
   return (
     <div className="p-8">
       <div className="mb-8">
-        <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-1">Seller Panel</p>
         <h1 className="text-3xl font-extrabold text-gray-900">My Assigned Leads</h1>
-        <p className="text-gray-500 text-sm mt-1">
-          Click any row to expand the full CRM panel — timeline, pipeline, and quick actions.
-        </p>
         {!loading && todayCount > 0 && (
           <div className="mt-3 inline-flex items-center gap-2 bg-green-50 border border-green-200 text-green-700 text-sm font-semibold px-4 py-2 rounded-xl">
             <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
@@ -862,6 +983,67 @@ const AssignedLeads = () => {
       {error && (
         <div className="mb-6 bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm">{error}</div>
       )}
+
+      {/* ── Follow-up Tasks Section ── */}
+      {!tasksLoading && hasTasks && (
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 mb-6">
+          <h2 className="text-sm font-bold text-gray-700 uppercase tracking-widest mb-4 flex items-center gap-2">
+            <Calendar size={14} className="text-brand-500" />
+            Follow-up Tasks
+          </h2>
+
+          {previousTasks.length > 0 && (
+            <div className="mb-4">
+              <p className="text-xs font-semibold text-red-500 uppercase tracking-wider mb-2">
+                ⚠️ PREVIOUS TASKS — OVERDUE ({previousTasks.length})
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-2">
+                {previousTasks.map(t => (
+                  <FollowUpTaskCard
+                    key={t._id}
+                    task={t}
+                    isOverdue={true}
+                    onUpdateStatus={handleUpdateTaskStatus}
+                    onExpandLead={handleExpandByLeadId}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {todayTasks.length > 0 && (
+            <div>
+              <p className="text-xs font-semibold text-emerald-600 uppercase tracking-wider mb-2">
+                📅 TODAY'S FOLLOW-UPS ({todayTasks.length})
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-2">
+                {todayTasks.map(t => (
+                  <FollowUpTaskCard
+                    key={t._id}
+                    task={t}
+                    isOverdue={false}
+                    onUpdateStatus={handleUpdateTaskStatus}
+                    onExpandLead={handleExpandByLeadId}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Tasks loading skeleton */}
+      {tasksLoading && (
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 mb-6">
+          <div className="h-4 bg-gray-200 rounded w-36 animate-pulse mb-4" />
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-2">
+            {[1, 2, 3].map(i => (
+              <div key={i} className="h-20 bg-gray-100 rounded-xl animate-pulse" />
+            ))}
+          </div>
+        </div>
+      )}
+
 
       {/* Skeleton */}
       {loading && (
@@ -908,15 +1090,18 @@ const AssignedLeads = () => {
               </thead>
               <tbody>
                 {requests.map(req => (
-                  <AssignedRow
-                    key={req._id}
-                    req={req}
-                    expanded={expandedId === req._id}
-                    onToggle={() => handleToggle(req._id)}
-                    onStatusChange={handleStatusChange}
-                    onUpdate={handleUpdate}
-                    onDelegate={() => handleDelegate(req)}
-                  />
+                  <React.Fragment key={req._id}>
+                    {/* id anchor for scroll-to from task card click */}
+                    <tr id={`lead-row-${req._id}`} style={{ display: "none" }} />
+                    <AssignedRow
+                      req={req}
+                      expanded={expandedId === req._id}
+                      onToggle={() => handleToggle(req._id)}
+                      onStatusChange={handleStatusChange}
+                      onUpdate={handleUpdate}
+                      onDelegate={() => handleDelegate(req)}
+                    />
+                  </React.Fragment>
                 ))}
               </tbody>
             </table>

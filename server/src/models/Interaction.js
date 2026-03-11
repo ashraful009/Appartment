@@ -34,6 +34,12 @@ const interactionSchema = new mongoose.Schema(
     nextMeetingDate:   { type: Date,    default: null },
     nextMeetingAgenda: { type: String,  default: "" },
     isJointMeeting:    { type: Boolean, default: false },
+    // Tracks whether this scheduled follow-up has been actioned
+    followUpStatus: {
+      type: String,
+      enum: ["Pending", "Completed", "Unable to Contact"],
+      default: "Pending",
+    },
 
     // ── Collaboration Fields ──────────────────────────────────────────────
     adminNote:         { type: String,  default: "" },
