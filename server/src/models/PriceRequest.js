@@ -39,6 +39,34 @@ const priceRequestSchema = new mongoose.Schema(
       enum: ["none", "pending_approval", "approved", "rejected"],
       default: "none",
     },
+
+    // ── CRM Pipeline Fields ────────────────────────────────────────────────
+    pipelineStage: {
+      type: String,
+      enum: ["New", "Contacted", "Site Visited", "Negotiation", "Closed Won", "Closed Lost"],
+      default: "New",
+    },
+    priority: {
+      type: String,
+      enum: ["Hot", "Warm", "Cold"],
+      default: "Warm",
+    },
+    clientPreferences: {
+      budget: { type: String, default: "" },
+      location: { type: String, default: "" },
+      bedrooms: { type: Number, default: null },
+      notes: { type: String, default: "" },
+    },
+    lastInteractionDate: {
+      type: Date,
+      default: Date.now,
+    },
+    // ── Lead Source ────────────────────────────────────────────────────────────
+    leadSource: {
+      type: String,
+      enum: ["Website", "Facebook", "Agent Referral", "Organic Search", "Other"],
+      default: "Website",
+    },
   },
   { timestamps: true }
 );

@@ -1,5 +1,6 @@
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
+const { generateUniqueReferralCode } = require("../utils/referralCodeUtil");
 
 /**
  * Helper: Generate JWT (7-day) and set it as an HttpOnly cookie
@@ -44,11 +45,11 @@ const register = async (req, res) => {
     // ── Validate referral code → resolve to a seller ObjectId ────────────────
     let referredBy = null;
     if (referralCode) {
-      const mongoose = require("mongoose");
-      if (mongoose.Types.ObjectId.isValid(referralCode)) {
-        const seller = await User.findOne({ _id: referralCode, roles: "seller" }).select("_id");
-        if (seller) referredBy = seller._id;
-      }
+      const seller = await User.findOne({
+        referralCode: referralCode.trim().toUpperCase(),
+        roles: "seller",
+      }).select("_id");
+      if (seller) referredBy = seller._id;
     }
 
     const user = await User.create({
@@ -111,6 +112,18 @@ const login = async (req, res) => {
       return res.status(401).json({ message: "Invalid email or password." });
     }
 
+    // If this user is a seller but has no referralCode yet (existing sellers before the
+    // 4-char code update), auto-generate and persist one now.
+    if (user.roles.includes("seller") && !user.referralCode) {
+      try {
+        user.referralCode = await generateUniqueReferralCode();
+        await user.save();
+      } catch (codeErr) {
+        console.error("Could not auto-generate referral code on login:", codeErr);
+        // Non-fatal — proceed with login even if code generation fails
+      }
+    }
+
     // Generate token and set HttpOnly cookie
     sendTokenCookie(res, user);
 
@@ -118,11 +131,12 @@ const login = async (req, res) => {
     res.status(200).json({
       message: "Login successful.",
       user: {
-        _id:    user._id,
-        name:   user.name,
-        email:  user.email,
+        _id: user._id,
+        name: user.name,
+        email: user.email,
         avatar: user.avatar,
-        roles:  user.roles,
+        roles: user.roles,
+        referralCode: user.referralCode ?? null,
       },
     });
   } catch (error) {
@@ -158,9 +172,21 @@ const logout = async (req, res) => {
 // ─────────────────────────────────────────────
 const getMe = async (req, res) => {
   try {
-    // req.user is attached by the protect middleware
+    let user = req.user;
+
+    // If this user is a seller but has no referralCode yet (existing sellers before the update),
+    // we backfill it seamlessly during their session check.
+    if (user.roles?.includes("seller") && !user.referralCode) {
+      try {
+        user.referralCode = await generateUniqueReferralCode();
+        await user.save();
+      } catch (codeErr) {
+        console.error("Could not auto-generate referral code on getMe:", codeErr);
+      }
+    }
+
     res.status(200).json({
-      user: req.user,
+      user,
     });
   } catch (error) {
     console.error("GetMe error:", error);

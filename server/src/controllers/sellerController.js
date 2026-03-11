@@ -102,4 +102,44 @@ const getMyTeam = async (req, res) => {
   }
 };
 
-module.exports = { requestSellerConversion, getMyTeam };
+// ─────────────────────────────────────────────────────────────────────────────
+// @desc   Get seller's scheduled tasks (today + overdue follow-ups)
+// @route  GET /api/seller/tasks
+// @access Private (seller)
+// ─────────────────────────────────────────────────────────────────────────────
+const getSellerTasks = async (req, res) => {
+  try {
+    const Interaction = require("../models/Interaction");
+
+    const now = new Date();
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
+    const todayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
+
+    // Find all interactions for this seller that have a nextMeetingDate set
+    const allTasks = await Interaction.find({
+      sellerId: req.user._id,
+      nextMeetingDate: { $ne: null, $exists: true },
+    })
+      .populate({
+        path: "leadId",
+        select: "user",
+        populate: { path: "user", select: "name phone" },
+      })
+      .sort({ nextMeetingDate: 1 });
+
+    const todayTasks = allTasks.filter(t =>
+      t.nextMeetingDate >= todayStart && t.nextMeetingDate <= todayEnd
+    );
+    const overdueTasks = allTasks.filter(t =>
+      t.nextMeetingDate < todayStart
+    );
+
+    res.status(200).json({ todayTasks, overdueTasks });
+  } catch (error) {
+    console.error("getSellerTasks error:", error);
+    res.status(500).json({ message: "Failed to fetch seller tasks." });
+  }
+};
+
+module.exports = { requestSellerConversion, getMyTeam, getSellerTasks };
+

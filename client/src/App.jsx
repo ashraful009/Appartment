@@ -13,17 +13,21 @@ import AdminLayout from "./pages/admin/AdminLayout";
 import Dashboard from "./pages/admin/Dashboard";
 import BannerManagement from "./pages/admin/BannerManagement";
 import AddBuilding from "./pages/admin/AddBuilding";
+import ManageBuildings from "./pages/admin/ManageBuildings";
+import EditBuilding from "./pages/admin/EditBuilding";
 import UserManagement from "./pages/admin/UserManagement";
 import SellersPerformance from "./pages/admin/SellersPerformance";
 import AdminPendingLeads from "./pages/admin/AdminPendingLeads";
-import SellersAnalytics from "./pages/admin/SellersAnalytics";
+import MasterAnalytics from "./pages/admin/MasterAnalytics";
 
 // Seller Panel
 import SellerLayout from "./pages/seller/SellerLayout";
 import SellerDashboard from "./pages/seller/SellerDashboard";
 import AssignedLeads from "./pages/seller/AssignedLeads";
 import MyTeam from "./pages/seller/MyTeam";
+import SellerProfile from "./pages/seller/SellerProfile";
 
+import CustomerProfile from "./pages/CustomerProfile";
 import PropertyDetails from "./pages/PropertyDetails";
 
 const Placeholder = ({ title }) => (
@@ -62,9 +66,11 @@ function App() {
                 <Route index element={<Dashboard />} />
                 <Route path="pending-leads" element={<AdminPendingLeads />} />
                 <Route path="sellers-performance" element={<SellersPerformance />} />
-                <Route path="sellers-analytics" element={<SellersAnalytics />} />
+                <Route path="master-analytics" element={<MasterAnalytics />} />
                 <Route path="banners" element={<BannerManagement />} />
                 <Route path="buildings" element={<AddBuilding />} />
+                <Route path="manage-buildings" element={<ManageBuildings />} />
+                <Route path="edit-building/:id" element={<EditBuilding />} />
                 <Route path="users" element={<UserManagement />} />
               </Route>
 
@@ -73,11 +79,12 @@ function App() {
                 <Route index element={<SellerDashboard />} />
                 <Route path="assigned" element={<AssignedLeads />} />
                 <Route path="my-team" element={<MyTeam />} />
+                <Route path="profile" element={<SellerProfile />} />
               </Route>
 
               {/* Other routes */}
               <Route path="/property/:id" element={<PropertyDetails />} />
-              <Route path="/profile" element={<Placeholder title="My Profile" />} />
+              <Route path="/profile" element={<CustomerProfile />} />
               <Route path="/customer-panel" element={<Placeholder title="Customer Panel" />} />
               <Route path="/properties"     element={<Placeholder title="Properties" />} />
               <Route path="/about"          element={<Placeholder title="About Us" />} />

@@ -59,4 +59,24 @@ const authorizeRoles = (...allowedRoles) => {
   };
 };
 
-module.exports = { protect, authorizeRoles };
+/**
+ * optionalAuth — Soft-protect middleware.
+ * If a valid JWT cookie is present, attach the user to req.user.
+ * If no token or invalid token, silently continue as a guest.
+ * Never returns 401 — guests are always allowed through.
+ */
+const optionalAuth = async (req, res, next) => {
+  try {
+    const token = req.cookies?.token;
+    if (!token) return next();
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.id).select("-password");
+    if (user) req.user = user;
+  } catch (_) {
+    // Invalid or expired token — treat as guest, do not block
+  }
+  next();
+};
+
+module.exports = { protect, authorizeRoles, optionalAuth };

@@ -29,8 +29,39 @@ const userSchema = new mongoose.Schema(
       required: [true, "Phone number is required"],
       trim: true,
     },
+    // ── Common Profile Fields ──────────────────────────────────────
+    profilePhoto: {
+      type: String,
+      default: "",
+    },
+    memberSince: {
+      type: Date,
+      default: Date.now,
+    },
+    // ── Customer Fields ────────────────────────────────────────────
+    address: {
+      present: { type: String, default: "" },
+      permanent: { type: String, default: "" },
+    },
+    occupation: {
+      type: String,
+      default: "",
+    },
+    preferredContactTime: {
+      type: String,
+      enum: ["Morning", "Afternoon", "Evening", "Anytime"],
+      default: "Anytime",
+    },
+    wishlist: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Property",
+      },
+    ],
     referralCode: {
       type: String,
+      unique: true,
+      sparse: true, // allows multiple null values; only enforces uniqueness for non-null
       trim: true,
       default: null,
     },
@@ -54,6 +85,27 @@ const userSchema = new mongoose.Schema(
         },
       ],
       default: ["user"],
+    },
+    // ── Seller Fields ──────────────────────────────────────────────
+    bio: {
+      type: String,
+      default: "",
+    },
+    socialLinks: {
+      linkedin: { type: String, default: "" },
+      facebook: { type: String, default: "" },
+      whatsapp: { type: String, default: "" },
+    },
+    expertise: {
+      type: [String],
+      default: [],
+    },
+    // ── Guest Lead Flag ────────────────────────────────────────────
+    // Set to true for shadow accounts auto-created via frictionless
+    // guest price requests. These accounts have no real login session.
+    isGuest: {
+      type: Boolean,
+      default: false,
     },
   },
   { timestamps: true }

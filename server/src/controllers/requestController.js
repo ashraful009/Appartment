@@ -1,10 +1,11 @@
 const PriceRequest = require("../models/PriceRequest");
 const User         = require("../models/User");
+const crypto = require("crypto");
 
 // ─────────────────────────────────────────────────────────────
-// @desc   Create a new price request
+// @desc   Create a new price request (supports authenticated users AND guests)
 // @route  POST /api/requests
-// @access Private (any authenticated user)
+// @access Public (optionalAuth middleware — guests allowed)
 // ─────────────────────────────────────────────────────────────
 const createRequest = async (req, res) => {
   try {
@@ -13,10 +14,60 @@ const createRequest = async (req, res) => {
       return res.status(400).json({ message: "propertyId is required." });
     }
 
-    // Prevent duplicate: same user requesting the same property twice
+    let resolvedUserId;
+    let autoAssignedTo = null;
+
+    // ── PATH A: Authenticated User ──────────────────────────────────────────
+    if (req.user) {
+      resolvedUserId = req.user._id;
+
+      // Auto-Assign via Referral Code
+      const requestingUser = await User.findById(req.user._id).select("referredBy");
+      if (requestingUser?.referredBy) {
+        const seller = await User.findOne({
+          _id: requestingUser.referredBy,
+          roles: "seller",
+        }).select("_id");
+        if (seller) autoAssignedTo = seller._id;
+      }
+    }
+
+    // ── PATH B: Guest (unauthenticated) ─────────────────────────────────────
+    else {
+      const { name, email, phone } = req.body;
+
+      // Validate required guest fields
+      if (!name || !email || !phone) {
+        return res.status(400).json({
+          message: "Guest requests require name, email, and phone.",
+        });
+      }
+
+      // Find an existing user by email OR phone
+      let guestUser = await User.findOne({ $or: [{ email }, { phone }] });
+
+      if (!guestUser) {
+        // Create a shadow guest account
+        // The pre-save bcrypt hook will hash this random password automatically.
+        const randomPassword = crypto.randomBytes(8).toString("hex"); // 16-char hex string
+
+        guestUser = await User.create({
+          name,
+          email: email.toLowerCase().trim(),
+          phone,
+          password: randomPassword,
+          roles: ["customer"],
+          isGuest: true,
+        });
+      }
+
+      resolvedUserId = guestUser._id;
+    }
+
+    // ── Duplicate Check ─────────────────────────────────────────────────────
     const existing = await PriceRequest.findOne({
       property: propertyId,
-      user: req.user._id,
+      user: resolvedUserId,
     });
     if (existing) {
       return res
@@ -24,31 +75,10 @@ const createRequest = async (req, res) => {
         .json({ message: "You have already requested pricing for this property." });
     }
 
-    // ── Auto-Assign via Referral Code ───────────────────────────────────────
-    // If the requesting user registered with a seller's referral code,
-    // automatically assign this lead to that seller.
-    const requestingUser = await User.findById(req.user._id).select("referralCode");
-    let autoAssignedTo = null;
-
-    if (requestingUser?.referralCode) {
-      const mongoose = require("mongoose");
-      const isValidId = mongoose.Types.ObjectId.isValid(requestingUser.referralCode);
-
-      if (isValidId) {
-        const seller = await User.findOne({
-          _id: requestingUser.referralCode,
-          roles: "seller",
-        }).select("_id");
-
-        if (seller) {
-          autoAssignedTo = seller._id;
-        }
-      }
-    }
-
+    // ── Create the PriceRequest ─────────────────────────────────────────────
     const requestData = {
       property: propertyId,
-      user: req.user._id,
+      user: resolvedUserId,
       status: autoAssignedTo ? "assigned" : "pending",
       assignedTo: autoAssignedTo,
       assignedAt: autoAssignedTo ? new Date() : null,
@@ -71,6 +101,7 @@ const createRequest = async (req, res) => {
     res.status(500).json({ message: "Failed to submit request." });
   }
 };
+
 
 // ─────────────────────────────────────────────────────────────
 // @desc   Get stats — pending count + seller's assigned count
@@ -148,9 +179,48 @@ const requestConversion = async (req, res) => {
   }
 };
 
+// ─────────────────────────────────────────────────────────────
+// @desc   Update pipeline stage, priority, and client preferences
+// @route  PUT /api/requests/:id/pipeline
+// @access Private (seller)
+// ─────────────────────────────────────────────────────────────
+const updatePipeline = async (req, res) => {
+  try {
+    const { pipelineStage, priority, clientPreferences } = req.body;
+
+    // Security: only the assigned seller can update pipeline
+    const request = await PriceRequest.findOne({
+      _id: req.params.id,
+      assignedTo: req.user._id,
+    });
+
+    if (!request) {
+      return res.status(404).json({ message: "Request not found or you do not have permission." });
+    }
+
+    if (pipelineStage) request.pipelineStage = pipelineStage;
+    if (priority) request.priority = priority;
+    if (clientPreferences) {
+      request.clientPreferences = {
+        ...request.clientPreferences,
+        ...clientPreferences,
+      };
+    }
+
+    await request.save();
+
+    res.status(200).json({ message: "Pipeline updated successfully.", request });
+  } catch (error) {
+    console.error("updatePipeline error:", error);
+    res.status(500).json({ message: "Failed to update pipeline." });
+  }
+};
+
 module.exports = {
   createRequest,
   getStats,
   getAssignedRequests,
   requestConversion,
+  updatePipeline,
 };
+

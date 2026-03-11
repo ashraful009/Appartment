@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 const User = require("../models/User");
 const PriceRequest = require("../models/PriceRequest");
+const { generateUniqueReferralCode } = require("../utils/referralCodeUtil");
 
 const VALID_ROLES = ["user", "customer", "seller", "admin"];
 
@@ -38,6 +39,25 @@ const getUsers = async (req, res) => {
   } catch (error) {
     console.error("getUsers error:", error);
     res.status(500).json({ message: "Failed to fetch users." });
+  }
+};
+
+// ─────────────────────────────────────────────
+// @desc   Get a single user's full profile
+// @route  GET /api/admin/users/:id
+// @access Private (admin)
+// ─────────────────────────────────────────────
+const getUserById = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id)
+      .select("-password")
+      .populate("referredBy", "name email phone");
+
+    if (!user) return res.status(404).json({ message: "User not found." });
+    res.status(200).json({ user });
+  } catch (error) {
+    console.error("getUserById error:", error);
+    res.status(500).json({ message: "Failed to fetch user profile." });
   }
 };
 
@@ -621,11 +641,13 @@ const approveSellerConversion = async (req, res) => {
       // Grant 'seller' role AND link them to the seller who converted them
       // Setting referredBy = assignedTo unifies the referral + conversion systems,
       // so this user automatically appears in the converter's /api/seller/my-team
+      const newReferralCode = await generateUniqueReferralCode();
+
       const userUpdate = await User.findByIdAndUpdate(
         updatedRequest.user,
         {
           $addToSet: { roles: "seller" },
-          $set: { referredBy: updatedRequest.assignedTo },
+          $set: { referredBy: updatedRequest.assignedTo, referralCode: newReferralCode },
         },
         { new: true, session }
       );
@@ -649,6 +671,7 @@ const approveSellerConversion = async (req, res) => {
 module.exports = {
   getStats,
   getUsers,
+  getUserById,
   updateUserRoles,
   getAdminPendingRequests,
   getSellersList,
