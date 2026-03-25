@@ -21,19 +21,21 @@ const getProfile = async (req, res) => {
 
     // ── If user is a Customer ──
     if (user.roles.includes("customer")) {
-      // Find the most recent active/pending PriceRequest to attach their Assigned Seller
+      // Find the most recently updated active PriceRequest (has an assigned seller,
+      // and pipeline has not closed as Lost).
       const recentRequest = await PriceRequest.findOne({
         user: userId,
-        status: "assigned", // Only assigned requests have an active seller
+        status: "assigned",
+        pipelineStage: { $ne: "Closed Lost" },
       })
-        .sort({ createdAt: -1 })
-        .populate("assignedTo", "name email phone profilePhoto socialLinks bio expertise");
+        .sort({ updatedAt: -1 }) // most recently touched lead first
+        .populate(
+          "assignedTo",
+          "name email phone profilePhoto bio socialLinks expertise"
+        );
 
-      if (recentRequest && recentRequest.assignedTo) {
-        profileData.currentAssignedSeller = recentRequest.assignedTo;
-      } else {
-        profileData.currentAssignedSeller = null;
-      }
+      profileData.currentAssignedSeller =
+        recentRequest?.assignedTo ?? null;
     }
 
     // ── If user is a Seller ──

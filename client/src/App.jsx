@@ -30,6 +30,13 @@ import SellerProfile from "./pages/seller/SellerProfile";
 import CustomerProfile from "./pages/public/CustomerProfile";
 import PropertyDetails from "./pages/public/PropertyDetails";
 
+// Customer Panel
+import CustomerLayout from "./pages/customer/CustomerLayout";
+import CustomerDashboard from "./pages/customer/CustomerDashboard";
+import JourneyPage from "./pages/customer/JourneyPage";
+import CustomerProfilePage from "./pages/customer/CustomerProfilePage";
+import DocumentVaultPage from "./pages/customer/DocumentVaultPage";
+
 const Placeholder = ({ title }) => (
   <div className="min-h-[60vh] flex items-center justify-center">
     <div className="text-center">
@@ -85,7 +92,13 @@ function App() {
               {/* Other routes */}
               <Route path="/property/:id" element={<PropertyDetails />} />
               <Route path="/profile" element={<CustomerProfile />} />
-              <Route path="/customer-panel" element={<Placeholder title="Customer Panel" />} />
+              {/* Customer Panel */}
+              <Route path="/customer-panel" element={<CustomerLayout />}>
+                <Route index element={<CustomerDashboard />} />
+                <Route path="requests" element={<JourneyPage />} />
+                <Route path="profile"  element={<CustomerProfilePage />} />
+                <Route path="vault"    element={<DocumentVaultPage />} />
+              </Route>
               <Route path="/properties"     element={<Placeholder title="Properties" />} />
               <Route path="/about"          element={<Placeholder title="About Us" />} />
               <Route path="/contact"        element={<Placeholder title="Contact Us" />} />

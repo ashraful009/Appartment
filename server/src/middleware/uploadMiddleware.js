@@ -75,4 +75,31 @@ const _propertyUpload = multer({
 
 const uploadPropertyImages = wrapMulter(_propertyUpload);
 
-module.exports = { uploadAvatar, uploadBannerImages, uploadPropertyImages };
+// ── 4. Customer documents (single file: images OR PDF, max 10 MB) ────────────
+const _documentUpload = multer({
+  storage: new CloudinaryStorage({
+    cloudinary,
+    params: {
+      folder: "apartment/documents",
+      // Allow both images and PDFs; Cloudinary needs resource_type raw for non-image
+      resource_type: "auto",
+      allowed_formats: ["jpg", "jpeg", "png", "webp", "pdf"],
+      public_id: (_req, file) => {
+        const name = file.originalname
+          .replace(/\.[^.]+$/, "")
+          .replace(/\s+/g, "_");
+        return `doc_${Date.now()}_${name}`;
+      },
+    },
+  }),
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB
+  fileFilter: (_req, file, cb) => {
+    const allowed = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
+    if (allowed.includes(file.mimetype)) return cb(null, true);
+    cb(new Error("Only images (JPG/PNG/WebP) and PDF files are allowed."));
+  },
+}).single("document"); // frontend must use field name "document"
+
+const uploadDocumentFile = wrapMulter(_documentUpload);
+
+module.exports = { uploadAvatar, uploadBannerImages, uploadPropertyImages, uploadDocumentFile };
