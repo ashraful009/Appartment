@@ -24,7 +24,7 @@ const ManageBuildings = () => {
 
   const fetchProperties = async () => {
     try {
-      const { data } = await axios.get("/api/properties");
+      const { data } = await axios.get("/api/admin/properties", { withCredentials: true });
       setProperties(data.properties || []);
     } catch (error) {
       toast.error("Failed to load properties");
@@ -37,7 +37,7 @@ const ManageBuildings = () => {
     if (!window.confirm("Delete this building permanently?")) return;
 
     try {
-      await axios.delete(`/api/properties/${id}`, { withCredentials: true });
+      await axios.delete(`/api/admin/properties/${id}`, { withCredentials: true });
       setProperties((prev) => prev.filter((p) => p._id !== id));
       toast.success("Building deleted");
     } catch {

@@ -5,7 +5,18 @@ import { useAuth } from "../../context/AuthContext";
 import {
   MapPin, Building2, Layers, LayoutGrid, Clock, Car, Home,
   ChevronLeft, ImageOff, CheckCircle, AlertCircle, Loader2, User, Mail, Phone,
+  FileText,
 } from "lucide-react";
+import { useLoadScript, GoogleMap, Marker } from "@react-google-maps/api";
+import PropertyUnitsTab from "../../components/public/PropertyUnitsTab";
+
+const MAPS_LIBRARIES = ["places"];
+const MAP_CONTAINER_STYLE = { width: "100%", height: "380px" };
+const MAP_OPTIONS = {
+  mapTypeControl: false, streetViewControl: false,
+  fullscreenControl: false, zoomControl: false,
+  scrollwheel: false, gestureHandling: "none",
+};
 
 // ── Toast ─────────────────────────────────────────────────────────────────────
 const Toast = ({ toast, onClose }) => {
@@ -51,12 +62,18 @@ const PropertyDetails = () => {
   const { user, isAuthenticated } = useAuth();
 
   const [property, setProperty] = useState(null);
+  const [propertyUnits, setPropertyUnits] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [lightbox, setLightbox] = useState(null);
   const [requesting, setRequesting] = useState(false);
   const [requested, setRequested] = useState(false);
   const [toast, setToast] = useState(null);
+
+  const { isLoaded: mapsLoaded } = useLoadScript({
+    googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY || "",
+    libraries: MAPS_LIBRARIES,
+  });
 
   // ── Guest form state ──────────────────────────────────────────────────────
   const [showGuestForm, setShowGuestForm] = useState(false);
@@ -69,10 +86,14 @@ const PropertyDetails = () => {
   };
 
   useEffect(() => {
-    const fetchProperty = async () => {
+    const fetchPropertyData = async () => {
       try {
-        const { data } = await axios.get(`/api/properties/${id}`);
-        setProperty(data.property);
+        const [propRes, unitsRes] = await Promise.all([
+          axios.get(`/api/properties/${id}`),
+          axios.get(`/api/properties/${id}/units`).catch(() => ({ data: { units: [] } }))
+        ]);
+        setProperty(propRes.data.property);
+        setPropertyUnits(unitsRes.data.units || []);
       } catch (err) {
         setError(
           err?.response?.status === 404
@@ -83,7 +104,7 @@ const PropertyDetails = () => {
         setLoading(false);
       }
     };
-    fetchProperty();
+    fetchPropertyData();
   }, [id]);
 
   // ── "Contact for Pricing" handler ─────────────────────────────────────────
@@ -162,7 +183,11 @@ const PropertyDetails = () => {
     );
   }
 
-  const { name, address, mainImage, extraImages = [], totalUnits, floors, landSize, handoverTime, parkingArea, apartmentSizes = [] } = property;
+  const {
+    name, address, mainImage, extraImages = [],
+    totalUnits, floors, landSize, handoverTime, parkingArea,
+    apartmentSizes = [], description, mapLocation,
+  } = property;
 
   return (
     <>
@@ -188,6 +213,17 @@ const PropertyDetails = () => {
             {address}
           </p>
         </div>
+
+        {/* ── Building Description ──────────────────────────────── */}
+        {description && (
+          <section className="mb-8 bg-white border border-gray-100 rounded-2xl p-6 shadow-sm">
+            <div className="flex items-center gap-2 mb-3">
+              <FileText size={16} className="text-brand-600" />
+              <h2 className="text-sm font-bold uppercase tracking-widest text-gray-400">About This Building</h2>
+            </div>
+            <p className="text-gray-700 leading-relaxed text-[15px]">{description}</p>
+          </section>
+        )}
 
         {/* Main Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch">
@@ -219,15 +255,20 @@ const PropertyDetails = () => {
 
               {apartmentSizes.length > 0 && (
                 <div className="py-3 border-b border-gray-200">
-                  <p className="flex items-center gap-2 text-sm font-medium text-gray-500 mb-2">
-                    <Building2 size={15} className="text-gray-400" /> Apartment Sizes
+                  <p className="flex items-center gap-2 text-sm font-medium text-gray-500 mb-3">
+                    <Building2 size={15} className="text-gray-400" /> Available Apartments
                   </p>
-                  <div className="flex flex-wrap gap-2">
+                  <div className="space-y-2">
                     {apartmentSizes.map((s, i) => (
-                      <div key={i} className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm">
-                        <span className="font-semibold text-gray-700">{s.type}</span>
-                        <span className="text-gray-300">|</span>
-                        <span className="text-gray-600">{s.size}</span>
+                      <div key={i} className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3">
+                        <div className="flex items-center gap-3 mb-1">
+                          <span className="font-bold text-gray-800 text-sm">{s.type}</span>
+                          <span className="text-gray-300 text-xs">|</span>
+                          <span className="text-brand-600 font-semibold text-sm">{s.size}</span>
+                        </div>
+                        {s.description && (
+                          <p className="text-xs text-gray-500 leading-relaxed mt-0.5">{s.description}</p>
+                        )}
                       </div>
                     ))}
                   </div>
@@ -338,6 +379,13 @@ const PropertyDetails = () => {
           </div>
         </div>
 
+        {/* ── Unit Visualizer ────────────────────────────────────── */}
+        {(totalUnits > 0 && floors > 0) && (
+          <section className="mt-14">
+            <PropertyUnitsTab property={property} units={propertyUnits} />
+          </section>
+        )}
+
         {/* Gallery */}
         {extraImages.length > 0 && (
           <section className="mt-14">
@@ -359,6 +407,38 @@ const PropertyDetails = () => {
           <div className="mt-14 py-10 text-center text-gray-400 text-sm border border-dashed border-gray-200 rounded-xl">
             No additional photos available for this property.
           </div>
+        )}
+
+        {/* ── Satellite Map ──────────────────────────────────────── */}
+        {mapLocation?.lat && mapLocation?.lng && (
+          <section className="mt-14">
+            <div className="mb-5 pb-3 border-b border-gray-200">
+              <p className="text-xs font-bold uppercase tracking-[0.15em] text-gray-400 mb-0.5">Find Us</p>
+              <h2 className="text-xl font-extrabold text-gray-900">Building Location</h2>
+            </div>
+            <div className="rounded-2xl overflow-hidden shadow-md border border-gray-100">
+              {mapsLoaded ? (
+                <GoogleMap
+                  mapContainerStyle={MAP_CONTAINER_STYLE}
+                  center={{ lat: mapLocation.lat, lng: mapLocation.lng }}
+                  zoom={17}
+                  mapTypeId="satellite"
+                  options={MAP_OPTIONS}
+                >
+                  <Marker position={{ lat: mapLocation.lat, lng: mapLocation.lng }} />
+                </GoogleMap>
+              ) : (
+                <div className="h-[380px] bg-gray-100 flex items-center justify-center text-gray-400 text-sm gap-2">
+                  <Loader2 size={18} className="animate-spin" />
+                  Loading map…
+                </div>
+              )}
+            </div>
+            <p className="mt-2 text-xs text-gray-400 flex items-center gap-1">
+              <MapPin size={11} />
+              {address}
+            </p>
+          </section>
         )}
       </div>
     </>

@@ -2,8 +2,9 @@ const mongoose = require("mongoose");
 
 const apartmentSizeSchema = new mongoose.Schema(
   {
-    type: { type: String, trim: true }, // e.g. "Type A"
-    size: { type: String, trim: true }, // e.g. "2448 sft"
+    type:        { type: String, trim: true }, // e.g. "Type A"
+    size:        { type: String, trim: true }, // e.g. "2448 sft"
+    description: { type: String, trim: true }, // e.g. "3 bed, 2 bath"
   },
   { _id: false }
 );
@@ -58,6 +59,19 @@ const propertySchema = new mongoose.Schema(
       type: String,
       trim: true,
       default: "",
+    },
+    description: {
+      type: String,
+      required: [true, "Property description is required"],
+      trim: true,
+    },
+    mapLocation: {
+      lat: { type: Number, default: null },
+      lng: { type: Number, default: null },
+    },
+    displayOrder: {
+      type: Number,
+      default: 999,
     },
     apartmentSizes: {
       type: [apartmentSizeSchema],

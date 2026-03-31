@@ -4,7 +4,7 @@ import { useAuth } from "../../context/AuthContext";
 import axios from "axios";
 import {
   LayoutDashboard, UserCheck, LogOut, ChevronRight, Users2,
-  Bell, X, Megaphone, AlertCircle, CheckCheck, Loader2, Copy, User,
+  Bell, X, Megaphone, AlertCircle, CheckCheck, Loader2, Copy, User, Building2
 } from "lucide-react";
 
 
@@ -12,6 +12,7 @@ const navItems = [
   { to: "/seller-panel", label: "Dashboard", icon: LayoutDashboard, end: true },
   { to: "/seller-panel/assigned", label: "Assigned Leads", icon: UserCheck },
   { to: "/seller-panel/my-team", label: "My Team", icon: Users2 },
+  { to: "/seller-panel/book-unit", label: "Book Unit", icon: Building2 },
   { to: "/seller-panel/profile", label: "My Profile", icon: User },
 ];
 

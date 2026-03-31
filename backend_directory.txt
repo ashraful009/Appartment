@@ -1,0 +1,48 @@
+# Backend Directory Structure (server/src)
+
+## Config
+- `config/cloudinary.js`: Cloudinary service configuration for file/image uploads.
+
+## Controllers
+- `controllers/adminController.js`: Handles admin-specific endpoint logic (e.g., managing global settings).
+- `controllers/adminEngineController.js`: Logic for deeper admin operations like system analytics generation.
+- `controllers/analyticsController.js`: Handles requests for platform-wide metrics and reporting.
+- `controllers/authController.js`: Manages user login, registration, and JWT token issuing.
+- `controllers/bannerController.js`: Logic for creating, editing, and deleting homepage banners.
+- `controllers/customerController.js`: Handles endpoints interacting with customer journey data.
+- `controllers/delegationController.js`: Manages the logic for sellers delegating leads to sub-sellers.
+- `controllers/documentController.js`: Handles document uploads, fetching, and vault management.
+- `controllers/interactionController.js`: Records and retrieves interaction timelines between sellers and leads.
+- `controllers/propertyController.js`: Manages CRUD operations for properties/buildings.
+- `controllers/requestController.js`: Logic for managing incoming property inquiries / price requests.
+- `controllers/sellerController.js`: Logic related to seller profiles, metrics, and pipelines.
+- `controllers/userController.js`: Generic user operations (profile updates, managing user roles).
+
+## Middleware
+- `middleware/authMiddleware.js`: Verifies JWT tokens and enforces role-based access control.
+- `middleware/uploadMiddleware.js`: Configurations for Multer to manage incoming file uploads.
+
+## Models (Database Schemas)
+- `models/Banner.js`: Mongoose Schema for homepage banners.
+- `models/Document.js`: Mongoose Schema tracking uploaded files/documents for customers.
+- `models/Interaction.js`: Mongoose Schema for logging interactions between agents and leads.
+- `models/Notification.js`: Mongoose Schema for user notifications.
+- `models/PaymentPlan.js`: Mongoose Schema to track individual installment choices and payments.
+- `models/PriceRequest.js`: Mongoose Schema representing inquiries or leads placed on properties.
+- `models/Property.js`: Mongoose Schema outlining properties, buildings, and assets.
+- `models/Target.js`: Mongoose Schema for storing monthly sales targets set for sellers.
+- `models/User.js`: Mongoose Schema for users handling authentication and role distinction (admin, seller, customer).
+
+## Routes
+- `routes/adminRoutes.js`: Maps endpoints requiring administrator privileges to relevant controllers.
+- `routes/authRoutes.js`: Endpoints for authentication (login and register).
+- `routes/customerRoutes.js`: Endpoints for fetching/updating customer journey and vault data.
+- `routes/documentRoutes.js`: Endpoints specifically for uploading and accessing customer documents.
+- `routes/interactionRoutes.js`: Endpoints for fetching interaction timelines and updating interaction statuses.
+- `routes/publicRoutes.js`: Open endpoints (fetching public properties, static banners) requiring no auth.
+- `routes/requestRoutes.js`: Endpoints mapping to inquiry and lead creation logic.
+- `routes/sellerRoutes.js`: Endpoints for seller operations (Kanban pipeline, claiming leads, managing teams).
+- `routes/userRoutes.js`: Generic user endpoints covering profile updates and fetch requests.
+
+## Utils
+- `utils/referralCodeUtil.js`: Utility to generate or validate referral codes used by sub-sellers and networking.

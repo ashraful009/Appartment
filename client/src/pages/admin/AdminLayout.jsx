@@ -21,6 +21,7 @@ const navItems = [
   { to: "/admin-panel/banners", label: "Manage Banners", icon: ImagePlay },
   { to: "/admin-panel/buildings", label: "Add Building", icon: Building2 },
   { to: "/admin-panel/manage-buildings", label: "Manage Buildings", icon: Building2 },
+  { to: "/admin-panel/book-unit", label: "Book Unit", icon: Building2 },
   { to: "/admin-panel/users", label: "Manage Users", icon: Users },
 ];
 

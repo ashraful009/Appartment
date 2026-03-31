@@ -5,9 +5,9 @@ import { Building2 } from "lucide-react";
 const PropertyGrid = ({ properties, loading }) => {
   if (loading) {
     return (
-      <div className="flex-1 grid gap-6 content-start" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(380px, 1fr))" }}>
-        {[...Array(4)].map((_, i) => (
-          <div key={i} className="w-[400px] h-[560px] rounded-3xl bg-gray-100 animate-pulse flex-shrink-0" />
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 w-full">
+        {[...Array(6)].map((_, i) => (
+          <div key={i} className="w-full h-[500px] rounded-3xl bg-gray-200 animate-pulse" />
         ))}
       </div>
     );
@@ -28,15 +28,15 @@ const PropertyGrid = ({ properties, loading }) => {
   }
 
   return (
-    <div className="flex-1 min-w-0">
+    <div className="w-full">
       <div className="flex items-center justify-between mb-5">
         <p className="text-sm text-gray-500 font-medium">
           Showing <span className="font-bold text-gray-800">{properties.length}</span> {properties.length === 1 ? "property" : "properties"}
         </p>
       </div>
 
-      {/* Responsive wrapping grid of fixed-size cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {/* Strict 3-column responsive grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 w-full">
         {properties.map((property, i) => (
           <PropertyCard key={property._id} property={property} index={i} />
         ))}

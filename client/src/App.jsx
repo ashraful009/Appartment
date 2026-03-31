@@ -19,6 +19,8 @@ import UserManagement from "./pages/admin/UserManagement";
 import SellersPerformance from "./pages/admin/SellersPerformance";
 import AdminPendingLeads from "./pages/admin/AdminPendingLeads";
 import MasterAnalytics from "./pages/admin/MasterAnalytics";
+import AdminBookUnit from "./pages/admin/AdminBookUnit";
+import BookUnitDetail from "./pages/admin/BookUnitDetail";
 
 // Seller Panel
 import SellerLayout from "./pages/seller/SellerLayout";
@@ -26,6 +28,7 @@ import SellerDashboard from "./pages/seller/SellerDashboard";
 import AssignedLeads from "./pages/seller/AssignedLeads";
 import MyTeam from "./pages/seller/MyTeam";
 import SellerProfile from "./pages/seller/SellerProfile";
+import SellerBookUnit from "./pages/seller/SellerBookUnit";
 
 import CustomerProfile from "./pages/public/CustomerProfile";
 import PropertyDetails from "./pages/public/PropertyDetails";
@@ -79,6 +82,8 @@ function App() {
                 <Route path="manage-buildings" element={<ManageBuildings />} />
                 <Route path="edit-building/:id" element={<EditBuilding />} />
                 <Route path="users" element={<UserManagement />} />
+                <Route path="book-unit" element={<AdminBookUnit />} />
+                <Route path="book-unit/:id" element={<BookUnitDetail />} />
               </Route>
 
               {/* Seller Panel */}
@@ -87,6 +92,8 @@ function App() {
                 <Route path="assigned" element={<AssignedLeads />} />
                 <Route path="my-team" element={<MyTeam />} />
                 <Route path="profile" element={<SellerProfile />} />
+                <Route path="book-unit" element={<SellerBookUnit />} />
+                <Route path="book-unit/:id" element={<BookUnitDetail />} />
               </Route>
 
               {/* Other routes */}

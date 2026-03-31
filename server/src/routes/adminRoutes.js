@@ -22,7 +22,7 @@ const {
     approveSellerConversion,
 } = require("../controllers/adminController");
 const { createBanner, getBanners } = require("../controllers/bannerController");
-const { createProperty, getProperties, updateProperty, deleteProperty } = require("../controllers/propertyController");
+const { createProperty, getProperties, updateProperty, deleteProperty, getPropertyUnits } = require("../controllers/propertyController");
 const { getIdleLeads, setMonthlyTarget } = require("../controllers/adminEngineController");
 
 // All routes below require a valid JWT + admin role
@@ -43,6 +43,8 @@ router.get("/banners", getBanners);
 // ─── Properties / Buildings ───────────────────────────────────────────────
 router.post("/properties", adminGuard, uploadPropertyImages, createProperty);
 router.get("/properties", getProperties);
+
+router.get("/properties/:id/units", adminGuard, getPropertyUnits);
 router.put("/properties/:id", adminGuard, uploadPropertyImages, updateProperty);
 router.delete("/properties/:id", adminGuard, deleteProperty);
 

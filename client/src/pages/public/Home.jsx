@@ -2,10 +2,10 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import axios from "axios";
 import { useAuth } from "../../context/AuthContext";
-import { ArrowRight, AlertCircle } from "lucide-react";
-import HeroBanner    from "../../components/common/HeroBanner";
-import FilterSidebar from "../../components/common/FilterSidebar";
-import PropertyGrid  from "../../components/common/PropertyGrid";
+import { ArrowRight } from "lucide-react";
+import HeroBanner   from "../../components/common/HeroBanner";
+import PropertyGrid from "../../components/common/PropertyGrid";
+import Pagination   from "../../components/common/Pagination";
 
 const stats = [
   { label: "Properties Listed", value: "1,200+" },
@@ -14,11 +14,6 @@ const stats = [
   { label: "Years Experience",  value: "10+"    },
 ];
 
-const features = [
-  { icon: "🏡", title: "Buy Properties",  desc: "Browse a wide selection of apartments, homes, and commercial spaces." },
-  { icon: "🏢", title: "Rent Apartments", desc: "Find furnished and unfurnished rentals in prime locations." },
-  { icon: "📋", title: "List Your Space", desc: "Become a seller and earn by listing your properties today." },
-];
 
 const Home = () => {
   const { isAuthenticated, user } = useAuth();
@@ -28,6 +23,8 @@ const Home = () => {
   const [loadingBanner,    setLoadingBanner]    = useState(true);
   const [loadingPropsData, setLoadingPropsData] = useState(true);
   const [bannerError,      setBannerError]      = useState(false);
+  const [currentPage,  setCurrentPage]  = useState(1);
+  const [totalPages,   setTotalPages]   = useState(1);
 
   // Fetch active banner
   useEffect(() => {
@@ -45,12 +42,16 @@ const Home = () => {
     fetchBanner();
   }, []);
 
-  // Fetch properties
+  // Fetch paginated properties
   useEffect(() => {
     const fetchProperties = async () => {
+      setLoadingPropsData(true);
       try {
-        const { data } = await axios.get("/api/properties");
+        const { data } = await axios.get(
+          `/api/properties/public?page=${currentPage}&limit=6`
+        );
         setProperties(data.properties || []);
+        setTotalPages(data.totalPages   || 1);
       } catch (err) {
         console.error("Failed to load properties:", err);
       } finally {
@@ -58,7 +59,7 @@ const Home = () => {
       }
     };
     fetchProperties();
-  }, []);
+  }, [currentPage]);
 
   return (
     <div className="min-h-screen">
@@ -91,9 +92,9 @@ const Home = () => {
         </div>
       </section>
 
-      {/* ── Property Listings (Sidebar + Grid) ──────────────────────── */}
-      <section className="py-12 px-4 sm:px-6 bg-gray-50">
-        <div className="max-w-7xl mx-auto">
+      {/* ── Property Listings ─────────────────────────────────────── */}
+      <section className="py-12 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
           {/* Section header */}
           <div className="mb-8">
@@ -101,11 +102,18 @@ const Home = () => {
             <p className="text-gray-500 mt-2 text-sm">Browse our hand-picked listings across Bangladesh.</p>
           </div>
 
-          {/* Sidebar + Grid layout */}
-          <div className="flex gap-8 items-start">
-            <FilterSidebar />
-            <PropertyGrid properties={properties} loading={loadingPropsData} />
-          </div>
+          {/* Full-width property grid */}
+          <PropertyGrid properties={properties} loading={loadingPropsData} />
+
+          {/* ── Pagination ──────────────────────────────────────────── */}
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={(page) => {
+              setCurrentPage(page);
+              window.scrollTo({ top: 500, behavior: "smooth" });
+            }}
+          />
         </div>
       </section>
 

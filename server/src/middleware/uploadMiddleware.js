@@ -8,7 +8,7 @@ const makeStorage = (folder) =>
     cloudinary,
     params: {
       folder,
-      allowed_formats: ["jpg", "jpeg", "png", "webp", "gif"],
+      allowed_formats: ["jpg", "jpeg", "png", "webp", "gif", "avif"],
       public_id: (_req, file) => {
         const name = file.originalname
           .replace(/\.[^.]+$/, "")
@@ -22,10 +22,12 @@ const makeStorage = (folder) =>
 const wrapMulter = (upload) => (req, res, next) => {
   upload(req, res, (err) => {
     if (err instanceof multer.MulterError) {
+      console.error("[wrapMulter] MulterError:", err.message);
       return res.status(400).json({ message: `Upload error: ${err.message}` });
     }
     if (err) {
-      return res.status(400).json({ message: err.message });
+      console.error("[wrapMulter] Upload/Cloudinary error:", err);
+      return res.status(400).json({ message: err.message || "File upload failed." });
     }
     next();
   });
@@ -67,7 +69,9 @@ const _propertyUpload = multer({
   storage: makeStorage("apartment/properties"),
   limits: { fileSize: 10 * 1024 * 1024 },
   fileFilter: (_req, file, cb) =>
-    file.mimetype.startsWith("image/") ? cb(null, true) : cb(new Error("Only images allowed.")),
+    file.mimetype.startsWith("image/")
+      ? cb(null, true)
+      : cb(new Error("Only image files are allowed (JPG, PNG, WebP, AVIF, GIF)."))
 }).fields([
   { name: "mainImage",   maxCount: 1  },
   { name: "extraImages", maxCount: 10 },
