@@ -1,5 +1,6 @@
 const PriceRequest = require("../models/PriceRequest");
 const User         = require("../models/User");
+const ApartmentUnit = require("../models/ApartmentUnit");
 
 // ─────────────────────────────────────────────────────────────────────────────
 // @desc   Seller requests conversion of an assigned lead to a seller (affiliate)
@@ -144,5 +145,85 @@ const getSellerTasks = async (req, res) => {
   }
 };
 
-module.exports = { requestSellerConversion, getMyTeam, getSellerTasks };
+// ─────────────────────────────────────────────────────────────────────────────
+// @desc   Get seller's specific unit sales
+// @route  GET /api/seller/my-sales
+// @access Private (seller)
+// ─────────────────────────────────────────────────────────────────────────────
+const getMySales = async (req, res) => {
+  try {
+    const units = await ApartmentUnit.find({ actionBy: req.user._id })
+      .populate('propertyId', 'name address')
+      .sort({ updatedAt: -1 });
+
+    const mappedUnits = units.map((u) => {
+      const unitObj = u.toObject();
+      // If the customer phone matches the seller's phone, it was booked "for self"
+      unitObj.ownerType = unitObj.customerPhone === req.user.phone ? 'self' : 'customer';
+      return unitObj;
+    });
+
+    res.status(200).json({ success: true, units: mappedUnits });
+  } catch (error) {
+    console.error("getMySales error:", error);
+    res.status(500).json({ success: false, message: "Failed to fetch sales." });
+  }
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// @desc   Convert Booked unit to Sold or re-assign to Customer
+// @route  PUT /api/seller/units/:id/convert
+// @access Private (seller)
+// ─────────────────────────────────────────────────────────────────────────────
+const convertUnitAction = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { actionType, customerName, customerPhone } = req.body;
+
+    const unit = await ApartmentUnit.findOne({ _id: id, actionBy: req.user._id });
+
+    if (!unit) {
+      return res.status(404).json({ success: false, message: "Unit not found or unauthorized." });
+    }
+
+    if (!["Sold", "Booked"].includes(actionType)) {
+      return res.status(400).json({ success: false, message: "Invalid conversion type." });
+    }
+
+    if (!customerName || !customerPhone) {
+      return res.status(400).json({ success: false, message: "Customer name and phone are required for conversion." });
+    }
+
+    unit.status = actionType;
+    unit.customerName = customerName;
+    unit.customerPhone = customerPhone;
+    unit.isDocumentReady = false; // Reset for accountant to re-process
+
+    // Auto-conversion: link registered user + promote to 'customer'
+    const existingUser = await User.findOne({ phone: customerPhone });
+    if (existingUser) {
+      unit.customerId = existingUser._id;
+      const updatedRoles = [...new Set([...existingUser.roles, "customer"])].filter(r => r !== "user");
+      if (JSON.stringify(updatedRoles.sort()) !== JSON.stringify([...existingUser.roles].sort())) {
+        existingUser.roles = updatedRoles;
+        await existingUser.save();
+      }
+    }
+
+    await unit.save();
+
+    res.status(200).json({ success: true, message: `Unit converted to ${actionType} successfully.`, unit });
+  } catch (error) {
+    console.error("convertUnitAction error:", error);
+    res.status(500).json({ success: false, message: "Failed to convert unit." });
+  }
+};
+
+module.exports = { 
+  requestSellerConversion, 
+  getMyTeam, 
+  getSellerTasks,
+  getMySales,
+  convertUnitAction
+};
 

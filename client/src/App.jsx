@@ -29,6 +29,7 @@ import AssignedLeads from "./pages/seller/AssignedLeads";
 import MyTeam from "./pages/seller/MyTeam";
 import SellerProfile from "./pages/seller/SellerProfile";
 import SellerBookUnit from "./pages/seller/SellerBookUnit";
+import MySales from "./pages/seller/MySales";
 
 import CustomerProfile from "./pages/public/CustomerProfile";
 import PropertyDetails from "./pages/public/PropertyDetails";
@@ -39,6 +40,19 @@ import CustomerDashboard from "./pages/customer/CustomerDashboard";
 import JourneyPage from "./pages/customer/JourneyPage";
 import CustomerProfilePage from "./pages/customer/CustomerProfilePage";
 import DocumentVaultPage from "./pages/customer/DocumentVaultPage";
+import MyAppartment from "./pages/customer/MyAppartment";
+
+import ProtectedRoute from "./components/common/ProtectedRoute";
+
+import DirectorLayout from "./layouts/DirectorLayout";
+import DirectorDashboard from "./pages/director/DirectorDashboard";
+import GMLayout from "./layouts/GMLayout";
+import GMDashboard from "./pages/gm/GMDashboard";
+import AGMLayout from "./layouts/AGMLayout";
+import AGMDashboard from "./pages/agm/AGMDashboard";
+import AccountantLayout from "./layouts/AccountantLayout";
+import AccountantDashboard from "./pages/accountant/AccountantDashboard";
+import SoldUnits from "./pages/accountant/SoldUnits";
 
 const Placeholder = ({ title }) => (
   <div className="min-h-[60vh] flex items-center justify-center">
@@ -94,6 +108,7 @@ function App() {
                 <Route path="profile" element={<SellerProfile />} />
                 <Route path="book-unit" element={<SellerBookUnit />} />
                 <Route path="book-unit/:id" element={<BookUnitDetail />} />
+                <Route path="my-sales" element={<MySales />} />
               </Route>
 
               {/* Other routes */}
@@ -102,9 +117,27 @@ function App() {
               {/* Customer Panel */}
               <Route path="/customer-panel" element={<CustomerLayout />}>
                 <Route index element={<CustomerDashboard />} />
+                <Route path="my-apartment" element={<MyAppartment />} />
                 <Route path="requests" element={<JourneyPage />} />
                 <Route path="profile"  element={<CustomerProfilePage />} />
                 <Route path="vault"    element={<DocumentVaultPage />} />
+              </Route>
+              
+              <Route path="/director" element={<ProtectedRoute allowedRoles={['Director']}><DirectorLayout /></ProtectedRoute>}>
+                <Route index element={<DirectorDashboard />} />
+              </Route>
+
+              <Route path="/gm" element={<ProtectedRoute allowedRoles={['GM']}><GMLayout /></ProtectedRoute>}>
+                <Route index element={<GMDashboard />} />
+              </Route>
+
+              <Route path="/agm" element={<ProtectedRoute allowedRoles={['AGM']}><AGMLayout /></ProtectedRoute>}>
+                <Route index element={<AGMDashboard />} />
+              </Route>
+
+              <Route path="/accountant" element={<ProtectedRoute allowedRoles={['Accountant']}><AccountantLayout /></ProtectedRoute>}>
+                <Route index element={<AccountantDashboard />} />
+                <Route path="sold-units" element={<SoldUnits />} />
               </Route>
               <Route path="/properties"     element={<Placeholder title="Properties" />} />
               <Route path="/about"          element={<Placeholder title="About Us" />} />

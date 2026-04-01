@@ -39,10 +39,47 @@ const apartmentUnitSchema = new mongoose.Schema(
       trim: true,
       default: null,
     },
+    // Strong DB relationship — populated when a registered user matches the customerPhone
+    customerId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
+    // Which role the actor was using when they performed the action
+    // (e.g. an admin can also be a seller — this records the active context)
+    actionRoleContext: {
+      type: String,
+      enum: ["admin", "seller", "Director", "GM", "AGM", "Accountent"],
+      default: null,
+    },
+    isDocumentReady: {
+      type: Boolean,
+      default: false,
+    },
+    specs: {
+      squareFt: Number,
+      bedrooms: Number,
+      washrooms: Number,
+      kitchen: Number,
+      balconies: Number,
+      drawingRoom: Number,
+      dining: Number,
+    },
+    financials: {
+      unitPrice: Number,
+      bookingMoney: Number,
+      downPayment: Number,
+      parkingCharge: Number,
+      financialServiceCharge: Number,
+      latePaymentPenalty: Number,
+      serviceCharge: Number,
+      totalPayable: Number,
+    },
     actionTimestamp: {
       type: Date,
       default: null,
     },
+
   },
   { timestamps: true }
 );

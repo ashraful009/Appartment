@@ -14,6 +14,7 @@ const unitRoutes      = require("./src/routes/unitRoutes");
 const userRoutes      = require("./src/routes/userRoutes");
 const customerRoutes  = require("./src/routes/customerRoutes");
 const documentRoutes  = require("./src/routes/documentRoutes");
+const accountantRoutes = require("./src/routes/accountantRoutes");
 
 const { protect } = require("./src/middleware/authMiddleware");
 const { authorizeRoles } = require("./src/middleware/authMiddleware");
@@ -55,6 +56,7 @@ app.use("/api/interactions", interactionRoutes);
 app.use("/api/users",     userRoutes);
 app.use("/api/customer",  customerRoutes);
 app.use("/api/documents", documentRoutes);
+app.use("/api/accountant", accountantRoutes);
 app.use("/api",           publicRoutes); // Public: /api/banners/active, /api/banners, /api/properties
 
 // GET /api/targets/current — available to all authenticated sellers + admins

@@ -3,7 +3,8 @@ const User = require("../models/User");
 const PriceRequest = require("../models/PriceRequest");
 const { generateUniqueReferralCode } = require("../utils/referralCodeUtil");
 
-const VALID_ROLES = ["user", "customer", "seller", "admin"];
+const VALID_ROLES = ["user", "customer", "seller", "admin", "Director", "GM", "AGM", "Accountant"];
+
 
 // ─────────────────────────────────────────────
 // @desc   Get admin dashboard stats
@@ -86,7 +87,15 @@ const updateUserRoles = async (req, res) => {
       return res.status(400).json({ message: "Cannot revoke your own admin role." });
     }
 
-    if (!roles.includes("user")) roles.unshift("user");
+    // Strip the base 'user' role when any elevated role is present.
+    // If the caller sends only ['user'], keep it as-is (bare user account).
+    const ELEVATED_ROLES = ["admin", "seller", "customer", "Director", "GM", "AGM", "Accountant"];
+    const hasElevated = roles.some((r) => ELEVATED_ROLES.includes(r));
+    if (hasElevated) {
+      roles = roles.filter((r) => r !== "user");
+    }
+    if (roles.length === 0) roles = ["user"]; // safety fallback
+
 
     const user = await User.findByIdAndUpdate(
       id,

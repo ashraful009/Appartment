@@ -70,7 +70,12 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const value = { user, isAuthenticated, loading, register, login, logout };
+  // ── Role helpers — convenience wrappers used throughout the UI ────────────
+  // Safely handles guests (user === null) so components don't need to null-guard.
+  const hasRole    = (role)    => Array.isArray(user?.roles) && user.roles.includes(role);
+  const hasAnyRole = (...roles) => Array.isArray(user?.roles) && roles.some(r => user.roles.includes(r));
+
+  const value = { user, isAuthenticated, loading, register, login, logout, hasRole, hasAnyRole };
 
   return (
     <AuthContext.Provider value={value}>

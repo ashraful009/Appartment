@@ -1,6 +1,7 @@
 const PriceRequest = require("../models/PriceRequest");
 const Interaction = require("../models/Interaction");
 const PaymentPlan = require("../models/PaymentPlan");
+const ApartmentUnit = require("../models/ApartmentUnit");
 
 /**
  * GET /api/customer/overview
@@ -72,8 +73,6 @@ const getCustomerOverview = async (req, res) => {
   }
 };
 
-module.exports = { getCustomerOverview };
-
 /**
  * GET /api/customer/journey
  * Fetches the customer's full property journey in a single request:
@@ -124,4 +123,24 @@ const getCustomerJourney = async (req, res) => {
   }
 };
 
-module.exports = { getCustomerOverview, getCustomerJourney };
+// ─────────────────────────────────────────────────────────────────────────────
+// @desc   Get all units booked/sold under the logged-in customer's account
+// @route  GET /api/customer/my-units
+// @access Private (customer — matched via customerId on ApartmentUnit)
+// ─────────────────────────────────────────────────────────────────────────────
+const getMyUnits = async (req, res) => {
+  try {
+    const units = await ApartmentUnit.find({ customerId: req.user._id })
+      .populate("propertyId", "name address mainImage description totalUnits floors handoverTime landSize parkingArea")
+      .populate("actionBy",   "name roles phone")
+      .sort({ updatedAt: -1 })       // latest bookings first
+      .lean();
+
+    res.status(200).json({ success: true, units });
+  } catch (error) {
+    console.error("getMyUnits error:", error);
+    res.status(500).json({ success: false, message: "Failed to fetch your units." });
+  }
+};
+
+module.exports = { getCustomerOverview, getCustomerJourney, getMyUnits };

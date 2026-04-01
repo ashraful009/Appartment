@@ -3,7 +3,7 @@ const router  = express.Router();
 
 const { protect }        = require("../middleware/authMiddleware");
 const { authorizeRoles } = require("../middleware/authMiddleware");
-const { getMyTeam, getSellerTasks } = require("../controllers/sellerController");
+const { getMyTeam, getSellerTasks, getMySales, convertUnitAction } = require("../controllers/sellerController");
 const { getTeamOverview, broadcastToTeam } = require("../controllers/delegationController");
 const Notification = require("../models/Notification");
 
@@ -15,6 +15,12 @@ router.get("/my-team", sellerGuard, getMyTeam);
 
 // GET /api/seller/tasks — today's and overdue follow-up tasks
 router.get("/tasks", sellerGuard, getSellerTasks);
+
+// GET /api/seller/my-sales — Get all units handled by this seller
+router.get("/my-sales", sellerGuard, getMySales);
+
+// PUT /api/seller/units/:id/convert — Convert units from self book to customer sold
+router.put("/units/:id/convert", sellerGuard, convertUnitAction);
 
 // GET /api/seller/team-overview — mentor view of all sub-sellers + earnings
 router.get("/team-overview", sellerGuard, getTeamOverview);

@@ -152,6 +152,11 @@ const Navbar = () => {
                     />
                   )}
 
+                  {user?.roles?.includes("Director") && <DropItem icon={<ShieldCheck size={15} />} label="Director Panel" to="/director" onClick={() => setDropOpen(false)} />}
+                  {user?.roles?.includes("GM") && <DropItem icon={<ShieldCheck size={15} />} label="GM Panel" to="/gm" onClick={() => setDropOpen(false)} />}
+                  {user?.roles?.includes("AGM") && <DropItem icon={<ShieldCheck size={15} />} label="AGM Panel" to="/agm" onClick={() => setDropOpen(false)} />}
+                  {user?.roles?.includes("Accountant") && <DropItem icon={<ShieldCheck size={15} />} label="Accountant Panel" to="/accountant" onClick={() => setDropOpen(false)} />}
+
                   {/* Logout */}
                   <div className="border-t border-gray-100 mt-1 pt-1">
                     <button
@@ -211,6 +216,10 @@ const Navbar = () => {
                   {user?.roles?.includes("customer") && <MobileLink to="/customer-panel" label="Customer Panel" onClick={() => setMobileOpen(false)} />}
                   {user?.roles?.includes("seller") && <MobileLink to="/seller-panel" label="Seller Panel" onClick={() => setMobileOpen(false)} />}
                   {user?.roles?.includes("admin") && <MobileLink to="/admin-panel" label="Admin Panel" onClick={() => setMobileOpen(false)} />}
+                  {user?.roles?.includes("Director") && <MobileLink to="/director" label="Director Panel" onClick={() => setMobileOpen(false)} />}
+                  {user?.roles?.includes("GM") && <MobileLink to="/gm" label="GM Panel" onClick={() => setMobileOpen(false)} />}
+                  {user?.roles?.includes("AGM") && <MobileLink to="/agm" label="AGM Panel" onClick={() => setMobileOpen(false)} />}
+                  {user?.roles?.includes("Accountant") && <MobileLink to="/accountant" label="Accountant Panel" onClick={() => setMobileOpen(false)} />}
                 <button
                   onClick={async () => { await logout(); setMobileOpen(false); navigate("/"); }}
                   className="mt-1 flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm text-red-500 hover:bg-red-50 font-medium transition-colors"

@@ -1,5 +1,6 @@
 const Property = require("../models/Property");
 const ApartmentUnit = require("../models/ApartmentUnit");
+const User = require("../models/User");
 const cloudinary = require("../config/cloudinary");
 
 // ─────────────────────────────────────────────
@@ -94,13 +95,13 @@ const createProperty = async (req, res) => {
         for (let u = 1; u <= unitsPerFloor; u++) {
           const columnLine = String.fromCharCode(64 + u); // 65 is 'A'
           const unitName = `${columnLine}-${f}`;
-          
+
           unitsArray.push({
             propertyId: property._id,
             floor: f,
             columnLine,
             unitName,
-            status: "Unsold"
+            status: "Unsold",
           });
         }
       }
@@ -343,7 +344,7 @@ const getPropertyUnits = async (req, res) => {
   try {
     const { id } = req.params;
     const units = await ApartmentUnit.find({ propertyId: id })
-      .populate('actionBy', 'name role phone')
+      .populate("actionBy", "name roles phone")
       .sort({ floor: 1, columnLine: 1 });
 
     const isAdmin = req.user?.roles?.includes("admin");
@@ -365,23 +366,34 @@ const getPropertyUnits = async (req, res) => {
 };
 
 // ─────────────────────────────────────────────
-// @desc   Update unit action (Sold/Booked)
+// @desc   Update unit action (Sold / Booked / Unsold)
 // @route  PUT /api/units/:unitId/action
 // @access Private (admin, seller)
 // ─────────────────────────────────────────────
 const updateUnitAction = async (req, res) => {
   try {
     const { unitId } = req.params;
-    const { actionType, customerName, customerPhone } = req.body;
+    const { actionType, customerName, customerPhone, actionRoleContext } = req.body;
+
+    // ── Validate actionRoleContext (required for Sold/Booked) ────────────────
+    const VALID_ACTION_ROLES = ["admin", "seller", "Director", "GM", "AGM", "Accountent"];
+    if (actionType !== "Unsold") {
+      if (!actionRoleContext || !VALID_ACTION_ROLES.includes(actionRoleContext)) {
+        return res.status(400).json({
+          success: false,
+          message: `actionRoleContext is required and must be one of: ${VALID_ACTION_ROLES.join(", ")}.`,
+        });
+      }
+      if (!req.user.roles.includes(actionRoleContext)) {
+        return res.status(403).json({
+          success: false,
+          message: `You do not hold the '${actionRoleContext}' role and cannot act in that context.`,
+        });
+      }
+    }
 
     if (!["Sold", "Booked", "Unsold"].includes(actionType)) {
       return res.status(400).json({ success: false, message: "Invalid action type." });
-    }
-
-    if (actionType === "Sold") {
-      if (!customerName || !customerPhone) {
-        return res.status(400).json({ success: false, message: "Customer name and phone are required for Sold units." });
-      }
     }
 
     const unit = await ApartmentUnit.findById(unitId);
@@ -390,20 +402,54 @@ const updateUnitAction = async (req, res) => {
     }
 
     unit.status = actionType;
+
     if (actionType === "Unsold") {
-      unit.actionBy = null;
-      unit.actionTimestamp = null;
-      unit.customerName = null;
-      unit.customerPhone = null;
+      // ── Clear all customer data ──────────────────────────────────────────
+      unit.actionBy          = null;
+      unit.actionTimestamp   = null;
+      unit.customerName      = null;
+      unit.customerPhone     = null;
+      unit.customerId        = null;
+      unit.actionRoleContext = null;
     } else {
-      unit.actionBy = req.user._id;
-      unit.actionTimestamp = Date.now();
-      unit.customerName = customerName || null;
-      unit.customerPhone = customerPhone || null;
+      // ── Strict fallback to logged in user details ────────────────────────
+      const finalCustomerName = customerName || req.user.name;
+      const finalCustomerPhone = customerPhone || req.user.phone;
+
+      // ── Record who performed the action ──────────────────────────────────
+      unit.actionBy          = req.user._id;
+      unit.actionTimestamp   = Date.now();
+      unit.customerName      = finalCustomerName;
+      unit.customerPhone     = finalCustomerPhone;
+      unit.actionRoleContext = actionRoleContext  || null;
+
+      // ── Auto-conversion: link registered user + promote to 'customer' ────
+      if (finalCustomerPhone) {
+        const existingUser = await User.findOne({ phone: finalCustomerPhone });
+
+        if (existingUser) {
+          // Attach the strong ObjectId reference to the unit
+          unit.customerId = existingUser._id;
+
+          // Promote to 'customer' and strip the base 'user' role.
+          // Using a filtered Set makes this idempotent — safe to call multiple times.
+          const updatedRoles = [...new Set([...existingUser.roles, "customer"])].filter(
+            (r) => r !== "user"
+          );
+          if (JSON.stringify(updatedRoles.sort()) !== JSON.stringify([...existingUser.roles].sort())) {
+            existingUser.roles = updatedRoles;
+            await existingUser.save();
+            console.info(
+              `[unitAction] User ${existingUser._id} (${existingUser.phone}) promoted to 'customer' (user role removed).`
+            );
+          }
+
+        }
+      }
     }
 
     await unit.save();
-    await unit.populate('actionBy', 'name role phone');
+    await unit.populate("actionBy", "name roles phone");
 
     res.status(200).json({ success: true, message: "Unit updated successfully.", unit });
   } catch (error) {

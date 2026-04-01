@@ -1,8 +1,6 @@
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 
-const VALID_ROLES = ["user", "customer", "seller", "admin"];
-
 const userSchema = new mongoose.Schema(
   {
     name: {
@@ -74,18 +72,7 @@ const userSchema = new mongoose.Schema(
     // ── Roles — array of strings ──────────────────────────────────
     // Possible values: "user", "customer", "seller", "admin"
     // Every new account gets ["user"] by default.
-    roles: {
-      type: [
-        {
-          type: String,
-          enum: {
-            values: VALID_ROLES,
-            message: '"{VALUE}" is not a valid role.',
-          },
-        },
-      ],
-      default: ["user"],
-    },
+    roles: [{ type: String, enum: ['user', 'customer', 'seller', 'admin', 'Director', 'GM', 'AGM', 'Accountant'], default: 'user' }],
     // ── Seller Fields ──────────────────────────────────────────────
     bio: {
       type: String,

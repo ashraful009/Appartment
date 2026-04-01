@@ -1,18 +1,30 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
-import { X, User, Phone, CheckCircle, ShieldCheck, Loader2 } from 'lucide-react';
+import { useLocation } from 'react-router-dom';
+import { X, User, Phone, CheckCircle, ShieldCheck, Loader2, Building2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const PropertyVisualizer = ({ totalUnits, totalFloors, units, viewerRole = 'public' }) => {
   const { user } = useAuth();
+  const location = useLocation();
+
+  // ── Derive which role context this panel is operating under ───────────────
+  // Matches the path prefix to the role the user is acting as right now.
+  // Falls back to null for unknown contexts (will be caught by backend validation).
+  const activeContext = location.pathname.startsWith('/admin-panel')
+    ? 'admin'
+    : location.pathname.startsWith('/seller-panel')
+    ? 'seller'
+    : null;
   
   const [localUnits, setLocalUnits] = useState([]);
   const [selectedUnit, setSelectedUnit] = useState(null);
   const [modalType, setModalType] = useState(null); // 'actionForm' or 'infoModal'
   
   // Form State
-  const [isBookOnly, setIsBookOnly] = useState(false);
+  const [bookingTarget, setBookingTarget] = useState('customer'); // 'own' or 'customer'
+  const [actionType, setActionType] = useState('Sold'); // 'Booked' or 'Sold'
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -65,7 +77,8 @@ const PropertyVisualizer = ({ totalUnits, totalFloors, units, viewerRole = 'publ
       setModalType('actionForm');
       setCustomerName('');
       setCustomerPhone('');
-      setIsBookOnly(false);
+      setBookingTarget('customer');
+      setActionType('Sold');
     } else if (cellUnit.status === 'Sold' || cellUnit.status === 'Booked') {
       setSelectedUnit(cellUnit);
       setModalType('infoModal');
@@ -73,16 +86,17 @@ const PropertyVisualizer = ({ totalUnits, totalFloors, units, viewerRole = 'publ
   };
 
   const submitAction = async () => {
-    if (!isBookOnly && (!customerName || !customerPhone)) {
+    if (bookingTarget === 'customer' && actionType === 'Sold' && (!customerName || !customerPhone)) {
       return toast.error("Customer name and phone are required for Sold units.");
     }
     
     setIsSubmitting(true);
     try {
       const payload = {
-        actionType: isBookOnly ? 'Booked' : 'Sold',
-        customerName: isBookOnly ? undefined : customerName,
-        customerPhone: isBookOnly ? undefined : customerPhone,
+        actionType: bookingTarget === 'own' ? 'Booked' : actionType,
+        customerName: bookingTarget === 'own' ? user.name : customerName,
+        customerPhone: bookingTarget === 'own' ? user.phone : customerPhone,
+        actionRoleContext: activeContext,
       };
 
       const { data } = await axios.put(`/api/units/${selectedUnit._id}/action`, payload, {
@@ -108,7 +122,8 @@ const PropertyVisualizer = ({ totalUnits, totalFloors, units, viewerRole = 'publ
     setModalType(null);
     setCustomerName('');
     setCustomerPhone('');
-    setIsBookOnly(false);
+    setBookingTarget('customer');
+    setActionType('Sold');
   };
 
   const getUnitStyle = (status) => {
@@ -151,22 +166,54 @@ const PropertyVisualizer = ({ totalUnits, totalFloors, units, viewerRole = 'publ
             </div>
           </div>
 
-          <div className="space-y-4">
-            <label className="flex items-center gap-3 cursor-pointer p-4 border border-gray-200 rounded-xl hover:bg-gray-50 transition">
-              <input 
-                type="checkbox" 
-                checked={isBookOnly}
-                onChange={(e) => setIsBookOnly(e.target.checked)}
-                className="w-5 h-5 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500"
-              />
-              <div>
-                <span className="block font-bold text-gray-800 text-sm">Book Only (Pending Sale)</span>
-                <span className="block text-xs text-gray-500">Temporarily reserve this unit without entering customer data.</span>
-              </div>
-            </label>
+          <div className="space-y-6">
+            <div className="flex bg-gray-100 p-1.5 rounded-xl">
+              <button
+                onClick={() => {
+                  setBookingTarget('own');
+                  setActionType('Booked');
+                  setCustomerName('');
+                  setCustomerPhone('');
+                }}
+                className={`flex-1 py-1.5 text-sm font-bold rounded-lg transition-all ${
+                  bookingTarget === 'own' ? 'bg-white text-indigo-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                For Own
+              </button>
+              <button
+                onClick={() => setBookingTarget('customer')}
+                className={`flex-1 py-1.5 text-sm font-bold rounded-lg transition-all ${
+                  bookingTarget === 'customer' ? 'bg-white text-indigo-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                For Customer
+              </button>
+            </div>
 
-            {!isBookOnly && (
+            {bookingTarget === 'own' ? (
+              <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-5 text-center">
+                <ShieldCheck size={28} className="text-indigo-500 mx-auto mb-2" />
+                <p className="text-sm font-bold text-indigo-900">Book Under Your Name</p>
+                <p className="text-xs text-indigo-700 mt-1">
+                  This unit will be booked under your name and phone number.
+                </p>
+              </div>
+            ) : (
               <div className="space-y-4 bg-white border border-gray-100 shadow-sm rounded-xl p-5">
+                <div>
+                  <label className="text-xs font-bold text-gray-700 uppercase tracking-wide mb-1.5 flex items-center gap-1.5">
+                    Action Type
+                  </label>
+                  <select
+                    value={actionType}
+                    onChange={(e) => setActionType(e.target.value)}
+                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-bold text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors"
+                  >
+                    <option value="Booked">Book</option>
+                    <option value="Sold">Sell</option>
+                  </select>
+                </div>
                 <div>
                   <label className="text-xs font-bold text-gray-700 uppercase tracking-wide mb-1.5 flex items-center gap-1.5">
                     <User size={14} className="text-gray-400" /> Customer Name
@@ -247,7 +294,14 @@ const PropertyVisualizer = ({ totalUnits, totalFloors, units, viewerRole = 'publ
                   </div>
                   <div>
                     <p className="text-sm font-bold text-gray-800 leading-tight">{actionBy.name}</p>
-                    <p className="text-xs text-gray-500 capitalize">{actionBy.role} • {actionBy.phone}</p>
+                    <p className="text-xs text-gray-500">
+                      {/* Show the stored role context (e.g. "admin", "seller") — capitalize it */}
+                      {selectedUnit?.actionRoleContext
+                        ? selectedUnit.actionRoleContext.charAt(0).toUpperCase() +
+                          selectedUnit.actionRoleContext.slice(1)
+                        : 'Staff'}
+                      {actionBy.phone ? ` • ${actionBy.phone}` : ''}
+                    </p>
                   </div>
                 </div>
               </div>

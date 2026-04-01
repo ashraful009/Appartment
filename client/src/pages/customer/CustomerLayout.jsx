@@ -2,14 +2,15 @@ import React from "react";
 import { NavLink, Outlet, Navigate, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import {
-  LayoutDashboard, ShieldCheck, FileText, User, LogOut, ChevronRight,
+  LayoutDashboard, ShieldCheck, FileText, User, LogOut, ChevronRight, Building2,
 } from "lucide-react";
 
 const navItems = [
-  { to: "/customer-panel",         label: "Dashboard",      icon: LayoutDashboard, end: true },
-  { to: "/customer-panel/requests", label: "My Requests",    icon: FileText },
-  { to: "/customer-panel/vault",    label: "Document Vault", icon: ShieldCheck },
-  { to: "/customer-panel/profile",  label: "My Profile",     icon: User },
+  { to: "/customer-panel",              label: "Dashboard",      icon: LayoutDashboard, end: true },
+  { to: "/customer-panel/my-apartment", label: "My Apartment",   icon: Building2 },
+  { to: "/customer-panel/requests",     label: "My Requests",    icon: FileText },
+  { to: "/customer-panel/vault",        label: "Document Vault", icon: ShieldCheck },
+  { to: "/customer-panel/profile",      label: "My Profile",     icon: User },
 ];
 
 // ── Main Layout ──────────────────────────────────────────────────────────────
