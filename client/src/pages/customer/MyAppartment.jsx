@@ -314,7 +314,7 @@ const ExpandableUnitCard = ({ unit }) => {
             </div>
           ) : (
             <div className="mt-4">
-              <InstallmentTable />
+              <InstallmentTable unitId={unit._id} unitDetails={unit} />
             </div>
           )}
         </div>

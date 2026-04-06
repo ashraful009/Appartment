@@ -54,7 +54,7 @@ const _avatarUpload = multer({
 
 const uploadAvatar = wrapMulter(_avatarUpload);
 
-// ── 2. Banner images (multiple, field: "images", max 10, 5 MB each) ──────────
+// ── 2a. Banner images — legacy (field: "images", multiple, 5 MB each) ─────────
 const _bannerUpload = multer({
   storage: makeStorage("apartment/banners"),
   limits: { fileSize: 5 * 1024 * 1024 },
@@ -63,6 +63,33 @@ const _bannerUpload = multer({
 }).array("images", 10);
 
 const uploadBannerImages = wrapMulter(_bannerUpload);
+
+// ── 2b. Banner media — new (fields: desktopMedia + mobileMedia; image OR video) ─
+const _bannerMediaUpload = multer({
+  storage: new CloudinaryStorage({
+    cloudinary,
+    params: (_req, file) => ({
+      folder: "apartment/banners",
+      resource_type: "auto", // handles both images and videos
+      allowed_formats: ["jpg", "jpeg", "png", "webp", "avif", "gif", "mp4", "webm", "mov"],
+      public_id: `${Date.now()}_${file.originalname
+        .replace(/\.[^.]+$/, "")
+        .replace(/\s+/g, "_")}`,
+    }),
+  }),
+  limits: { fileSize: 50 * 1024 * 1024 }, // 50 MB — generous for videos
+  fileFilter: (_req, file, cb) => {
+    const isImage = file.mimetype.startsWith("image/");
+    const isVideo = file.mimetype.startsWith("video/");
+    if (isImage || isVideo) return cb(null, true);
+    cb(new Error("Only image or video files are allowed."));
+  },
+}).fields([
+  { name: "desktopMedia", maxCount: 1 },
+  { name: "mobileMedia",  maxCount: 1 },
+]);
+
+const uploadBannerMedia = wrapMulter(_bannerMediaUpload);
 
 // ── 3. Property images (mainImage single + extraImages multiple, max 10) ─────
 const _propertyUpload = multer({
@@ -106,4 +133,35 @@ const _documentUpload = multer({
 
 const uploadDocumentFile = wrapMulter(_documentUpload);
 
-module.exports = { uploadAvatar, uploadBannerImages, uploadPropertyImages, uploadDocumentFile };
+// ── 5. Customer Installment Invoices (single file: images OR PDF, max 10 MB) ──
+const _invoiceUpload = multer({
+  storage: new CloudinaryStorage({
+    cloudinary,
+    params: {
+      folder: "apartment/invoices",
+      resource_type: "auto",
+      allowed_formats: ["jpg", "jpeg", "png", "webp", "pdf"],
+      public_id: (_req, file) => {
+        const name = file.originalname.replace(/\.[^.]+$/, "").replace(/\s+/g, "_");
+        return `invoice_${Date.now()}_${name}`;
+      },
+    },
+  }),
+  limits: { fileSize: 10 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    const allowed = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
+    if (allowed.includes(file.mimetype)) return cb(null, true);
+    cb(new Error("Only images (JPG/PNG/WebP) and PDF files are allowed for invoices."));
+  },
+}).single("invoice"); // frontend must use field name "invoice"
+
+const uploadInvoice = wrapMulter(_invoiceUpload);
+
+module.exports = {
+  uploadAvatar,
+  uploadBannerImages,
+  uploadBannerMedia,
+  uploadPropertyImages,
+  uploadDocumentFile,
+  uploadInvoice,
+};

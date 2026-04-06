@@ -66,14 +66,24 @@ const apartmentUnitSchema = new mongoose.Schema(
       dining: Number,
     },
     financials: {
-      unitPrice: Number,
-      bookingMoney: Number,
-      downPayment: Number,
-      parkingCharge: Number,
+      unitPrice:              Number,
+      bookingMoney:           Number,
+      downPayment:            Number,
+      parkingCharge:          Number,
       financialServiceCharge: Number,
-      latePaymentPenalty: Number,
-      serviceCharge: Number,
-      totalPayable: Number,
+      latePaymentPenalty:     Number,
+      serviceCharge:          Number,
+      totalPayable:           Number,
+    },
+
+    // ── EMI tracking (populated by Accountant on first document processing) ──
+    emiAmount: {
+      type:    Number,
+      default: null,
+    },
+    remainingEmis: {
+      type:    Number,
+      default: 184,
     },
     actionTimestamp: {
       type: Date,

@@ -93,10 +93,8 @@ const UnitProcessForm = ({ unit, onClose, onSuccess }) => {
     const fieldsToSum = [
       "unitPrice",
       "bookingMoney",
-      "downPayment",
       "parkingCharge",
       "financialServiceCharge",
-      "latePaymentPenalty",
       "serviceCharge",
     ];
     let total = 0;

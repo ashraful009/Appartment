@@ -3,7 +3,7 @@ const router  = express.Router();
 
 const { protect }        = require("../middleware/authMiddleware");
 const { authorizeRoles } = require("../middleware/authMiddleware");
-const { uploadBannerImages, uploadPropertyImages } = require("../middleware/uploadMiddleware");
+const { uploadBannerImages, uploadBannerMedia, uploadPropertyImages } = require("../middleware/uploadMiddleware");
 
 const {
     getStats,
@@ -21,7 +21,7 @@ const {
     getSellerAnalytics,
     approveSellerConversion,
 } = require("../controllers/adminController");
-const { createBanner, getBanners } = require("../controllers/bannerController");
+const { createBanner, getBanners, getBannerById, updateBanner, deleteBanner } = require("../controllers/bannerController");
 const { createProperty, getProperties, updateProperty, deleteProperty, getPropertyUnits } = require("../controllers/propertyController");
 const { getIdleLeads, setMonthlyTarget } = require("../controllers/adminEngineController");
 
@@ -36,9 +36,12 @@ router.get("/users", adminGuard, getUsers);
 router.get("/users/:id", adminGuard, getUserById);
 router.put("/users/:id/roles", adminGuard, updateUserRoles);
 
-// ─── Banners ──────────────────────────────────────────────────────────────
-router.post("/banners", adminGuard, uploadBannerImages, createBanner);
-router.get("/banners", getBanners);
+// ─── Banners ──────────────────────────────────────────────────────
+router.get("/banners",         adminGuard, getBanners);
+router.get("/banners/:id",     adminGuard, getBannerById);
+router.post("/banners",        adminGuard, uploadBannerMedia, createBanner);
+router.put("/banners/:id",     adminGuard, uploadBannerMedia, updateBanner);
+router.delete("/banners/:id",  adminGuard, deleteBanner);
 
 // ─── Properties / Buildings ───────────────────────────────────────────────
 router.post("/properties", adminGuard, uploadPropertyImages, createProperty);

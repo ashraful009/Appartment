@@ -5,9 +5,9 @@ import { Building2 } from "lucide-react";
 const PropertyGrid = ({ properties, loading }) => {
   if (loading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 w-full">
+      <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-5 lg:gap-8 w-full">
         {[...Array(6)].map((_, i) => (
-          <div key={i} className="w-full h-[500px] rounded-3xl bg-gray-200 animate-pulse" />
+          <div key={i} className="w-full h-[220px] sm:h-[320px] lg:h-[500px] rounded-2xl lg:rounded-3xl bg-gray-200 animate-pulse" />
         ))}
       </div>
     );
@@ -35,8 +35,8 @@ const PropertyGrid = ({ properties, loading }) => {
         </p>
       </div>
 
-      {/* Strict 3-column responsive grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 w-full">
+      {/* 2-col on mobile → 2-col on md → 3-col on lg */}
+      <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-5 lg:gap-8 w-full">
         {properties.map((property, i) => (
           <PropertyCard key={property._id} property={property} index={i} />
         ))}

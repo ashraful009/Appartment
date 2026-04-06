@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
-import { LayoutDashboard, FileText } from 'lucide-react';
+import { LayoutDashboard, FileText, ReceiptText } from 'lucide-react';
 
 const AccountantLayout = () => {
   return (
@@ -38,6 +38,20 @@ const AccountantLayout = () => {
           >
             <FileText size={20} />
             Sold Units / Processing
+          </NavLink>
+
+          <NavLink
+            to="/accountant/payments"
+            className={({ isActive }) =>
+              `flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all ${
+                isActive
+                  ? "bg-brand-50 text-brand-700 shadow-sm border border-brand-100"
+                  : "text-gray-600 hover:bg-gray-50 hover:text-gray-900 border border-transparent"
+              }`
+            }
+          >
+            <ReceiptText size={20} />
+            Customer Payments
           </NavLink>
         </nav>
       </aside>

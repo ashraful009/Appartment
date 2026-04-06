@@ -19,8 +19,8 @@ const PropertyCard = ({ property, index = 0 }) => {
       onClick={() => navigate(`/property/${property._id}`)}
       className="group relative w-full flex flex-col rounded-3xl overflow-hidden cursor-pointer shadow-lg hover:shadow-2xl transition-shadow duration-500"
     >
-      {/* ── Full-bleed image — fixed tall height, stretches to card width ── */}
-      <div className="relative h-[500px] w-full overflow-hidden">
+      {/* ── Full-bleed image — height scales with screen size ────────── */}
+      <div className="relative h-[180px] sm:h-[280px] md:h-[360px] lg:h-[460px] w-full overflow-hidden">
         {property.mainImage ? (
           <img
             src={property.mainImage}
@@ -38,66 +38,58 @@ const PropertyCard = ({ property, index = 0 }) => {
         {/* ── Persistent bottom gradient for text readability ── */}
         <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-black/85 via-black/40 to-transparent pointer-events-none" />
 
-        {/* ── Text overlay — sits above image and gradient ── */}
-        <div className="absolute inset-x-0 bottom-0 p-6 flex flex-col gap-2">
+        {/* ── 2-col info strip — pinned to bottom, thin as possible ─── */}
+        <div className="absolute inset-x-0 bottom-0 p-2 sm:p-3 lg:p-4 flex items-end justify-between gap-2">
 
-          {/* Tags */}
-          <div className="flex flex-wrap gap-2 mb-1">
+          {/* LEFT — name · location · apt types */}
+          <div className="flex flex-col gap-0.5 sm:gap-1 min-w-0">
+            <h3 className="text-xs sm:text-base lg:text-xl font-extrabold text-white leading-tight drop-shadow-md line-clamp-1">
+              {property.name}
+            </h3>
+
+            <div className="flex items-center gap-0.5 sm:gap-1 text-white/80">
+              <MapPin size={9} className="flex-shrink-0 text-yellow-300 sm:w-3 sm:h-3" />
+              <p className="text-[9px] sm:text-xs line-clamp-1">{property.address}</p>
+            </div>
+
+            {/* Apt size chips — up to 2, hidden on very small */}
+            {property.apartmentSizes?.length > 0 && (
+              <div className="hidden sm:flex flex-wrap gap-1 mt-0.5">
+                {property.apartmentSizes.slice(0, 2).map((s, i) => (
+                  <span
+                    key={i}
+                    className="bg-white/15 backdrop-blur-sm text-white text-[9px] sm:text-[10px] font-medium px-1.5 sm:px-2 py-0.5 rounded-md border border-white/20"
+                  >
+                    {s.type}: {s.size}
+                  </span>
+                ))}
+                {property.apartmentSizes.length > 2 && (
+                  <span className="text-white/50 text-[9px] self-center">
+                    +{property.apartmentSizes.length - 2}
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* RIGHT — stats badges (floors · units · handover) */}
+          <div className="flex flex-col items-end gap-1 flex-shrink-0">
             {property.floors > 0 && (
-              <span className="bg-white/20 backdrop-blur-sm text-white text-xs font-semibold px-3 py-1 rounded-full border border-white/20">
+              <span className="bg-white/20 backdrop-blur-sm text-white text-[9px] sm:text-[10px] font-semibold px-1.5 sm:px-2.5 py-0.5 rounded-full border border-white/20 whitespace-nowrap">
                 {property.floors} floors
               </span>
             )}
             {property.totalUnits > 0 && (
-              <span className="bg-white/20 backdrop-blur-sm text-white text-xs font-semibold px-3 py-1 rounded-full border border-white/20">
+              <span className="bg-white/20 backdrop-blur-sm text-white text-[9px] sm:text-[10px] font-semibold px-1.5 sm:px-2.5 py-0.5 rounded-full border border-white/20 whitespace-nowrap">
                 {property.totalUnits} units
               </span>
             )}
             {property.handoverTime && (
-              <span className="bg-yellow-400/80 backdrop-blur-sm text-yellow-900 text-xs font-bold px-3 py-1 rounded-full">
+              <span className="bg-yellow-400/90 text-yellow-900 text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2.5 py-0.5 rounded-full whitespace-nowrap">
                 📅 {property.handoverTime}
               </span>
             )}
           </div>
-
-          {/* Building name */}
-          <h3 className="text-2xl font-extrabold text-white leading-tight drop-shadow-md line-clamp-2">
-            {property.name}
-          </h3>
-
-          {/* Location */}
-          <div className="flex items-start gap-1.5 text-white/80">
-            <MapPin size={15} className="flex-shrink-0 mt-0.5 text-yellow-300" />
-            <p className="text-sm line-clamp-1">{property.address}</p>
-          </div>
-
-          {/* Apartment sizes */}
-          {property.apartmentSizes?.length > 0 && (
-            <div className="flex flex-wrap gap-1.5 mt-1">
-              {property.apartmentSizes.slice(0, 3).map((s, i) => (
-                <span key={i} className="bg-white/15 backdrop-blur-sm text-white text-xs font-medium px-2.5 py-1 rounded-lg border border-white/20">
-                  {s.type}: {s.size}
-                </span>
-              ))}
-              {property.apartmentSizes.length > 3 && (
-                <span className="text-white/60 text-xs self-center">
-                  +{property.apartmentSizes.length - 3}
-                </span>
-              )}
-            </div>
-          )}
-
-          {/* View Details button — slides up on hover */}
-          <button
-            onClick={(e) => { e.stopPropagation(); navigate(`/property/${property._id}`); }}
-            className="mt-3 w-full py-3 rounded-xl bg-white text-gray-900 text-sm font-bold
-                       opacity-0 translate-y-4
-                       group-hover:opacity-100 group-hover:translate-y-0
-                       transition-all duration-500 ease-in-out
-                       hover:bg-brand-50 shadow-lg"
-          >
-            View Details →
-          </button>
         </div>
       </div>
     </div>

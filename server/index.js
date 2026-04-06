@@ -16,6 +16,8 @@ const customerRoutes  = require("./src/routes/customerRoutes");
 const documentRoutes  = require("./src/routes/documentRoutes");
 const accountantRoutes = require("./src/routes/accountantRoutes");
 
+const { startInstallmentCron } = require("./src/cron/installmentCron");
+
 const { protect } = require("./src/middleware/authMiddleware");
 const { authorizeRoles } = require("./src/middleware/authMiddleware");
 const { getCurrentTarget } = require("./src/controllers/adminEngineController");
@@ -88,4 +90,7 @@ connectDB().then(() => {
   app.listen(PORT, () => {
     console.log(`🚀 Server running at http://localhost:${PORT}`);
   });
+
+  // Start scheduled jobs AFTER DB is ready (models are registered)
+  startInstallmentCron();
 });

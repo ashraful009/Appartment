@@ -53,6 +53,7 @@ import AGMDashboard from "./pages/agm/AGMDashboard";
 import AccountantLayout from "./layouts/AccountantLayout";
 import AccountantDashboard from "./pages/accountant/AccountantDashboard";
 import SoldUnits from "./pages/accountant/SoldUnits";
+import CustomerPayments from "./pages/accountant/CustomerPayments";
 
 const Placeholder = ({ title }) => (
   <div className="min-h-[60vh] flex items-center justify-center">
@@ -74,7 +75,7 @@ function App() {
         }}
       />
       <AuthProvider>
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen" style={{ background: "#FAF7F0" }}>
           <TopBar />
           <Navbar />
 
@@ -138,6 +139,7 @@ function App() {
               <Route path="/accountant" element={<ProtectedRoute allowedRoles={['Accountant']}><AccountantLayout /></ProtectedRoute>}>
                 <Route index element={<AccountantDashboard />} />
                 <Route path="sold-units" element={<SoldUnits />} />
+                <Route path="payments" element={<CustomerPayments />} />
               </Route>
               <Route path="/properties"     element={<Placeholder title="Properties" />} />
               <Route path="/about"          element={<Placeholder title="About Us" />} />

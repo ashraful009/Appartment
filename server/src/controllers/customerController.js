@@ -1,7 +1,8 @@
 const PriceRequest = require("../models/PriceRequest");
-const Interaction = require("../models/Interaction");
-const PaymentPlan = require("../models/PaymentPlan");
+const Interaction  = require("../models/Interaction");
+const PaymentPlan  = require("../models/PaymentPlan");
 const ApartmentUnit = require("../models/ApartmentUnit");
+const Installment  = require("../models/Installment");
 
 /**
  * GET /api/customer/overview
@@ -143,4 +144,73 @@ const getMyUnits = async (req, res) => {
   }
 };
 
-module.exports = { getCustomerOverview, getCustomerJourney, getMyUnits };
+// ─────────────────────────────────────────────────────────────────────────────
+// @desc   Get all installments for a specific unit belonging to the customer
+// @route  GET /api/customer/installments/:unitId
+// @access Private (customer — must own the unit)
+// ─────────────────────────────────────────────────────────────────────────────
+const getInstallmentsByUnit = async (req, res) => {
+  try {
+    const { unitId } = req.params;
+    const userId     = req.user._id;
+
+    // Security: verify this unit actually belongs to the requesting customer
+    const unit = await ApartmentUnit.findOne({ _id: unitId, customerId: userId }).lean();
+    if (!unit) {
+      return res.status(403).json({ success: false, message: "Unit not found or access denied." });
+    }
+
+    const installments = await Installment.find({ unitId })
+      .sort({ invoiceDate: 1 })   // chronological order
+      .lean();
+
+    res.status(200).json({ success: true, installments });
+  } catch (error) {
+    console.error("getInstallmentsByUnit error:", error);
+    res.status(500).json({ success: false, message: "Failed to fetch installments." });
+  }
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// @desc   Submit payment proof for an installment
+// @route  PUT /api/customer/installments/:id/pay
+// @access Private (customer)
+// ─────────────────────────────────────────────────────────────────────────────
+const submitPaymentProof = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { bankName, accountNumber } = req.body;
+    let invoiceUrl = "";
+
+    if (req.file) {
+      invoiceUrl = req.file.path;
+    }
+
+    const installment = await Installment.findById(id);
+    if (!installment) {
+      return res.status(404).json({ success: false, message: "Installment not found" });
+    }
+
+    // Security verify
+    if (installment.customerId.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ success: false, message: "Unauthorized" });
+    }
+
+    // Update details
+    installment.paymentDetails = {
+      bankName: bankName || "",
+      accountNumber: accountNumber || "",
+      invoiceUrl: invoiceUrl || installment.paymentDetails?.invoiceUrl,
+    };
+    installment.status = "Pending";
+    
+    await installment.save();
+
+    res.status(200).json({ success: true, message: "Payment proof submitted successfully", installment });
+  } catch (error) {
+    console.error("submitPaymentProof error:", error);
+    res.status(500).json({ success: false, message: "Failed to submit payment proof." });
+  }
+};
+
+module.exports = { getCustomerOverview, getCustomerJourney, getMyUnits, getInstallmentsByUnit, submitPaymentProof };
