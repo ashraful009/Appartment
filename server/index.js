@@ -37,10 +37,11 @@ const connectDB = async () => {
 };
 
 // ─── Middleware ────────────────────────────────────────────────────────────
-// Allow both production (Vercel) and local dev origins
+// Allowed CORS origins: local dev + production Vercel frontend
 const allowedOrigins = [
   "http://localhost:5173",
   "http://localhost:4173",
+  "https://appartment-five.vercel.app",          // production frontend
   ...(process.env.CLIENT_URL ? [process.env.CLIENT_URL] : []),
 ];
 
