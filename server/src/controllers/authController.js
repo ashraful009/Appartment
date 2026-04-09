@@ -54,13 +54,22 @@ const register = async (req, res) => {
       if (seller) referredBy = seller._id;
     }
 
+    // Generate a unique referral code for the new user (every user gets one)
+    let newUserReferralCode = null;
+    try {
+      newUserReferralCode = await generateUniqueReferralCode();
+    } catch (codeErr) {
+      console.error("Could not generate referral code on register:", codeErr);
+      // Non-fatal — proceed without a referral code
+    }
+
     const user = await User.create({
       name,
       email,
       password,
       phone,
-      referralCode: referralCode || null,
-      referredBy,
+      referralCode: newUserReferralCode, // user's OWN unique code (not the input one)
+      referredBy,                        // the seller who referred them (if any)
     });
 
     sendTokenCookie(res, user);

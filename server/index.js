@@ -25,6 +25,10 @@ const { getCurrentTarget } = require("./src/controllers/adminEngineController");
 const app  = express();
 const PORT = process.env.PORT || 5000;
 
+// Trust the first proxy — required on Render (and most cloud platforms) so that
+// Express correctly sees HTTPS connections and SameSite=None;Secure cookies work.
+app.set("trust proxy", 1);
+
 // ─── Connect to MongoDB ────────────────────────────────────────────────────
 const connectDB = async () => {
   try {
