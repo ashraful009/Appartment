@@ -1,9 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import axios from "axios";
 
-// ── Axios base config ─────────────────────────────────────────────────────
-axios.defaults.baseURL = "http://localhost:5000";
-axios.defaults.withCredentials = true; // Always send cookies
+
 
 const AuthContext = createContext(null);
 

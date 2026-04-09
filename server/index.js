@@ -37,12 +37,19 @@ const connectDB = async () => {
 };
 
 // ─── Middleware ────────────────────────────────────────────────────────────
-// Allowed CORS origins: local dev + production Vercel frontend
+// Allowed CORS origins: local dev + all known production frontends
+// To add a new origin without touching code, set CLIENT_URL on the Render dashboard.
 const allowedOrigins = [
+  // ── Local development ──
   "http://localhost:5173",
   "http://localhost:4173",
-  "https://appartment-five.vercel.app",          // production frontend
-  ...(process.env.CLIENT_URL ? [process.env.CLIENT_URL] : []),
+  // ── Production (Vercel) ──
+  "https://appartment-five.vercel.app",
+  "https://nirapod-nibash.vercel.app",
+  // ── Extra origin from Render env var (no trailing slash) ──
+  ...(process.env.CLIENT_URL
+    ? process.env.CLIENT_URL.split(",").map((u) => u.trim())
+    : []),
 ];
 
 app.use(

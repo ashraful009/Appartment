@@ -322,4 +322,96 @@
   ::-webkit-scrollbar-track { background: var(--ivory-warm); }
   ::-webkit-scrollbar-thumb { background: rgba(201,148,42,0.45); border-radius: 4px; }
   ::-webkit-scrollbar-thumb:hover { background: var(--gold); }
+
+  /* ── Skeleton / Shimmer System ──────────────────────────────────────────
+     Used by SkeletonLoader.jsx for loading states across the entire app.
+     All variants reuse the existing @keyframes shimmer defined above.
+     ───────────────────────────────────────────────────────────────────── */
+
+  /* Light skeleton — for cards on ivory/white backgrounds */
+  .skeleton-shimmer {
+    background: linear-gradient(
+      100deg,
+      rgba(10, 22, 40, 0.06) 0%,
+      rgba(10, 22, 40, 0.04) 20%,
+      rgba(201, 148, 42, 0.10) 50%,
+      rgba(10, 22, 40, 0.04) 80%,
+      rgba(10, 22, 40, 0.06) 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.8s ease-in-out infinite;
+    border-radius: 6px;
+  }
+
+  /* Dark skeleton — for elements on navy/dark hero backgrounds */
+  .skeleton-shimmer-dark {
+    background: linear-gradient(
+      100deg,
+      rgba(255, 255, 255, 0.06) 0%,
+      rgba(255, 255, 255, 0.04) 20%,
+      rgba(201, 148, 42, 0.15) 50%,
+      rgba(255, 255, 255, 0.04) 80%,
+      rgba(255, 255, 255, 0.06) 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.8s ease-in-out infinite;
+    border-radius: 6px;
+  }
+
+  /* Gold skeleton — for CTA button placeholders */
+  .skeleton-shimmer-gold {
+    background: linear-gradient(
+      100deg,
+      rgba(201, 148, 42, 0.20) 0%,
+      rgba(201, 148, 42, 0.12) 20%,
+      rgba(232, 184, 75, 0.35) 50%,
+      rgba(201, 148, 42, 0.12) 80%,
+      rgba(201, 148, 42, 0.20) 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.8s ease-in-out infinite;
+    border-radius: 12px;
+  }
+
+  /* Property card skeleton container */
+  .skeleton-card {
+    background: linear-gradient(
+      135deg,
+      rgba(10, 22, 40, 0.07) 0%,
+      rgba(10, 22, 40, 0.04) 100%
+    );
+    border-radius: 24px;
+    overflow: hidden;
+    position: relative;
+  }
+  .skeleton-card .skeleton-shimmer {
+    border-radius: 0;
+  }
+
+  /* Hero section full-width shimmer sweep */
+  .hero-shimmer-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      105deg,
+      transparent 30%,
+      rgba(201, 148, 42, 0.07) 50%,
+      transparent 70%
+    );
+    background-size: 300% 100%;
+    animation: shimmer 2.4s ease-in-out infinite;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  /* Pulse animation for simpler use cases (still available) */
+  .skeleton-pulse {
+    animation: pulse 1.8s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    background-color: rgba(10, 22, 40, 0.08);
+    border-radius: 6px;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.45; }
+  }
 }

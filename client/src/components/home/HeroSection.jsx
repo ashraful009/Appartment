@@ -1,17 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-
-/* ─── Skeleton ───────────────────────────────────────────────────────────── */
-const HeroSkeleton = () => (
-  <div
-    className="w-full animate-pulse"
-    style={{
-      background: "linear-gradient(135deg, #040810 0%, #0A1628 50%, #122040 100%)",
-      aspectRatio: "1920/700",
-      minHeight: "320px",
-    }}
-  />
-);
+import { HeroSkeleton } from "../common/SkeletonLoader";
 
 /* ─── Fallback Hero (no banner) ─────────────────────────────────────────── */
 const FallbackHero = () => {
