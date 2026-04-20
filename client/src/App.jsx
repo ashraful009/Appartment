@@ -7,7 +7,7 @@ import Navbar from "./components/common/Navbar";
 import Home from "./pages/public/Home";
 import Login from "./pages/public/Login";
 import Register from "./pages/public/Register";
-
+import ToastPopup from "./components/common/ToastPopup";
 // Admin Panel
 import AdminLayout from "./pages/admin/AdminLayout";
 import Dashboard from "./pages/admin/Dashboard";
@@ -80,6 +80,7 @@ function App() {
           <Navbar />
 
           <main>
+            <ToastPopup />
             <Routes>
               {/* Public routes */}
               <Route path="/"         element={<Home />} />
