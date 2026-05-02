@@ -19,9 +19,14 @@ const createProperty = async (req, res) => {
       handoverTime,
       parkingArea,
       description,
-      mapLocation,    // JSON string or object from FormData
+      mapLocation,       // JSON string or object from FormData
       displayOrder,
-      apartmentSizes, // JSON string from FormData
+      apartmentSizes,    // JSON string from FormData
+      area,              // Area ObjectId
+      status,            // Ongoing | Completed | Upcoming
+      installmentType,   // Long-term | Short-term
+      totalPrice,
+      totalSqft,
     } = req.body;
 
     if (!name || !address || !description) {
@@ -68,6 +73,18 @@ const createProperty = async (req, res) => {
       }
     }
 
+    let parsedInstallmentType = ["Long-term"];
+    if (installmentType) {
+      try {
+        parsedInstallmentType = typeof installmentType === "string" 
+          ? JSON.parse(installmentType) 
+          : installmentType;
+      } catch {
+        // Fallback if not valid JSON string but a simple string
+        parsedInstallmentType = [installmentType];
+      }
+    }
+
     const property = await Property.create({
       name,
       address,
@@ -75,15 +92,20 @@ const createProperty = async (req, res) => {
       mainImagePublicId,
       extraImages,
       extraImagePublicIds,
-      totalUnits:    totalUnits    ? Number(totalUnits)    : 0,
-      floors:        floors        ? Number(floors)        : 0,
-      landSize:      landSize      || "",
-      handoverTime:  handoverTime  || "",
-      parkingArea:   parkingArea   || "",
-      description:   description   || "",
-      mapLocation:   parsedMapLocation,
-      displayOrder:  displayOrder  !== undefined ? Number(displayOrder) : 999,
-      apartmentSizes: parsedSizes,
+      totalUnits:      totalUnits      ? Number(totalUnits)    : 0,
+      floors:          floors          ? Number(floors)        : 0,
+      landSize:        landSize        || "",
+      handoverTime:    handoverTime    || "",
+      parkingArea:     parkingArea     || "",
+      description:     description     || "",
+      mapLocation:     parsedMapLocation,
+      displayOrder:    displayOrder    !== undefined ? Number(displayOrder) : 999,
+      apartmentSizes:  parsedSizes,
+      area:            area            || null,
+      status:          status          || "Ongoing",
+      installmentType: parsedInstallmentType,
+      totalPrice:      totalPrice      ? Number(totalPrice) : 0,
+      totalSqft:       totalSqft       ? Number(totalSqft)  : 0,
     });
 
     // Pre-generate apartment units
@@ -140,22 +162,82 @@ const getProperties = async (req, res) => {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// @desc   Get paginated properties — PUBLIC home page
-// @route  GET /api/properties/public?page=1&limit=6
+// @desc   Get properties — PUBLIC (supports filtering + optional pagination)
+// @route  GET /api/properties/public?page=1&limit=6&area=...&status=...&installmentType=...&minPrice=...&maxPrice=...&minSqft=...&maxSqft=...&noPaginate=true
 // @access Public
-// Note:   No filter sidebar — only pagination + displayOrder sort.
-//         Add { isPublished: true } filter here once that field is added to the schema.
 // ─────────────────────────────────────────────────────────────────────────────
 const getPublicProperties = async (req, res) => {
   try {
-    const page  = parseInt(req.query.page,  10) || 1;
-    const limit = parseInt(req.query.limit, 10) || 6;
-    const skip  = (page - 1) * limit;
+    const {
+      page: rawPage,
+      limit: rawLimit,
+      country,
+      city,
+      area,
+      status,
+      installmentType,
+      minPrice,
+      maxPrice,
+      minSqft,
+      maxSqft,
+      noPaginate,
+    } = req.query;
 
-    const filter = {}; // extend with { isPublished: true } when schema supports it
+    // ── Build dynamic filter ──────────────────────────────────────────────
+    const filter = {};
+
+    if (area) {
+      filter.area = area;
+    } else if (country || city) {
+      const areaQuery = {};
+      if (country) areaQuery.country = country;
+      if (city) areaQuery.city = city;
+      
+      const Area = require("../models/Area");
+      const matchedAreas = await Area.find(areaQuery).select("_id");
+      const matchedAreaIds = matchedAreas.map((a) => a._id);
+      
+      filter.area = { $in: matchedAreaIds };
+    }
+
+    if (status)          filter.status          = status;
+    if (installmentType) filter.installmentType = installmentType;
+
+    // Price range: 5 Lakh query buffer
+    if (minPrice || maxPrice) {
+      filter.totalPrice = {};
+      if (minPrice) filter.totalPrice.$gte = Number(minPrice) - 500000;
+      if (maxPrice) filter.totalPrice.$lte = Number(maxPrice) + 500000;
+    }
+
+    // Sqft range
+    if (minSqft || maxSqft) {
+      filter.totalSqft = {};
+      if (minSqft) filter.totalSqft.$gte = Number(minSqft);
+      if (maxSqft) filter.totalSqft.$lte = Number(maxSqft);
+    }
+
+    // ── No pagination mode (for carousels / View All pages) ───────────────
+    if (noPaginate === "true") {
+      const properties = await Property.find(filter)
+        .populate("area", "name")
+        .sort({ displayOrder: 1, updatedAt: -1 });
+
+      return res.status(200).json({
+        success: true,
+        properties,
+        totalProperties: properties.length,
+      });
+    }
+
+    // ── Paginated mode ────────────────────────────────────────────────────
+    const page  = parseInt(rawPage,  10) || 1;
+    const limit = parseInt(rawLimit, 10) || 6;
+    const skip  = (page - 1) * limit;
 
     const [properties, total] = await Promise.all([
       Property.find(filter)
+        .populate("area", "name")
         .sort({ displayOrder: 1, updatedAt: -1 })
         .skip(skip)
         .limit(limit),
@@ -216,9 +298,14 @@ const updateProperty = async (req, res) => {
       handoverTime,
       parkingArea,
       description,
-      mapLocation,    // JSON string or object from FormData
+      mapLocation,       // JSON string or object from FormData
       displayOrder,
-      apartmentSizes, // JSON string from FormData
+      apartmentSizes,    // JSON string from FormData
+      area,
+      status,
+      installmentType,
+      totalPrice,
+      totalSqft,
     } = req.body;
 
     if (name) property.name = name;
@@ -230,6 +317,19 @@ const updateProperty = async (req, res) => {
     if (handoverTime !== undefined) property.handoverTime = handoverTime;
     if (parkingArea !== undefined) property.parkingArea = parkingArea;
     if (displayOrder !== undefined) property.displayOrder = Number(displayOrder);
+    if (area !== undefined)            property.area            = area || null;
+    if (status !== undefined)          property.status          = status;
+    if (installmentType !== undefined) {
+      try {
+        property.installmentType = typeof installmentType === "string" 
+          ? JSON.parse(installmentType) 
+          : installmentType;
+      } catch {
+        property.installmentType = [installmentType];
+      }
+    }
+    if (totalPrice !== undefined)      property.totalPrice      = totalPrice ? Number(totalPrice) : 0;
+    if (totalSqft !== undefined)       property.totalSqft       = totalSqft  ? Number(totalSqft)  : 0;
 
     if (mapLocation !== undefined) {
       try {

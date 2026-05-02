@@ -6,9 +6,9 @@ import {
   ArrowRight, CheckCircle, Building2, Users, MapPin,
   Award, Phone, Mail, Star, Shield, Clock, TrendingUp,
 } from "lucide-react";
-import HeroSection   from "../../components/home/HeroSection";
-import PropertyGrid  from "../../components/common/PropertyGrid";
-import Pagination    from "../../components/common/Pagination";
+import HeroSection          from "../../components/home/HeroSection";
+import PropertyFilterSidebar from "../../components/home/PropertyFilterSidebar";
+import PropertyCarousel      from "../../components/home/PropertyCarousel";
 
 /* ─ Color tokens ─────────────────────────────────────────────────────────── */
 const C = {
@@ -308,27 +308,36 @@ const SectionHeader = ({ label, title, subtitle, center = false }) => {
 
 /* ─ Main Home ────────────────────────────────────────────────────────────── */
 const Home = () => {
-  const { isAuthenticated, user }        = useAuth();
-  const [properties, setProperties]      = useState([]);
-  const [loadingProps, setLoadingProps]  = useState(true);
-  const [currentPage, setCurrentPage]    = useState(1);
-  const [totalPages, setTotalPages]      = useState(1);
+  const { isAuthenticated, user }              = useAuth();
+  const [longTermProps, setLongTermProps]       = useState([]);
+  const [shortTermProps, setShortTermProps]     = useState([]);
+  const [loadingLong, setLoadingLong]           = useState(true);
+  const [loadingShort, setLoadingShort]         = useState(true);
 
   useEffect(() => {
-    const fetchProps = async () => {
-      setLoadingProps(true);
+    const fetchLong = async () => {
       try {
-        const { data } = await axios.get(`/api/properties/public?page=${currentPage}&limit=6`);
-        setProperties(data.properties || []);
-        setTotalPages(data.totalPages || 1);
+        const { data } = await axios.get("/api/properties/public?installmentType=Long-term&noPaginate=true");
+        setLongTermProps(data.properties || []);
       } catch (err) {
-        console.error("Failed to load properties:", err);
+        console.error("Failed to load long-term properties:", err);
       } finally {
-        setLoadingProps(false);
+        setLoadingLong(false);
       }
     };
-    fetchProps();
-  }, [currentPage]);
+    const fetchShort = async () => {
+      try {
+        const { data } = await axios.get("/api/properties/public?installmentType=Short-term&noPaginate=true");
+        setShortTermProps(data.properties || []);
+      } catch (err) {
+        console.error("Failed to load short-term properties:", err);
+      } finally {
+        setLoadingShort(false);
+      }
+    };
+    fetchLong();
+    fetchShort();
+  }, []);
 
   return (
     <div className="min-h-screen" style={{ background: C.ivory, fontFamily: "'Jost', sans-serif" }}>
@@ -413,42 +422,42 @@ const Home = () => {
       <section className="py-16 sm:py-24" style={{ background: C.ivory }}>
         <div className="section-wrap">
 
-          {/* Header */}
-          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-10">
-            <SectionHeader
-              label="Our Portfolio"
-              title="Available Properties"
-              subtitle="Handpicked, verified, and ready for you."
-            />
-            <Link
-              to="/properties"
-              className="flex items-center gap-2 flex-shrink-0 transition-all duration-200 group"
-              style={{
-                fontFamily: "'Jost', sans-serif",
-                fontSize: "0.875rem",
-                fontWeight: 600,
-                color: C.gold,
-                paddingBottom: "60px",
-                textDecoration: "none",
-              }}
-              onMouseEnter={(e) => { e.currentTarget.style.color = "#E8B84B"; }}
-              onMouseLeave={(e) => { e.currentTarget.style.color = C.gold; }}
-            >
-              View All
-              <ArrowRight size={15} className="group-hover:translate-x-1 transition-transform duration-200" />
-            </Link>
-          </div>
-
-          <PropertyGrid properties={properties} loading={loadingProps} />
-
-          <Pagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={(page) => {
-              setCurrentPage(page);
-              window.scrollTo({ top: 500, behavior: "smooth" });
-            }}
+          {/* Section Header */}
+          <SectionHeader
+            title="Available Properties"
           />
+
+          {/* 2-column layout: Sidebar + Carousels */}
+          <div className="flex flex-col lg:flex-row gap-8">
+
+            {/* Left Sidebar Filter */}
+            <div className="w-full lg:w-72 flex-shrink-0">
+              <PropertyFilterSidebar />
+            </div>
+
+            {/* Right Content — Carousels */}
+            <div className="flex-1 min-w-0">
+
+              {/* Long-term Installment */}
+              <PropertyCarousel
+                title="Long-term Installment"
+                subtitle="Flexible payment plans for your dream home."
+                properties={longTermProps}
+                loading={loadingLong}
+                viewAllLink="/properties/long-term"
+              />
+
+              {/* Short-term Installment */}
+              <PropertyCarousel
+                title="Short-term Installment"
+                subtitle="Quick possession, shorter commitment."
+                properties={shortTermProps}
+                loading={loadingShort}
+                viewAllLink="/properties/short-term"
+              />
+
+            </div>
+          </div>
         </div>
       </section>
 
@@ -618,8 +627,8 @@ const Home = () => {
                 <p style={{ fontFamily: "'Jost', sans-serif", fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.18em", textTransform: "uppercase", color: C.gold, marginBottom: "3px" }}>
                   Call Us
                 </p>
-                <a href="tel:+8801700000000" style={{ fontFamily: "'Jost', sans-serif", fontSize: "0.9rem", fontWeight: 600, color: C.navy, textDecoration: "none" }}>
-                  +880 1700-000000
+                <a href="tel:+880 16116 52555" style={{ fontFamily: "'Jost', sans-serif", fontSize: "0.9rem", fontWeight: 600, color: C.navy, textDecoration: "none" }}>
+                  +880 16116 52555
                 </a>
                 <p style={{ fontFamily: "'Jost', sans-serif", fontSize: "0.75rem", color: C.textMuted, marginTop: "2px" }}>Sat–Thu · 9 AM–7 PM</p>
               </div>
@@ -734,7 +743,7 @@ const Home = () => {
               <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: "10px" }}>
                 {[
                   { icon: "📍", text: "123 Gulshan Ave, Dhaka" },
-                  { icon: "📞", text: "+880 1700-000000", href: "tel:+8801700000000" },
+                  { icon: "📞", text: "+880 16116 52555", href: "tel:+8801611652555" },
                   { icon: "✉️", text: "info@nirapodnibash.com", href: "mailto:info@nirapodnibash.com" },
                   { icon: "🕐", text: "Sat–Thu: 9 AM – 7 PM" },
                 ].map(({ icon, text, href }) => (

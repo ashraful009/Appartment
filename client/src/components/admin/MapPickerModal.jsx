@@ -1,5 +1,5 @@
-import React, { useState, useCallback, useEffect } from "react";
-import { GoogleMap, Marker } from "@react-google-maps/api";
+import React, { useState, useCallback } from "react";
+import { GoogleMap, MarkerF } from "@react-google-maps/api";
 import { X, MapPin, CheckCircle, Loader2 } from "lucide-react";
 
 const MAP_CONTAINER_STYLE = { width: "100%", height: "450px" };
@@ -23,10 +23,15 @@ const MAP_OPTIONS = {
 const MapPickerModal = ({ isOpen, onClose, mapLocation, onConfirm, isLoaded, loadError }) => {
   const [markerPos, setMarkerPos] = useState(mapLocation);
 
-  // Reset working position every time the modal opens
-  useEffect(() => {
-    if (isOpen) setMarkerPos(mapLocation);
-  }, [isOpen]); // eslint-disable-line react-hooks/exhaustive-deps
+  const [prevIsOpen, setPrevIsOpen] = useState(isOpen);
+
+  // Reset working position every time the modal opens without triggering a cascading render
+  if (isOpen !== prevIsOpen) {
+    setPrevIsOpen(isOpen);
+    if (isOpen) {
+      setMarkerPos(mapLocation);
+    }
+  }
 
   const handleMapClick = useCallback((e) => {
     setMarkerPos({ lat: e.latLng.lat(), lng: e.latLng.lng() });
@@ -79,7 +84,7 @@ const MapPickerModal = ({ isOpen, onClose, mapLocation, onConfirm, isLoaded, loa
               onClick={handleMapClick}
               options={MAP_OPTIONS}
             >
-              <Marker position={markerPos} />
+              <MarkerF position={markerPos} />
             </GoogleMap>
           )}
         </div>

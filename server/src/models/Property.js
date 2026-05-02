@@ -77,6 +77,30 @@ const propertySchema = new mongoose.Schema(
       type: [apartmentSizeSchema],
       default: [],
     },
+    // ── New fields for filtering & categorization ──────────────────────────
+    area: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Area",
+      default: null,
+    },
+    status: {
+      type: String,
+      enum: ["Ongoing", "Completed", "Upcoming"],
+      default: "Ongoing",
+    },
+    installmentType: {
+      type: [String],
+      enum: ["Long-term", "Short-term"],
+      default: ["Long-term"],
+    },
+    totalPrice: {
+      type: Number,
+      default: 0,
+    },
+    totalSqft: {
+      type: Number,
+      default: 0,
+    },
   },
   { timestamps: true }
 );

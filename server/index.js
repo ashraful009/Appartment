@@ -15,6 +15,7 @@ const userRoutes      = require("./src/routes/userRoutes");
 const customerRoutes  = require("./src/routes/customerRoutes");
 const documentRoutes  = require("./src/routes/documentRoutes");
 const accountantRoutes = require("./src/routes/accountantRoutes");
+const areaRoutes       = require("./src/routes/areaRoutes");
 
 const { startInstallmentCron } = require("./src/cron/installmentCron");
 
@@ -83,6 +84,7 @@ app.use("/api/users",     userRoutes);
 app.use("/api/customer",  customerRoutes);
 app.use("/api/documents", documentRoutes);
 app.use("/api/accountant", accountantRoutes);
+app.use("/api/areas",      areaRoutes);
 app.use("/api",           publicRoutes); // Public: /api/banners/active, /api/banners, /api/properties
 
 // GET /api/targets/current — available to all authenticated sellers + admins
@@ -112,7 +114,7 @@ app.use((err, req, res, next) => {
 // ─── Start ─────────────────────────────────────────────────────────────────
 connectDB().then(() => {
   app.listen(PORT, () => {
-    console.log(`🚀 Server running at http://localhost:${PORT}`);
+    console.log(`🚀 Server running `);
   });
 
   // Start scheduled jobs AFTER DB is ready (models are registered)

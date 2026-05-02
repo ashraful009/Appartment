@@ -11,6 +11,7 @@ import {
   ClipboardList,
   Store,
   BarChart2,
+  MapPin,
 } from "lucide-react";
 
 const navItems = [
@@ -23,6 +24,8 @@ const navItems = [
   { to: "/admin-panel/manage-buildings", label: "Manage Buildings", icon: Building2 },
   { to: "/admin-panel/book-unit", label: "Book Unit", icon: Building2 },
   { to: "/admin-panel/users", label: "Manage Users", icon: Users },
+  { to: "/admin-panel/areas", label: "Manage Areas", icon: MapPin },
+  { to: "/admin-panel/short-term-requests", label: "Short-term Inquiries", icon: ClipboardList },
 ];
 
 const AdminLayout = () => {

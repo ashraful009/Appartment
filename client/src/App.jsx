@@ -7,7 +7,10 @@ import Navbar from "./components/common/Navbar";
 import Home from "./pages/public/Home";
 import Login from "./pages/public/Login";
 import Register from "./pages/public/Register";
-import ToastPopup from "./components/common/ToastPopup";
+import FilteredProperties from "./pages/public/FilteredProperties";
+import LongTermProperties from "./pages/public/LongTermProperties";
+import ShortTermProperties from "./pages/public/ShortTermProperties";
+
 // Admin Panel
 import AdminLayout from "./pages/admin/AdminLayout";
 import Dashboard from "./pages/admin/Dashboard";
@@ -21,6 +24,8 @@ import AdminPendingLeads from "./pages/admin/AdminPendingLeads";
 import MasterAnalytics from "./pages/admin/MasterAnalytics";
 import AdminBookUnit from "./pages/admin/AdminBookUnit";
 import BookUnitDetail from "./pages/admin/BookUnitDetail";
+import AreaManagement from "./pages/admin/AreaManagement";
+import ShortTermRequests from "./pages/admin/ShortTermRequests";
 
 // Seller Panel
 import SellerLayout from "./pages/seller/SellerLayout";
@@ -80,12 +85,15 @@ function App() {
           <Navbar />
 
           <main>
-            <ToastPopup />
+
             <Routes>
               {/* Public routes */}
               <Route path="/"         element={<Home />} />
               <Route path="/login"    element={<Login />} />
               <Route path="/register" element={<Register />} />
+              <Route path="/properties/filtered" element={<FilteredProperties />} />
+              <Route path="/properties/long-term" element={<LongTermProperties />} />
+              <Route path="/properties/short-term" element={<ShortTermProperties />} />
 
               {/* Admin Panel */}
               <Route path="/admin-panel" element={<AdminLayout />}>
@@ -100,6 +108,8 @@ function App() {
                 <Route path="users" element={<UserManagement />} />
                 <Route path="book-unit" element={<AdminBookUnit />} />
                 <Route path="book-unit/:id" element={<BookUnitDetail />} />
+                <Route path="areas" element={<AreaManagement />} />
+                <Route path="short-term-requests" element={<ShortTermRequests />} />
               </Route>
 
               {/* Seller Panel */}

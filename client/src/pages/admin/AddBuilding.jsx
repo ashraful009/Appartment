@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import axios from "axios";
 import {
   ImagePlus, X, Plus, Trash2, CheckCircle,
@@ -40,6 +40,11 @@ const INITIAL_FORM = {
   parkingArea: "",
   description: "",
   displayOrder: "",
+  area: "",
+  status: "Ongoing",
+  installmentType: ["Long-term"],
+  totalPrice: "",
+  totalSqft: "",
 };
 
 const DEFAULT_MAP_LOCATION = { lat: 23.7942, lng: 90.4132 };
@@ -55,6 +60,21 @@ const AddBuilding = () => {
   const [showMapModal, setShowMapModal] = useState(false);
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState(null);
+  const [areas, setAreas] = useState([]);
+  const [selectedCountry, setSelectedCountry] = useState("");
+  const [selectedCity, setSelectedCity] = useState("");
+
+  useEffect(() => {
+    const fetchAreas = async () => {
+      try {
+        const { data } = await axios.get("/api/areas");
+        setAreas(data.areas || []);
+      } catch (err) {
+        console.error("Failed to fetch areas:", err);
+      }
+    };
+    fetchAreas();
+  }, []);
 
   const { isLoaded: mapsLoaded, loadError: mapsLoadError } = useLoadScript({
     googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY || "",
@@ -70,14 +90,38 @@ const AddBuilding = () => {
   };
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setForm((p) => ({ ...p, [name]: value }));
+    const { name, value, type, checked } = e.target;
+    
+    if (name === "installmentType") {
+      setForm((prev) => {
+        let updatedTypes = [...prev.installmentType];
+        if (checked) {
+          updatedTypes.push(value);
+        } else {
+          updatedTypes = updatedTypes.filter(t => t !== value);
+        }
+        return { ...prev, installmentType: updatedTypes };
+      });
+    } else {
+      setForm((p) => ({ ...p, [name]: value }));
+    }
   };
 
   const handleSerialChange = (e) => {
     const val = parseInt(e.target.value, 10);
     if (!val) { setForm((p) => ({ ...p, displayOrder: "" })); return; }
     setForm((prev) => ({ ...prev, displayOrder: parseInt(e.target.value) }));
+  };
+
+  const handleCountryChange = (e) => {
+    setSelectedCountry(e.target.value);
+    setSelectedCity("");
+    setForm((p) => ({ ...p, area: "" }));
+  };
+
+  const handleCityChange = (e) => {
+    setSelectedCity(e.target.value);
+    setForm((p) => ({ ...p, area: "" }));
   };
 
   const handleMainImage = (e) => {
@@ -121,11 +165,16 @@ const AddBuilding = () => {
 
     try {
       const fd = new FormData();
-      Object.entries(form).forEach(([k, v]) => fd.append(k, v));
+      Object.entries(form).forEach(([k, v]) => {
+        if (k !== "installmentType") fd.append(k, v);
+      });
       fd.append("mapLocation", JSON.stringify(mapLocation));
 
       if (mainImage) fd.append("mainImage", mainImage);
       extraFiles.forEach((f) => fd.append("extraImages", f));
+
+      // Append array as JSON string
+      fd.append("installmentType", JSON.stringify(form.installmentType));
 
       const filteredSizes = aptSizes.filter(
         (r) => r.type.trim() || r.size.trim()
@@ -150,6 +199,8 @@ const AddBuilding = () => {
       setExtraPreviews([]);
       setAptSizes([{ type: "", size: "", description: "" }]);
       setMapLocation(DEFAULT_MAP_LOCATION);
+      setSelectedCountry("");
+      setSelectedCity("");
 
       if (mainInputRef.current) mainInputRef.current.value = "";
       if (extraInputRef.current) extraInputRef.current.value = "";
@@ -179,7 +230,18 @@ const AddBuilding = () => {
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-8">
+      {/* Derived Locations */}
+      {(() => {
+        const uniqueCountries = [...new Set(areas.map((a) => a.country))].filter(Boolean).sort();
+        const uniqueCities = selectedCountry 
+          ? [...new Set(areas.filter((a) => a.country === selectedCountry).map((a) => a.city))].filter(Boolean).sort()
+          : [];
+        const filteredAreas = selectedCity 
+          ? areas.filter((a) => a.country === selectedCountry && a.city === selectedCity).sort((a, b) => a.name.localeCompare(b.name))
+          : [];
+
+        return (
+          <form onSubmit={handleSubmit} className="space-y-8">
 
         {/* Image Section — 2-col: polished uploads left, full-bleed live preview right */}
         <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
@@ -445,6 +507,130 @@ const AddBuilding = () => {
 
           </div>
 
+          {/* Row 2b — Categorization Grid (Area, Status, Installment Type) */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
+
+            {/* Country */}
+            <div>
+              <label className="text-sm font-semibold text-gray-600 mb-1.5 block">Country</label>
+              <select
+                value={selectedCountry}
+                onChange={handleCountryChange}
+                className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:bg-white transition-all appearance-none cursor-pointer"
+              >
+                <option value="">— Select Country —</option>
+                {uniqueCountries.map((c) => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* City */}
+            <div>
+              <label className="text-sm font-semibold text-gray-600 mb-1.5 block">City</label>
+              <select
+                value={selectedCity}
+                onChange={handleCityChange}
+                disabled={!selectedCountry}
+                className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:bg-white transition-all appearance-none cursor-pointer disabled:opacity-50"
+              >
+                <option value="">— Select City —</option>
+                {uniqueCities.map((c) => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Area */}
+            <div>
+              <label className="text-sm font-semibold text-gray-600 mb-1.5 block">Area</label>
+              <select
+                name="area"
+                value={form.area}
+                onChange={handleChange}
+                disabled={!selectedCity}
+                className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:bg-white transition-all appearance-none cursor-pointer disabled:opacity-50"
+              >
+                <option value="">— Select Area —</option>
+                {filteredAreas.map((a) => (
+                  <option key={a._id} value={a._id}>{a.name}</option>
+                ))}
+              </select>
+              <p className="text-[11px] text-gray-400 mt-1.5">Manage areas from Admin → Manage Areas.</p>
+            </div>
+
+            {/* Status */}
+            <div>
+              <label className="text-sm font-semibold text-gray-600 mb-1.5 block">Status</label>
+              <select
+                name="status"
+                value={form.status}
+                onChange={handleChange}
+                className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:bg-white transition-all appearance-none cursor-pointer"
+              >
+                <option value="Ongoing">Ongoing</option>
+                <option value="Completed">Completed</option>
+                <option value="Upcoming">Upcoming</option>
+              </select>
+            </div>
+
+            {/* Installment Type */}
+            <div>
+              <label className="text-sm font-semibold text-gray-600 mb-2.5 block">Installment Type</label>
+              <div className="flex flex-col gap-3">
+                {["Long-term", "Short-term"].map((type) => (
+                  <label key={type} className="flex items-center gap-3 cursor-pointer group">
+                    <div className="relative flex items-center justify-center w-5 h-5 border border-gray-300 rounded focus-within:ring-2 focus-within:ring-indigo-400 focus-within:ring-offset-1 bg-white">
+                      <input
+                        type="checkbox"
+                        name="installmentType"
+                        value={type}
+                        checked={form.installmentType.includes(type)}
+                        onChange={handleChange}
+                        className="opacity-0 absolute w-full h-full cursor-pointer"
+                      />
+                      {form.installmentType.includes(type) && (
+                        <svg className="w-3.5 h-3.5 text-indigo-600 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                        </svg>
+                      )}
+                    </div>
+                    <span className="text-sm text-gray-700 font-medium select-none group-hover:text-gray-900">{type}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+          </div>
+
+          {/* Row 2c — Total Price & Total Sqft */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+            <div>
+              <label className="text-sm font-semibold text-gray-600 mb-1.5 block">Total Price (BDT)</label>
+              <input
+                name="totalPrice"
+                type="number"
+                min="0"
+                value={form.totalPrice}
+                onChange={handleChange}
+                placeholder="e.g. 10000000"
+                className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:bg-white transition-all"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-semibold text-gray-600 mb-1.5 block">Total Sqft</label>
+              <input
+                name="totalSqft"
+                type="number"
+                min="0"
+                value={form.totalSqft}
+                onChange={handleChange}
+                placeholder="e.g. 1800"
+                className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:bg-white transition-all"
+              />
+            </div>
+          </div>
+
           {/* Row 3 — Location (address + map button) */}
           <div className="mt-6">
             <label className="text-sm font-semibold text-gray-600 mb-1.5 block">
@@ -580,7 +766,9 @@ const AddBuilding = () => {
             </>
           )}
         </button>
-      </form>
+          </form>
+        );
+      })()}
 
       {/* Google Maps Picker Modal */}
       <MapPickerModal

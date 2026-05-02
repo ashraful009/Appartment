@@ -323,6 +323,10 @@
   ::-webkit-scrollbar-thumb { background: rgba(201,148,42,0.45); border-radius: 4px; }
   ::-webkit-scrollbar-thumb:hover { background: var(--gold); }
 
+  /* Hide scrollbar for carousels */
+  .scrollbar-hide::-webkit-scrollbar { display: none; }
+  .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+
   /* ── Skeleton / Shimmer System ──────────────────────────────────────────
      Used by SkeletonLoader.jsx for loading states across the entire app.
      All variants reuse the existing @keyframes shimmer defined above.
