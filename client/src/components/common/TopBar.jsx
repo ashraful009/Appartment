@@ -60,7 +60,7 @@ const TopBar = () => (
           />
 
           <a
-            href="tel:+8801700000000"
+            href="tel:01611652333"
             className="flex items-center gap-1.5 group transition-all duration-200"
             style={{ textDecoration: "none" }}
           >
@@ -73,7 +73,7 @@ const TopBar = () => (
               className="font-medium tracking-wide group-hover:text-gold-300 transition-colors duration-200"
               style={{ fontSize: "11px", color: "rgba(200,211,232,0.8)" }}
             >
-              +880 1700-000000
+              01611652555
             </span>
           </a>
         </div>
@@ -94,7 +94,7 @@ const TopBar = () => (
               color: "rgba(201,148,42,0.75)",
             }}
           >
-            Premium Real Estate · Dhaka, Bangladesh
+            Premium Real Estate
           </span>
           <div
             className="w-1 h-1 rounded-full animate-pulse-ring delay-300"
@@ -110,7 +110,7 @@ const TopBar = () => (
           >
             <Clock size={11} style={{ color: "#C9942A", flexShrink: 0 }} />
             <span style={{ fontSize: "11px", fontWeight: 500, letterSpacing: "0.03em" }}>
-              Sat–Thu · 9 AM–7 PM
+              Sat–Thu · 10.00 AM–06.00 PM
             </span>
           </div>
 
@@ -120,7 +120,7 @@ const TopBar = () => (
           >
             <MapPin size={11} style={{ color: "#C9942A", flexShrink: 0 }} />
             <span style={{ fontSize: "11px", fontWeight: 500, letterSpacing: "0.03em" }}>
-              Gulshan Ave, Dhaka
+              House No. 2, Road No. 11, Block F, Banani, Dhaka-1213
             </span>
           </div>
         </div>

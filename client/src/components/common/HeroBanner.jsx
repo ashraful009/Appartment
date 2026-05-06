@@ -7,7 +7,7 @@ const SLIDE_INTERVAL = 5000; // ms between auto-slides
 const FALLBACK = {
   images: [],
   motivationalText: "Find Your Dream Home",
-  contactInfo: "+880 1700-000000 | info@appartment.com",
+  contactInfo: "01611-652333 | info@appartment.com",
 };
 
 const HeroBanner = ({ banner }) => {

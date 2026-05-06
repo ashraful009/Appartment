@@ -627,8 +627,8 @@ const Home = () => {
                 <p style={{ fontFamily: "'Jost', sans-serif", fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.18em", textTransform: "uppercase", color: C.gold, marginBottom: "3px" }}>
                   Call Us
                 </p>
-                <a href="tel:+880 16116 52555" style={{ fontFamily: "'Jost', sans-serif", fontSize: "0.9rem", fontWeight: 600, color: C.navy, textDecoration: "none" }}>
-                  +880 16116 52555
+                <a href="tel:01611652333" style={{ fontFamily: "'Jost', sans-serif", fontSize: "0.9rem", fontWeight: 600, color: C.navy, textDecoration: "none" }}>
+                  01611652555
                 </a>
                 <p style={{ fontFamily: "'Jost', sans-serif", fontSize: "0.75rem", color: C.textMuted, marginTop: "2px" }}>Sat–Thu · 9 AM–7 PM</p>
               </div>
@@ -663,8 +663,8 @@ const Home = () => {
                 <p style={{ fontFamily: "'Jost', sans-serif", fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.18em", textTransform: "uppercase", color: C.gold, marginBottom: "3px" }}>
                   Visit Us
                 </p>
-                <p style={{ fontFamily: "'Jost', sans-serif", fontSize: "0.9rem", fontWeight: 600, color: C.navy }}>123 Gulshan Ave, Dhaka</p>
-                <p style={{ fontFamily: "'Jost', sans-serif", fontSize: "0.75rem", color: C.textMuted, marginTop: "2px" }}>Dhaka 1212, Bangladesh</p>
+                <p style={{ fontFamily: "'Jost', sans-serif", fontSize: "0.9rem", fontWeight: 600, color: C.navy }}>House No. 2, Road No. 11, Block F</p>
+                <p style={{ fontFamily: "'Jost', sans-serif", fontSize: "0.75rem", color: C.textMuted, marginTop: "2px" }}>Banani, Dhaka-1213</p>
               </div>
             </div>
 
@@ -742,10 +742,10 @@ const Home = () => {
               </p>
               <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: "10px" }}>
                 {[
-                  { icon: "📍", text: "123 Gulshan Ave, Dhaka" },
-                  { icon: "📞", text: "+880 16116 52555", href: "tel:+8801611652555" },
+                  { icon: "📍", text: "House No. 2, Road No. 11, Block F, Banani, Dhaka-1213" },
+                  { icon: "📞", text: "01611652555", href: "tel:01611652555" },
                   { icon: "✉️", text: "info@nirapodnibash.com", href: "mailto:info@nirapodnibash.com" },
-                  { icon: "🕐", text: "Sat–Thu: 9 AM – 7 PM" },
+                  { icon: "🕐", text: "Sat–Thu: 10.00 AM – 06.00 PM" },
                 ].map(({ icon, text, href }) => (
                   <li key={text}>
                     {href ? (

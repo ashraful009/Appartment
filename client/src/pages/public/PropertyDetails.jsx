@@ -281,7 +281,7 @@ const PropertyDetails = () => {
               <span className="text-xs font-bold uppercase tracking-widest text-gray-500">Call for details</span>
               <a href="tel:01784446633" className="text-lg font-extrabold text-gray-900 flex items-center gap-2 hover:text-gray-600 transition-colors">
                 <Phone size={18} className="text-gray-400" />
-                01784446633
+                01611652555
               </a>
             </div>
 

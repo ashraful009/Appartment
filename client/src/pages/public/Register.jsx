@@ -174,7 +174,7 @@ const Register = () => {
                   icon={Phone}
                   id="phone" name="phone" type="tel"
                   value={form.phone} onChange={handleChange}
-                  placeholder="+880 1700-000000"
+                  placeholder="01611-652333"
                   error={errors.phone}
                 />
               </Field>
