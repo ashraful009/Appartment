@@ -276,11 +276,20 @@ const PropertyDetails = () => {
               )}
             </div>
 
+            {/* Call for details */}
+            <div className="mt-6 flex items-center justify-between px-5 py-4 bg-gray-50 border border-gray-200 rounded-xl">
+              <span className="text-xs font-bold uppercase tracking-widest text-gray-500">Call for details</span>
+              <a href="tel:01784446633" className="text-lg font-extrabold text-gray-900 flex items-center gap-2 hover:text-gray-600 transition-colors">
+                <Phone size={18} className="text-gray-400" />
+                01784446633
+              </a>
+            </div>
+
             {/* CTA Button */}
             <button
               onClick={handleRequestPrice}
               disabled={requesting || requested}
-              className={`mt-6 w-full py-3.5 rounded-lg text-white text-sm font-bold uppercase tracking-widest transition-all duration-200 shadow-md flex items-center justify-center gap-2 ${
+              className={`mt-4 w-full py-3.5 rounded-lg text-white text-sm font-bold uppercase tracking-widest transition-all duration-200 shadow-md flex items-center justify-center gap-2 ${
                 requested
                   ? "bg-emerald-600 cursor-default"
                   : requesting
