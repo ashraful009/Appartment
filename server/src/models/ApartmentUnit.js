@@ -90,6 +90,34 @@ const apartmentUnitSchema = new mongoose.Schema(
       default: null,
     },
 
+    // ── Investor allocation (set by Management on the Building Allocate page) ──
+    // When a unit is allocated to an investor it is marked "Booked" and these
+    // fields record who it's for, who allocated it, and the handover month/year.
+    allocatedTo: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
+    allocatedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
+    allocatedAt: {
+      type: Date,
+      default: null,
+    },
+    handoverMonth: {
+      type: Number, // 1–12
+      min: 1,
+      max: 12,
+      default: null,
+    },
+    handoverYear: {
+      type: Number,
+      default: null,
+    },
+
   },
   { timestamps: true }
 );

@@ -72,7 +72,7 @@ const userSchema = new mongoose.Schema(
     // ── Roles — array of strings ──────────────────────────────────
     // Possible values: "user", "customer", "seller", "admin"
     // Every new account gets ["user"] by default.
-    roles: [{ type: String, enum: ['user', 'customer', 'seller', 'admin', 'Director', 'GM', 'AGM', 'Accountant'], default: 'user' }],
+    roles: [{ type: String, enum: ['user', 'customer', 'seller', 'admin', 'Director', 'GM', 'AGM', 'Accountant', 'DataEntry', 'Management', 'member', 'Investor'], default: 'user' }],
     // ── Seller Fields ──────────────────────────────────────────────
     bio: {
       type: String,

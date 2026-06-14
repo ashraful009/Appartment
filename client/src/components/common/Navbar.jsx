@@ -13,6 +13,8 @@ import {
   Building2,
   Briefcase,
   TrendingUp,
+  Users,
+  Wallet,
 } from "lucide-react";
 
 /* ─── Default avatar ───────────────────────────────────────────────────── */
@@ -333,6 +335,8 @@ const Navbar = () => {
                   </div>
 
                   <DropItem icon={<User size={14} />}            label="My Profile"       to="/profile"       onClick={() => setDropOpen(false)} />
+                  {!user?.roles?.includes("member") && !user?.roles?.includes("Investor") &&
+                    <DropItem icon={<Wallet size={14} />}           label="My Investment"    to="/membership"     onClick={() => setDropOpen(false)} />}
                   {user?.roles?.includes("customer")   && <DropItem icon={<LayoutDashboard size={14} />}  label="Customer Panel"   to="/customer-panel" onClick={() => setDropOpen(false)} />}
                   {user?.roles?.includes("seller")     && <DropItem icon={<Store size={14} />}            label="Seller Panel"     to="/seller-panel"   onClick={() => setDropOpen(false)} />}
                   {user?.roles?.includes("admin")      && <DropItem icon={<ShieldCheck size={14} />}      label="Admin Panel"      to="/admin-panel"    onClick={() => setDropOpen(false)} />}
@@ -340,6 +344,10 @@ const Navbar = () => {
                   {user?.roles?.includes("GM")         && <DropItem icon={<TrendingUp size={14} />}       label="GM Panel"         to="/gm"             onClick={() => setDropOpen(false)} />}
                   {user?.roles?.includes("AGM")        && <DropItem icon={<TrendingUp size={14} />}       label="AGM Panel"        to="/agm"            onClick={() => setDropOpen(false)} />}
                   {user?.roles?.includes("Accountant") && <DropItem icon={<ShieldCheck size={14} />}      label="Accountant Panel" to="/accountant"     onClick={() => setDropOpen(false)} />}
+                  {user?.roles?.includes("DataEntry")  && <DropItem icon={<ShieldCheck size={14} />}      label="Data Entry Panel" to="/data-entry"     onClick={() => setDropOpen(false)} />}
+                  {user?.roles?.includes("Management") && <DropItem icon={<Briefcase size={14} />}        label="Management Panel" to="/management"     onClick={() => setDropOpen(false)} />}
+                  {user?.roles?.includes("member")     && <DropItem icon={<Users size={14} />}            label="Member Panel"     to="/member"         onClick={() => setDropOpen(false)} />}
+                  {user?.roles?.includes("Investor")   && <DropItem icon={<Wallet size={14} />}           label="Investor Panel"   to="/investor"       onClick={() => setDropOpen(false)} />}
 
                   <div style={{ borderTop: "1px solid rgba(232,223,200,0.7)", marginTop: "6px", paddingTop: "6px" }}>
                     <button
@@ -438,6 +446,12 @@ const Navbar = () => {
               {user?.roles?.includes("GM")         && <MobileLink to="/gm"             label="GM Panel"         onClick={() => setMobileOpen(false)} />}
               {user?.roles?.includes("AGM")        && <MobileLink to="/agm"            label="AGM Panel"        onClick={() => setMobileOpen(false)} />}
               {user?.roles?.includes("Accountant") && <MobileLink to="/accountant"     label="Accountant Panel" onClick={() => setMobileOpen(false)} />}
+              {user?.roles?.includes("DataEntry")  && <MobileLink to="/data-entry"     label="Data Entry Panel" onClick={() => setMobileOpen(false)} />}
+              {user?.roles?.includes("Management") && <MobileLink to="/management"     label="Management Panel" onClick={() => setMobileOpen(false)} />}
+              {!user?.roles?.includes("member") && !user?.roles?.includes("Investor") &&
+                <MobileLink to="/membership"     label="My Investment"    onClick={() => setMobileOpen(false)} />}
+              {user?.roles?.includes("member")     && <MobileLink to="/member"         label="Member Panel"     onClick={() => setMobileOpen(false)} />}
+              {user?.roles?.includes("Investor")   && <MobileLink to="/investor"       label="Investor Panel"   onClick={() => setMobileOpen(false)} />}
 
               <button
                 onClick={async () => { await logout(); setMobileOpen(false); navigate("/"); }}

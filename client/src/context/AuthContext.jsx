@@ -55,6 +55,24 @@ export const AuthProvider = ({ children }) => {
   };
 
   /**
+   * refreshUser — re-fetch the current user from /api/auth/me.
+   * Use after a server-side role change (e.g. membership approval) so the UI
+   * unlocks new panels without forcing a full logout/login.
+   */
+  const refreshUser = async () => {
+    try {
+      const { data } = await axios.get("/api/auth/me");
+      setUser(data.user);
+      setIsAuthenticated(true);
+      return data.user;
+    } catch {
+      setUser(null);
+      setIsAuthenticated(false);
+      return null;
+    }
+  };
+
+  /**
    * logout — clear cookie on server, reset state.
    */
   const logout = async () => {
@@ -73,7 +91,7 @@ export const AuthProvider = ({ children }) => {
   const hasRole    = (role)    => Array.isArray(user?.roles) && user.roles.includes(role);
   const hasAnyRole = (...roles) => Array.isArray(user?.roles) && roles.some(r => user.roles.includes(r));
 
-  const value = { user, isAuthenticated, loading, register, login, logout, hasRole, hasAnyRole };
+  const value = { user, isAuthenticated, loading, register, login, logout, refreshUser, hasRole, hasAnyRole };
 
   return (
     <AuthContext.Provider value={value}>

@@ -1,9 +1,14 @@
 import React, { useState } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import PaymentProgressBar from "./PaymentProgressBar";
-import InstallmentTable from "./InstallmentTable";
 
 const FALLBACK_IMG = "https://placehold.co/80x60/e2e8f0/94a3b8?text=No+Image";
+
+const STATUS_CLASSES = {
+  Paid:    "bg-emerald-50 text-emerald-700 border-emerald-200",
+  Overdue: "bg-red-50 text-red-700 border-red-200",
+  Pending: "bg-amber-50 text-amber-700 border-amber-200",
+};
 
 /**
  * PaymentPlanCard — shows a payment plan summary with a collapsible installment table.
@@ -64,7 +69,38 @@ const PaymentPlanCard = ({ plan }) => {
       {/* ── Collapsible Installment Table ────────────────────────────── */}
       {expanded && (
         <div className="px-5 pb-5">
-          <InstallmentTable installments={installments} />
+          {installments.length === 0 ? (
+            <p className="text-sm text-gray-400 py-4 text-center">No installments scheduled yet.</p>
+          ) : (
+            <div className="overflow-x-auto rounded-xl border border-gray-100">
+              <table className="w-full text-sm min-w-[420px]">
+                <thead>
+                  <tr className="bg-gray-50 border-b border-gray-100 text-[11px] uppercase tracking-wider text-gray-500">
+                    <th className="px-4 py-2.5 text-left font-bold">#</th>
+                    <th className="px-4 py-2.5 text-left font-bold">Amount</th>
+                    <th className="px-4 py-2.5 text-left font-bold">Due Date</th>
+                    <th className="px-4 py-2.5 text-left font-bold">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {installments.map((inst) => (
+                    <tr key={inst.installmentNumber} className="border-b border-gray-50 last:border-0">
+                      <td className="px-4 py-2.5 font-semibold text-gray-700">{inst.installmentNumber}</td>
+                      <td className="px-4 py-2.5 text-gray-800">{formatCurrency(inst.amount)}</td>
+                      <td className="px-4 py-2.5 text-gray-600">
+                        {inst.dueDate ? new Date(inst.dueDate).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) : "—"}
+                      </td>
+                      <td className="px-4 py-2.5">
+                        <span className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold border ${STATUS_CLASSES[inst.status] || STATUS_CLASSES.Pending}`}>
+                          {inst.status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       )}
     </div>

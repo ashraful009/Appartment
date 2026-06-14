@@ -26,6 +26,10 @@ import AdminBookUnit from "./pages/admin/AdminBookUnit";
 import BookUnitDetail from "./pages/admin/BookUnitDetail";
 import AreaManagement from "./pages/admin/AreaManagement";
 import ShortTermRequests from "./pages/admin/ShortTermRequests";
+import MembershipManagement from "./pages/admin/MembershipManagement";
+import MemberPaymentDetail from "./pages/admin/MemberPaymentDetail";
+import ProjectsManagement from "./pages/admin/ProjectsManagement";
+import PaymentTracking from "./pages/admin/PaymentTracking";
 
 // Seller Panel
 import SellerLayout from "./pages/seller/SellerLayout";
@@ -45,7 +49,6 @@ import CustomerDashboard from "./pages/customer/CustomerDashboard";
 import JourneyPage from "./pages/customer/JourneyPage";
 import CustomerProfilePage from "./pages/customer/CustomerProfilePage";
 import DocumentVaultPage from "./pages/customer/DocumentVaultPage";
-import MyAppartment from "./pages/customer/MyAppartment";
 
 import ProtectedRoute from "./components/common/ProtectedRoute";
 
@@ -57,8 +60,24 @@ import AGMLayout from "./layouts/AGMLayout";
 import AGMDashboard from "./pages/agm/AGMDashboard";
 import AccountantLayout from "./layouts/AccountantLayout";
 import AccountantDashboard from "./pages/accountant/AccountantDashboard";
-import SoldUnits from "./pages/accountant/SoldUnits";
-import CustomerPayments from "./pages/accountant/CustomerPayments";
+import PendingConfirmations from "./pages/accountant/PendingConfirmations";
+import AccountantMembers from "./pages/accountant/AccountantMembers";
+import DataEntryLayout from "./layouts/DataEntryLayout";
+import DataEntryDashboard from "./pages/dataentry/DataEntryDashboard";
+import DataEntryPending from "./pages/dataentry/DataEntryPending";
+import DataEntryMembers from "./pages/dataentry/DataEntryMembers";
+import ManagementLayout from "./layouts/ManagementLayout";
+import ManagementDashboard from "./pages/management/ManagementDashboard";
+import ManagementPending from "./pages/management/ManagementPending";
+import ManagementMembers from "./pages/management/ManagementMembers";
+import BuildingAllocate from "./pages/management/BuildingAllocate";
+import MemberLayout from "./layouts/MemberLayout";
+import MemberDashboard from "./pages/member/MemberDashboard";
+import InvestorLayout from "./layouts/InvestorLayout";
+import InvestorDashboard from "./pages/investor/InvestorDashboard";
+import InvestorProperties from "./pages/investor/InvestorProperties";
+import MembershipJourney from "./pages/membership/MembershipJourney";
+import PaymentPage from "./pages/membership/PaymentPage";
 
 const Placeholder = ({ title }) => (
   <div className="min-h-[60vh] flex items-center justify-center">
@@ -110,6 +129,10 @@ function App() {
                 <Route path="book-unit/:id" element={<BookUnitDetail />} />
                 <Route path="areas" element={<AreaManagement />} />
                 <Route path="short-term-requests" element={<ShortTermRequests />} />
+                <Route path="memberships" element={<MembershipManagement />} />
+                <Route path="memberships/:userId" element={<MemberPaymentDetail />} />
+                <Route path="payment-tracking" element={<PaymentTracking />} />
+                <Route path="projects" element={<ProjectsManagement />} />
               </Route>
 
               {/* Seller Panel */}
@@ -129,7 +152,6 @@ function App() {
               {/* Customer Panel */}
               <Route path="/customer-panel" element={<CustomerLayout />}>
                 <Route index element={<CustomerDashboard />} />
-                <Route path="my-apartment" element={<MyAppartment />} />
                 <Route path="requests" element={<JourneyPage />} />
                 <Route path="profile"  element={<CustomerProfilePage />} />
                 <Route path="vault"    element={<DocumentVaultPage />} />
@@ -149,8 +171,34 @@ function App() {
 
               <Route path="/accountant" element={<ProtectedRoute allowedRoles={['Accountant']}><AccountantLayout /></ProtectedRoute>}>
                 <Route index element={<AccountantDashboard />} />
-                <Route path="sold-units" element={<SoldUnits />} />
-                <Route path="payments" element={<CustomerPayments />} />
+                <Route path="pending" element={<PendingConfirmations />} />
+                <Route path="members" element={<AccountantMembers />} />
+              </Route>
+
+              <Route path="/data-entry" element={<ProtectedRoute allowedRoles={['DataEntry']}><DataEntryLayout /></ProtectedRoute>}>
+                <Route index element={<DataEntryDashboard />} />
+                <Route path="pending" element={<DataEntryPending />} />
+                <Route path="members" element={<DataEntryMembers />} />
+              </Route>
+
+              <Route path="/management" element={<ProtectedRoute allowedRoles={['Management']}><ManagementLayout /></ProtectedRoute>}>
+                <Route index element={<ManagementDashboard />} />
+                <Route path="pending" element={<ManagementPending />} />
+                <Route path="members" element={<ManagementMembers />} />
+                <Route path="allocate" element={<BuildingAllocate />} />
+              </Route>
+
+              {/* Universal investment-journey entry — any logged-in user */}
+              <Route path="/membership" element={<ProtectedRoute><MembershipJourney /></ProtectedRoute>} />
+              <Route path="/membership/pay" element={<ProtectedRoute><PaymentPage /></ProtectedRoute>} />
+
+              <Route path="/member" element={<ProtectedRoute allowedRoles={['member']}><MemberLayout /></ProtectedRoute>}>
+                <Route index element={<MemberDashboard />} />
+              </Route>
+
+              <Route path="/investor" element={<ProtectedRoute allowedRoles={['Investor']}><InvestorLayout /></ProtectedRoute>}>
+                <Route index element={<InvestorDashboard />} />
+                <Route path="properties" element={<InvestorProperties />} />
               </Route>
               <Route path="/properties"     element={<Placeholder title="Properties" />} />
               <Route path="/about"          element={<Placeholder title="About Us" />} />

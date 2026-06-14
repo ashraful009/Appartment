@@ -1,6 +1,12 @@
 import React from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
-import { LayoutDashboard, FileText, ReceiptText } from 'lucide-react';
+import { LayoutDashboard, ClipboardCheck, Users } from 'lucide-react';
+
+const links = [
+  { to: "/accountant", end: true, icon: LayoutDashboard, label: "Dashboard" },
+  { to: "/accountant/pending", icon: ClipboardCheck, label: "Pending Confirmations" },
+  { to: "/accountant/members", icon: Users, label: "Members" },
+];
 
 const AccountantLayout = () => {
   return (
@@ -11,48 +17,23 @@ const AccountantLayout = () => {
           <h2 className="text-xl font-bold text-gray-800">Accountant Panel</h2>
         </div>
         <nav className="flex-1 p-4 space-y-1">
-          <NavLink
-            to="/accountant"
-            end
-            className={({ isActive }) =>
-              `flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all ${
-                isActive
-                  ? "bg-brand-50 text-brand-700"
-                  : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-              }`
-            }
-          >
-            <LayoutDashboard size={20} />
-            Dashboard
-          </NavLink>
-
-          <NavLink
-            to="/accountant/sold-units"
-            className={({ isActive }) =>
-              `flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all ${
-                isActive
-                  ? "bg-brand-50 text-brand-700 shadow-sm border border-brand-100"
-                  : "text-gray-600 hover:bg-gray-50 hover:text-gray-900 border border-transparent"
-              }`
-            }
-          >
-            <FileText size={20} />
-            Sold Units / Processing
-          </NavLink>
-
-          <NavLink
-            to="/accountant/payments"
-            className={({ isActive }) =>
-              `flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all ${
-                isActive
-                  ? "bg-brand-50 text-brand-700 shadow-sm border border-brand-100"
-                  : "text-gray-600 hover:bg-gray-50 hover:text-gray-900 border border-transparent"
-              }`
-            }
-          >
-            <ReceiptText size={20} />
-            Customer Payments
-          </NavLink>
+          {links.map(({ to, end, icon: Icon, label }) => (
+            <NavLink
+              key={to}
+              to={to}
+              end={end}
+              className={({ isActive }) =>
+                `flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all ${
+                  isActive
+                    ? "bg-brand-50 text-brand-700"
+                    : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                }`
+              }
+            >
+              <Icon size={20} />
+              {label}
+            </NavLink>
+          ))}
         </nav>
       </aside>
 

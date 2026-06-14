@@ -15,9 +15,13 @@ const userRoutes      = require("./src/routes/userRoutes");
 const customerRoutes  = require("./src/routes/customerRoutes");
 const documentRoutes  = require("./src/routes/documentRoutes");
 const accountantRoutes = require("./src/routes/accountantRoutes");
+const dataEntryRoutes  = require("./src/routes/dataEntryRoutes");
+const managementRoutes = require("./src/routes/managementRoutes");
 const areaRoutes       = require("./src/routes/areaRoutes");
+const membershipRoutes = require("./src/routes/membershipRoutes");
+const projectRoutes    = require("./src/routes/projectRoutes");
 
-const { startInstallmentCron } = require("./src/cron/installmentCron");
+const { startMembershipCron }  = require("./src/cron/membershipCron");
 
 const { protect } = require("./src/middleware/authMiddleware");
 const { authorizeRoles } = require("./src/middleware/authMiddleware");
@@ -84,7 +88,11 @@ app.use("/api/users",     userRoutes);
 app.use("/api/customer",  customerRoutes);
 app.use("/api/documents", documentRoutes);
 app.use("/api/accountant", accountantRoutes);
+app.use("/api/data-entry", dataEntryRoutes);
+app.use("/api/management", managementRoutes);
 app.use("/api/areas",      areaRoutes);
+app.use("/api/membership", membershipRoutes);
+app.use("/api/projects",   projectRoutes);
 app.use("/api",           publicRoutes); // Public: /api/banners/active, /api/banners, /api/properties
 
 // GET /api/targets/current — available to all authenticated sellers + admins
@@ -118,5 +126,5 @@ connectDB().then(() => {
   });
 
   // Start scheduled jobs AFTER DB is ready (models are registered)
-  startInstallmentCron();
+  startMembershipCron();
 });

@@ -10,6 +10,10 @@ const ALL_ROLES = [
   { key: "GM",         label: "GM",         colorClass: "bg-indigo-50 text-indigo-700 border-indigo-200" },
   { key: "AGM",        label: "AGM",        colorClass: "bg-teal-50 text-teal-700 border-teal-200" },
   { key: "Accountant", label: "Accountant", colorClass: "bg-emerald-50 text-emerald-700 border-emerald-200" },
+  { key: "DataEntry",  label: "Data Entry", colorClass: "bg-sky-50 text-sky-700 border-sky-200" },
+  { key: "Management", label: "Management", colorClass: "bg-violet-50 text-violet-700 border-violet-200" },
+  { key: "member",     label: "Member",     colorClass: "bg-rose-50 text-rose-700 border-rose-200" },
+  { key: "Investor",   label: "Investor",   colorClass: "bg-cyan-50 text-cyan-700 border-cyan-200" },
 ];
 
 /**

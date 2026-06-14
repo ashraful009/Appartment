@@ -24,6 +24,20 @@ const {
 const { createBanner, getBanners, getBannerById, updateBanner, deleteBanner } = require("../controllers/bannerController");
 const { createProperty, getProperties, updateProperty, deleteProperty, getPropertyUnits } = require("../controllers/propertyController");
 const { getIdleLeads, setMonthlyTarget } = require("../controllers/adminEngineController");
+const {
+    listMemberships,
+    getMembershipDetail,
+    createBookingForUser,
+    getPaymentTracking,
+    getInstallmentDueDay,
+    setInstallmentDueDay,
+} = require("../controllers/adminMembershipController");
+const {
+    getProjects,
+    createProject,
+    updateProject,
+    deleteProject,
+} = require("../controllers/projectController");
 
 // All routes below require a valid JWT + admin role
 const adminGuard = [protect, authorizeRoles("admin")];
@@ -102,6 +116,24 @@ router.get("/analytics/team-leaderboard", adminGuard, getTeamLeaderboard);
 // ─── Short-term Inquiries ─────────────────────────────────────────────────────
 const { getShortTermRequests } = require("../controllers/shortTermRequestController");
 router.get("/short-term-requests", adminGuard, getShortTermRequests);
+
+// ─── Membership / Investor Management ─────────────────────────────────────────
+router.get("/memberships", adminGuard, listMemberships);
+router.get("/memberships/:userId", adminGuard, getMembershipDetail);
+router.post("/memberships", adminGuard, createBookingForUser);
+
+// ─── Payment Tracking (full pipeline monitoring) ──────────────────────────────
+router.get("/payment-tracking", adminGuard, getPaymentTracking);
+
+// ─── Investment Settings (global installment due day) ──────────────────────────
+router.get("/settings/installment-due-day", adminGuard, getInstallmentDueDay);
+router.put("/settings/installment-due-day", adminGuard, setInstallmentDueDay);
+
+// ─── Projects (running / completed) ───────────────────────────────────────────
+router.get("/projects", adminGuard, getProjects);
+router.post("/projects", adminGuard, uploadPropertyImages, createProject);
+router.put("/projects/:id", adminGuard, uploadPropertyImages, updateProject);
+router.delete("/projects/:id", adminGuard, deleteProject);
 
 module.exports = router;
 

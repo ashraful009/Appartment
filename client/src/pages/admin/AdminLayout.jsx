@@ -12,6 +12,9 @@ import {
   Store,
   BarChart2,
   MapPin,
+  PieChart,
+  Layers,
+  Activity,
 } from "lucide-react";
 
 const navItems = [
@@ -24,6 +27,9 @@ const navItems = [
   { to: "/admin-panel/manage-buildings", label: "Manage Buildings", icon: Building2 },
   { to: "/admin-panel/book-unit", label: "Book Unit", icon: Building2 },
   { to: "/admin-panel/users", label: "Manage Users", icon: Users },
+  { to: "/admin-panel/memberships", label: "Memberships", icon: PieChart },
+  { to: "/admin-panel/payment-tracking", label: "Payment Tracking", icon: Activity },
+  { to: "/admin-panel/projects", label: "Projects", icon: Layers },
   { to: "/admin-panel/areas", label: "Manage Areas", icon: MapPin },
   { to: "/admin-panel/short-term-requests", label: "Short-term Inquiries", icon: ClipboardList },
 ];
