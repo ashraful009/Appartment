@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { X, User, Phone, CheckCircle, ShieldCheck, Loader2, Building2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const PropertyVisualizer = ({ totalUnits, totalFloors, units, viewerRole = 'public' }) => {
   const { user } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
 
   // ── Derive which role context this panel is operating under ───────────────
   // Matches the path prefix to the role the user is acting as right now.
@@ -64,11 +65,25 @@ const PropertyVisualizer = ({ totalUnits, totalFloors, units, viewerRole = 'publ
   }
 
   const handleUnitClick = (unitName, cellUnit) => {
-    if (viewerRole === 'public') return;
-    
     // If unit hasn't been saved to DB yet (preview mode)
     if (!cellUnit || !cellUnit._id) {
-      toast.error("Unit must be saved to the database first.", { id: 'unsaved-unit' });
+      if (viewerRole !== 'public') toast.error("Unit must be saved to the database first.", { id: 'unsaved-unit' });
+      return;
+    }
+
+    if (viewerRole === 'public') {
+      if (cellUnit.status === 'Unsold') {
+        navigate('/membership/pay', {
+          state: {
+            kind: 'booking',
+            propertyId: cellUnit.propertyId || cellUnit.property?._id,
+            unitId: cellUnit._id,
+            total: 20000,
+            amount: 20000,
+            returnTo: location.pathname
+          }
+        });
+      }
       return;
     }
 
@@ -375,7 +390,7 @@ const PropertyVisualizer = ({ totalUnits, totalFloors, units, viewerRole = 'publ
                       key={unitName}
                       onClick={() => handleUnitClick(unitName, cellUnit)}
                       className={`rounded-full border font-bold text-xs py-2 px-5 shadow-sm text-center min-w-[70px] ${
-                        viewerRole === 'public' ? 'cursor-default' : 'cursor-pointer hover:shadow-md hover:scale-105 transition-all'
+                        viewerRole === 'public' && status !== 'Unsold' ? 'cursor-default' : 'cursor-pointer hover:shadow-md hover:scale-105 transition-all'
                       } ${styleStr}`}
                     >
                       {unitName}

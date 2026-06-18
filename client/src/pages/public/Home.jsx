@@ -8,7 +8,8 @@ import {
 } from "lucide-react";
 import HeroSection          from "../../components/home/HeroSection";
 import PropertyFilterSidebar from "../../components/home/PropertyFilterSidebar";
-import PropertyCarousel      from "../../components/home/PropertyCarousel";
+import PropertyCard         from "../../components/common/PropertyCard";
+import { PropertyGridSkeleton } from "../../components/common/SkeletonLoader";
 
 /* ─ Color tokens ─────────────────────────────────────────────────────────── */
 const C = {
@@ -309,35 +310,26 @@ const SectionHeader = ({ label, title, subtitle, center = false }) => {
 /* ─ Main Home ────────────────────────────────────────────────────────────── */
 const Home = () => {
   const { isAuthenticated, user }              = useAuth();
-  const [longTermProps, setLongTermProps]       = useState([]);
-  const [shortTermProps, setShortTermProps]     = useState([]);
-  const [loadingLong, setLoadingLong]           = useState(true);
-  const [loadingShort, setLoadingShort]         = useState(true);
+  const [properties, setProperties] = useState([]);
+  const [loading, setLoading]       = useState(true);
+  const [page, setPage]             = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
   useEffect(() => {
-    const fetchLong = async () => {
+    const fetchProperties = async () => {
+      setLoading(true);
       try {
-        const { data } = await axios.get("/api/properties/public?installmentType=Long-term&noPaginate=true");
-        setLongTermProps(data.properties || []);
+        const { data } = await axios.get(`/api/properties/public?page=${page}&limit=6`);
+        setProperties(data.properties || []);
+        setTotalPages(data.totalPages || 1);
       } catch (err) {
-        console.error("Failed to load long-term properties:", err);
+        console.error("Failed to load properties:", err);
       } finally {
-        setLoadingLong(false);
+        setLoading(false);
       }
     };
-    const fetchShort = async () => {
-      try {
-        const { data } = await axios.get("/api/properties/public?installmentType=Short-term&noPaginate=true");
-        setShortTermProps(data.properties || []);
-      } catch (err) {
-        console.error("Failed to load short-term properties:", err);
-      } finally {
-        setLoadingShort(false);
-      }
-    };
-    fetchLong();
-    fetchShort();
-  }, []);
+    fetchProperties();
+  }, [page]);
 
   return (
     <div className="min-h-screen" style={{ background: C.ivory, fontFamily: "'Jost', sans-serif" }}>
@@ -438,23 +430,51 @@ const Home = () => {
             {/* Right Content — Carousels */}
             <div className="flex-1 min-w-0">
 
-              {/* Long-term Installment */}
-              <PropertyCarousel
-                title="Long-term Installment"
-                subtitle="Flexible payment plans for your dream home."
-                properties={longTermProps}
-                loading={loadingLong}
-                viewAllLink="/properties/long-term"
-              />
+              {loading ? (
+                <PropertyGridSkeleton count={6} />
+              ) : properties.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-16 text-center">
+                  <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4" style={{ background: "rgba(201,148,42,0.08)", border: "1px solid rgba(201,148,42,0.15)" }}>
+                    <Building2 size={28} style={{ color: C.gold }} />
+                  </div>
+                  <p style={{ fontFamily: "'Jost', sans-serif", fontSize: "0.875rem", color: C.textMuted }}>
+                    No properties available at the moment.
+                  </p>
+                </div>
+              ) : (
+                <>
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                    {properties.map((property, i) => (
+                      <PropertyCard key={property._id} property={property} index={i} />
+                    ))}
+                  </div>
 
-              {/* Short-term Installment */}
-              <PropertyCarousel
-                title="Short-term Installment"
-                subtitle="Quick possession, shorter commitment."
-                properties={shortTermProps}
-                loading={loadingShort}
-                viewAllLink="/properties/short-term"
-              />
+                  {/* Pagination */}
+                  {totalPages > 1 && (
+                    <div className="flex justify-center items-center gap-4 mt-10">
+                      <button
+                        disabled={page === 1}
+                        onClick={() => setPage(p => Math.max(1, p - 1))}
+                        className="px-4 py-2 rounded-lg border text-sm font-semibold disabled:opacity-50 transition-colors"
+                        style={{ borderColor: C.gold, color: C.navy, background: page === 1 ? 'transparent' : C.goldPale }}
+                      >
+                        Previous
+                      </button>
+                      <span className="text-sm font-semibold" style={{ color: C.textMuted }}>
+                        Page {page} of {totalPages}
+                      </span>
+                      <button
+                        disabled={page === totalPages}
+                        onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                        className="px-4 py-2 rounded-lg border text-sm font-semibold disabled:opacity-50 transition-colors"
+                        style={{ borderColor: C.gold, color: C.navy, background: page === totalPages ? 'transparent' : C.goldPale }}
+                      >
+                        Next
+                      </button>
+                    </div>
+                  )}
+                </>
+              )}
 
             </div>
           </div>

@@ -8,8 +8,6 @@ import Home from "./pages/public/Home";
 import Login from "./pages/public/Login";
 import Register from "./pages/public/Register";
 import FilteredProperties from "./pages/public/FilteredProperties";
-import LongTermProperties from "./pages/public/LongTermProperties";
-import ShortTermProperties from "./pages/public/ShortTermProperties";
 
 // Admin Panel
 import AdminLayout from "./pages/admin/AdminLayout";
@@ -25,7 +23,7 @@ import MasterAnalytics from "./pages/admin/MasterAnalytics";
 import AdminBookUnit from "./pages/admin/AdminBookUnit";
 import BookUnitDetail from "./pages/admin/BookUnitDetail";
 import AreaManagement from "./pages/admin/AreaManagement";
-import ShortTermRequests from "./pages/admin/ShortTermRequests";
+
 import MembershipManagement from "./pages/admin/MembershipManagement";
 import MemberPaymentDetail from "./pages/admin/MemberPaymentDetail";
 import ProjectsManagement from "./pages/admin/ProjectsManagement";
@@ -112,8 +110,6 @@ function App() {
               <Route path="/login"    element={<Login />} />
               <Route path="/register" element={<Register />} />
               <Route path="/properties/filtered" element={<FilteredProperties />} />
-              <Route path="/properties/long-term" element={<LongTermProperties />} />
-              <Route path="/properties/short-term" element={<ShortTermProperties />} />
 
               {/* Admin Panel */}
               <Route path="/admin-panel" element={<AdminLayout />}>
@@ -129,7 +125,7 @@ function App() {
                 <Route path="book-unit" element={<AdminBookUnit />} />
                 <Route path="book-unit/:id" element={<BookUnitDetail />} />
                 <Route path="areas" element={<AreaManagement />} />
-                <Route path="short-term-requests" element={<ShortTermRequests />} />
+
                 <Route path="memberships" element={<MembershipManagement />} />
                 <Route path="memberships/:membershipId" element={<MemberPaymentDetail />} />
                 <Route path="payment-tracking" element={<PaymentTracking />} />

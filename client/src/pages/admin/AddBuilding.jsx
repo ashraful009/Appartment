@@ -42,7 +42,6 @@ const INITIAL_FORM = {
   displayOrder: "",
   area: "",
   status: "Ongoing",
-  installmentType: ["Long-term"],
   totalPrice: "",
   totalSqft: "",
 };
@@ -89,22 +88,7 @@ const AddBuilding = () => {
     setTimeout(() => setToast(null), 4500);
   };
 
-  const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    
-    if (name === "installmentType") {
-      setForm((prev) => {
-        let updatedTypes = [...prev.installmentType];
-        if (checked) {
-          updatedTypes.push(value);
-        } else {
-          updatedTypes = updatedTypes.filter(t => t !== value);
-        }
-        return { ...prev, installmentType: updatedTypes };
-      });
-    } else {
-      setForm((p) => ({ ...p, [name]: value }));
-    }
+    setForm((p) => ({ ...p, [name]: value }));
   };
 
   const handleSerialChange = (e) => {
@@ -166,15 +150,12 @@ const AddBuilding = () => {
     try {
       const fd = new FormData();
       Object.entries(form).forEach(([k, v]) => {
-        if (k !== "installmentType") fd.append(k, v);
+        fd.append(k, v);
       });
       fd.append("mapLocation", JSON.stringify(mapLocation));
 
       if (mainImage) fd.append("mainImage", mainImage);
       extraFiles.forEach((f) => fd.append("extraImages", f));
-
-      // Append array as JSON string
-      fd.append("installmentType", JSON.stringify(form.installmentType));
 
       const filteredSizes = aptSizes.filter(
         (r) => r.type.trim() || r.size.trim()
@@ -574,32 +555,7 @@ const AddBuilding = () => {
               </select>
             </div>
 
-            {/* Installment Type */}
-            <div>
-              <label className="text-sm font-semibold text-gray-600 mb-2.5 block">Installment Type</label>
-              <div className="flex flex-col gap-3">
-                {["Long-term", "Short-term"].map((type) => (
-                  <label key={type} className="flex items-center gap-3 cursor-pointer group">
-                    <div className="relative flex items-center justify-center w-5 h-5 border border-gray-300 rounded focus-within:ring-2 focus-within:ring-indigo-400 focus-within:ring-offset-1 bg-white">
-                      <input
-                        type="checkbox"
-                        name="installmentType"
-                        value={type}
-                        checked={form.installmentType.includes(type)}
-                        onChange={handleChange}
-                        className="opacity-0 absolute w-full h-full cursor-pointer"
-                      />
-                      {form.installmentType.includes(type) && (
-                        <svg className="w-3.5 h-3.5 text-indigo-600 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                        </svg>
-                      )}
-                    </div>
-                    <span className="text-sm text-gray-700 font-medium select-none group-hover:text-gray-900">{type}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
+
 
           </div>
 

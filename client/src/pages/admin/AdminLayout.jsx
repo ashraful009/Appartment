@@ -32,7 +32,6 @@ const navItems = [
   { to: "/admin-panel/analysis", label: "Analysis", icon: BarChart2 },
   { to: "/admin-panel/projects", label: "Projects", icon: Layers },
   { to: "/admin-panel/areas", label: "Manage Areas", icon: MapPin },
-  { to: "/admin-panel/short-term-requests", label: "Short-term Inquiries", icon: ClipboardList },
 ];
 
 const AdminLayout = () => {

@@ -114,9 +114,7 @@ router.get("/analytics/genealogy-tree", adminGuard, getGenealogyTree);
 // GET /api/admin/analytics/team-leaderboard — parent sellers ranked by team Closed Won
 router.get("/analytics/team-leaderboard", adminGuard, getTeamLeaderboard);
 
-// ─── Short-term Inquiries ─────────────────────────────────────────────────────
-const { getShortTermRequests } = require("../controllers/shortTermRequestController");
-router.get("/short-term-requests", adminGuard, getShortTermRequests);
+
 
 // ─── Membership / Investor Management ─────────────────────────────────────────
 router.get("/memberships/properties-list", adminGuard, getPropertiesForMembership);

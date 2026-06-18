@@ -49,6 +49,7 @@ const PaymentPage = () => {
     returnTo = "/membership",
     count,
     propertyId,
+    unitId,
     membershipId,
   } = state;
 
@@ -99,6 +100,7 @@ const PaymentPage = () => {
     if (kind === "booking") {
       url = "/api/membership/booking";
       if (propertyId) fd.append("propertyId", propertyId);
+      if (unitId) fd.append("unitId", unitId);
     } else if (kind === "downpayment") {
       url = "/api/membership/downpayment";
       fd.append("amount", amount);

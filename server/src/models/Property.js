@@ -88,11 +88,6 @@ const propertySchema = new mongoose.Schema(
       enum: ["Ongoing", "Completed", "Upcoming"],
       default: "Ongoing",
     },
-    installmentType: {
-      type: [String],
-      enum: ["Long-term", "Short-term"],
-      default: ["Long-term"],
-    },
     totalPrice: {
       type: Number,
       default: 0,

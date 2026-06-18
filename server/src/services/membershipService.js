@@ -10,6 +10,7 @@ const Membership         = require("../models/Membership");
 const InvestmentLedger   = require("../models/InvestmentLedger");
 const InvestmentSettings = require("../models/InvestmentSettings");
 const User               = require("../models/User");
+const ApartmentUnit      = require("../models/ApartmentUnit");
 const {
   TOTAL_TARGET,
   INSTALLMENT_AMOUNT,
@@ -205,6 +206,16 @@ const finalizeEntry = async (entry, staffId) => {
       addRole(user, "member");
       await user.save();
     }
+    if (membership.unitId) {
+      const unit = await ApartmentUnit.findById(membership.unitId);
+      if (unit && unit.status === "Unsold") {
+        unit.status = "Booked";
+        unit.allocatedTo = membership.userId;
+        unit.allocatedBy = staffId || null;
+        unit.allocatedAt = now;
+        await unit.save();
+      }
+    }
   } else if (entry.type === "downpayment" && membership.status === "member") {
     membership.status = "investor";
     membership.downPaymentCompletedAt = now;
@@ -220,6 +231,13 @@ const finalizeEntry = async (entry, staffId) => {
       }
       addRole(user, "Investor");
       await user.save();
+    }
+    if (membership.unitId) {
+      const unit = await ApartmentUnit.findById(membership.unitId);
+      if (unit && unit.status === "Booked" && String(unit.allocatedTo) === String(membership.userId)) {
+        unit.status = "Sold";
+        await unit.save();
+      }
     }
     await generateInstallments(membership, now);
   }

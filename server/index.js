@@ -22,6 +22,7 @@ const membershipRoutes = require("./src/routes/membershipRoutes");
 const projectRoutes    = require("./src/routes/projectRoutes");
 
 const { startMembershipCron }  = require("./src/cron/membershipCron");
+const { startPropertyCron }    = require("./src/cron/propertyCron");
 
 const { protect } = require("./src/middleware/authMiddleware");
 const { authorizeRoles } = require("./src/middleware/authMiddleware");
@@ -127,4 +128,5 @@ connectDB().then(() => {
 
   // Start scheduled jobs AFTER DB is ready (models are registered)
   startMembershipCron();
+  startPropertyCron();
 });

@@ -88,8 +88,7 @@ const PropertyFilterSidebar = () => {
       searchParams.get("minSqft") ? Number(searchParams.get("minSqft")) : SQFT_MIN,
       searchParams.get("maxSqft") ? Number(searchParams.get("maxSqft")) : SQFT_MAX,
     ],
-    longTerm: searchParams.get("installmentType") === "Long-term",
-    shortTerm: searchParams.get("installmentType") === "Short-term",
+
     country: searchParams.get("country") || "",
     city: searchParams.get("city") || "",
     area: searchParams.get("area") || "",
@@ -145,13 +144,6 @@ const PropertyFilterSidebar = () => {
     if (filters.city) params.set("city", filters.city);
     if (filters.area) params.set("area", filters.area);
 
-    // Installment type logic
-    if (filters.longTerm && !filters.shortTerm) {
-      params.set("installmentType", "Long-term");
-    } else if (filters.shortTerm && !filters.longTerm) {
-      params.set("installmentType", "Short-term");
-    }
-    // If both checked or neither, don't filter by installment type
 
     navigate(`/properties/filtered?${params.toString()}`);
   };
@@ -362,60 +354,6 @@ const PropertyFilterSidebar = () => {
           </div>
         </div>
 
-        {/* Installment Toggles */}
-        <div>
-          <label
-            className="block mb-2.5"
-            style={labelStyle}
-          >
-            Installment Type
-          </label>
-          <div className="space-y-2">
-            {[
-              { name: "longTerm", label: "Long-term Installment" },
-              { name: "shortTerm", label: "Short-term Installment" },
-            ].map(({ name, label }) => (
-              <label
-                key={name}
-                className="flex items-center gap-3 cursor-pointer group"
-              >
-                <div className="relative">
-                  <input
-                    type="checkbox"
-                    name={name}
-                    checked={filters[name]}
-                    onChange={handleChange}
-                    className="sr-only peer"
-                  />
-                  <div
-                    className="w-9 h-5 rounded-full transition-all duration-300 peer-checked:bg-[#C9942A]"
-                    style={{
-                      background: filters[name]
-                        ? "linear-gradient(135deg, #C9942A, #E8B84B)"
-                        : "#E8DFC8",
-                    }}
-                  />
-                  <div
-                    className="absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow-sm transition-transform duration-300"
-                    style={{
-                      transform: filters[name] ? "translateX(16px)" : "translateX(0)",
-                    }}
-                  />
-                </div>
-                <span
-                  style={{
-                    fontFamily: "'Jost', sans-serif",
-                    fontSize: "0.82rem",
-                    fontWeight: 500,
-                    color: C.navy,
-                  }}
-                >
-                  {label}
-                </span>
-              </label>
-            ))}
-          </div>
-        </div>
 
         {/* Country Dropdown */}
         <div>

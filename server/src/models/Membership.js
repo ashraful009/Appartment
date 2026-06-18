@@ -30,6 +30,11 @@ const membershipSchema = new mongoose.Schema(
       ref: "Property",
       default: null,
     },
+    unitId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "ApartmentUnit",
+      default: null,
+    },
     status: {
       type: String,
       enum: ["pending_booking", "member", "investor", "lapsed"],

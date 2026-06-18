@@ -24,7 +24,6 @@ const createProperty = async (req, res) => {
       apartmentSizes,    // JSON string from FormData
       area,              // Area ObjectId
       status,            // Ongoing | Completed | Upcoming
-      installmentType,   // Long-term | Short-term
       totalPrice,
       totalSqft,
     } = req.body;
@@ -73,18 +72,6 @@ const createProperty = async (req, res) => {
       }
     }
 
-    let parsedInstallmentType = ["Long-term"];
-    if (installmentType) {
-      try {
-        parsedInstallmentType = typeof installmentType === "string" 
-          ? JSON.parse(installmentType) 
-          : installmentType;
-      } catch {
-        // Fallback if not valid JSON string but a simple string
-        parsedInstallmentType = [installmentType];
-      }
-    }
-
     const property = await Property.create({
       name,
       address,
@@ -103,7 +90,6 @@ const createProperty = async (req, res) => {
       apartmentSizes:  parsedSizes,
       area:            area            || null,
       status:          status          || "Ongoing",
-      installmentType: parsedInstallmentType,
       totalPrice:      totalPrice      ? Number(totalPrice) : 0,
       totalSqft:       totalSqft       ? Number(totalSqft)  : 0,
     });
@@ -175,7 +161,6 @@ const getPublicProperties = async (req, res) => {
       city,
       area,
       status,
-      installmentType,
       minPrice,
       maxPrice,
       minSqft,
@@ -201,7 +186,6 @@ const getPublicProperties = async (req, res) => {
     }
 
     if (status)          filter.status          = status;
-    if (installmentType) filter.installmentType = installmentType;
 
     // Price range: 5 Lakh query buffer
     if (minPrice || maxPrice) {
@@ -303,7 +287,6 @@ const updateProperty = async (req, res) => {
       apartmentSizes,    // JSON string from FormData
       area,
       status,
-      installmentType,
       totalPrice,
       totalSqft,
     } = req.body;
@@ -319,15 +302,6 @@ const updateProperty = async (req, res) => {
     if (displayOrder !== undefined) property.displayOrder = Number(displayOrder);
     if (area !== undefined)            property.area            = area || null;
     if (status !== undefined)          property.status          = status;
-    if (installmentType !== undefined) {
-      try {
-        property.installmentType = typeof installmentType === "string" 
-          ? JSON.parse(installmentType) 
-          : installmentType;
-      } catch {
-        property.installmentType = [installmentType];
-      }
-    }
     if (totalPrice !== undefined)      property.totalPrice      = totalPrice ? Number(totalPrice) : 0;
     if (totalSqft !== undefined)       property.totalSqft       = totalSqft  ? Number(totalSqft)  : 0;
 

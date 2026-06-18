@@ -167,7 +167,7 @@ const getMyMembershipDetail = async (req, res) => {
 // ─────────────────────────────────────────────────────────────────────────────
 const submitBooking = async (req, res) => {
   try {
-    const { propertyId } = req.body;
+    const { propertyId, unitId } = req.body;
     if (!propertyId) {
       return res.status(400).json({ message: "propertyId is required." });
     }
@@ -194,6 +194,7 @@ const submitBooking = async (req, res) => {
     const membership = await Membership.create({
       userId: req.user._id,
       propertyId,
+      unitId: unitId || null,
       status: "pending_booking",
       bookingMoney: BOOKING_MONEY,
     });
