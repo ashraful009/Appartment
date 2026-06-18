@@ -62,25 +62,89 @@ const buildSummary = (ledger) => {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// @desc    Get the current user's membership + ledger
+// @desc    Get all of the current user's memberships (multi-property)
 // @route   GET /api/membership/me
 // @access  Private
 // ─────────────────────────────────────────────────────────────────────────────
 const getMyMembership = async (req, res) => {
   try {
-    const membership = await Membership.findOne({ userId: req.user._id });
-    if (!membership) {
-      return res.status(200).json({ membership: null, ledger: [], summary: null });
+    const memberships = await Membership.find({ userId: req.user._id })
+      .populate("propertyId", "name mainImage address status")
+      .sort({ createdAt: -1 });
+
+    if (memberships.length === 0) {
+      return res.status(200).json({ memberships: [], items: [] });
     }
 
-    const ledger = await InvestmentLedger.find({ membershipId: membership._id }).sort({
-      type: 1,
-      installmentNumber: 1,
-      createdAt: 1,
+    // Fetch all ledger entries across all memberships in one query
+    const membershipIds = memberships.map((m) => m._id);
+    const allLedger = await InvestmentLedger.find({
+      membershipId: { $in: membershipIds },
+    }).sort({ type: 1, installmentNumber: 1, createdAt: 1 });
+
+    // Fetch all allocated units for this user
+    const allocatedUnits = await ApartmentUnit.find({ allocatedTo: req.user._id })
+      .populate("propertyId", "name address mainImage handoverTime")
+      .select("unitName floor status handoverMonth handoverYear propertyId");
+
+    // Group ledger by membershipId
+    const ledgerByMembership = {};
+    for (const entry of allLedger) {
+      const key = entry.membershipId.toString();
+      (ledgerByMembership[key] ||= []).push(entry);
+    }
+
+    // Group units by propertyId (allocated units may match membership properties)
+    const unitsByProperty = {};
+    for (const unit of allocatedUnits) {
+      const key = unit.propertyId?._id?.toString();
+      if (key) (unitsByProperty[key] ||= []).push(unit);
+    }
+
+    // Build response items — one per membership with its ledger + summary
+    const items = memberships.map((m) => {
+      const mId = m._id.toString();
+      const pId = m.propertyId?._id?.toString();
+      const ledger = ledgerByMembership[mId] || [];
+      return {
+        membership: m,
+        ledger,
+        summary: buildSummary(ledger),
+        allocatedUnit: pId ? (unitsByProperty[pId] || [])[0] || null : null,
+      };
     });
 
-    // Any unit Management has allocated to this investor (for display).
-    const allocatedUnit = await ApartmentUnit.findOne({ allocatedTo: req.user._id })
+    res.status(200).json({ memberships, items });
+  } catch (error) {
+    console.error("Error fetching memberships:", error);
+    res.status(500).json({ message: "Server error fetching memberships." });
+  }
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// @desc    Get a single membership detail (for expanded view)
+// @route   GET /api/membership/me/:membershipId
+// @access  Private
+// ─────────────────────────────────────────────────────────────────────────────
+const getMyMembershipDetail = async (req, res) => {
+  try {
+    const membership = await Membership.findOne({
+      _id: req.params.membershipId,
+      userId: req.user._id,
+    }).populate("propertyId", "name mainImage address status");
+
+    if (!membership) {
+      return res.status(404).json({ message: "Membership not found." });
+    }
+
+    const ledger = await InvestmentLedger.find({
+      membershipId: membership._id,
+    }).sort({ type: 1, installmentNumber: 1, createdAt: 1 });
+
+    const allocatedUnit = await ApartmentUnit.findOne({
+      allocatedTo: req.user._id,
+      propertyId: membership.propertyId,
+    })
       .populate("propertyId", "name address mainImage handoverTime")
       .select("unitName floor status handoverMonth handoverYear propertyId");
 
@@ -91,22 +155,31 @@ const getMyMembership = async (req, res) => {
       allocatedUnit,
     });
   } catch (error) {
-    console.error("Error fetching membership:", error);
-    res.status(500).json({ message: "Server error fetching membership." });
+    console.error("Error fetching membership detail:", error);
+    res.status(500).json({ message: "Server error fetching membership detail." });
   }
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// @desc    Submit booking money to become a member (self-serve)
+// @desc    Submit booking money for a specific property
 // @route   POST /api/membership/booking
 // @access  Private  (multipart: field "invoice")
 // ─────────────────────────────────────────────────────────────────────────────
 const submitBooking = async (req, res) => {
   try {
-    const existing = await Membership.findOne({ userId: req.user._id });
+    const { propertyId } = req.body;
+    if (!propertyId) {
+      return res.status(400).json({ message: "propertyId is required." });
+    }
+
+    // Check for existing membership for this user + property combo
+    const existing = await Membership.findOne({
+      userId: req.user._id,
+      propertyId,
+    });
     if (existing) {
       return res.status(400).json({
-        message: "You already have an active membership journey.",
+        message: "You already have an investment journey for this property.",
       });
     }
 
@@ -120,6 +193,7 @@ const submitBooking = async (req, res) => {
 
     const membership = await Membership.create({
       userId: req.user._id,
+      propertyId,
       status: "pending_booking",
       bookingMoney: BOOKING_MONEY,
     });
@@ -127,6 +201,7 @@ const submitBooking = async (req, res) => {
     await InvestmentLedger.create({
       membershipId: membership._id,
       userId: req.user._id,
+      propertyId,
       type: "booking",
       amount: BOOKING_MONEY,
       dueDate: new Date(),
@@ -144,20 +219,33 @@ const submitBooking = async (req, res) => {
     });
   } catch (error) {
     console.error("Error submitting booking:", error);
+    if (error.code === 11000) {
+      return res.status(400).json({
+        message: "You already have an investment journey for this property.",
+      });
+    }
     res.status(500).json({ message: "Server error submitting booking." });
   }
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// @desc    Submit the down payment to become an investor
+// @desc    Submit the down payment for a specific membership (property)
 // @route   POST /api/membership/downpayment
 // @access  Private  (multipart: field "invoice")
 // ─────────────────────────────────────────────────────────────────────────────
 const submitDownPayment = async (req, res) => {
   try {
-    const membership = await Membership.findOne({ userId: req.user._id });
+    const { membershipId } = req.body;
+    if (!membershipId) {
+      return res.status(400).json({ message: "membershipId is required." });
+    }
+
+    const membership = await Membership.findOne({
+      _id: membershipId,
+      userId: req.user._id,
+    });
     if (!membership) {
-      return res.status(404).json({ message: "No membership found." });
+      return res.status(404).json({ message: "Membership not found." });
     }
     if (membership.status !== "member") {
       return res.status(400).json({
@@ -185,8 +273,8 @@ const submitDownPayment = async (req, res) => {
     const payment = buildPaymentInfo(req.body);
     if (payment.error) return res.status(400).json({ message: payment.error });
 
-    // The new cash collected now = chosen downpayment minus the already-paid booking.
-    const newCash = amount - membership.bookingMoney;
+    // The new cash collected now = chosen downpayment amount (no booking deduction)
+    const newCash = amount;
 
     membership.downPaymentAmount = amount;
     await membership.save();
@@ -211,6 +299,7 @@ const submitDownPayment = async (req, res) => {
       entry = await InvestmentLedger.create({
         membershipId: membership._id,
         userId: req.user._id,
+        propertyId: membership.propertyId || null,
         type: "downpayment",
         amount: newCash,
         dueDate: new Date(),
@@ -240,7 +329,15 @@ const submitDownPayment = async (req, res) => {
 // ─────────────────────────────────────────────────────────────────────────────
 const payInstallments = async (req, res) => {
   try {
-    const membership = await Membership.findOne({ userId: req.user._id });
+    const { membershipId } = req.body;
+    if (!membershipId) {
+      return res.status(400).json({ message: "membershipId is required." });
+    }
+
+    const membership = await Membership.findOne({
+      _id: membershipId,
+      userId: req.user._id,
+    });
     if (!membership || membership.status !== "investor") {
       return res.status(400).json({ message: "Only investors can pay installments." });
     }
@@ -258,7 +355,7 @@ const payInstallments = async (req, res) => {
     const payment = buildPaymentInfo(req.body);
     if (payment.error) return res.status(400).json({ message: payment.error });
 
-    // Only allow the caller's own, currently-Unpaid installments.
+    // Only allow the caller's own, currently-Unpaid installments for this membership.
     const entries = await InvestmentLedger.find({
       _id: { $in: ids },
       membershipId: membership._id,
@@ -301,6 +398,7 @@ const payInstallments = async (req, res) => {
 
 module.exports = {
   getMyMembership,
+  getMyMembershipDetail,
   submitBooking,
   submitDownPayment,
   payInstallments,

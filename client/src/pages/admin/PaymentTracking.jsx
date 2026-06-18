@@ -113,7 +113,7 @@ const PaymentTracking = () => {
           <table className="w-full text-sm min-w-[920px]">
             <thead>
               <tr className="bg-gray-50 border-b border-gray-100">
-                {["User", "Payment", "Stage", "Accountant", "Data Entry", "Management", "Proof"].map((c) => (
+                {["User", "Property", "Payment", "Stage", "Accountant", "Data Entry", "Management", "Proof"].map((c) => (
                   <th key={c} className="text-left px-5 py-3.5 font-semibold text-gray-600 whitespace-nowrap">
                     {c}
                   </th>
@@ -124,14 +124,14 @@ const PaymentTracking = () => {
               {loading ? (
                 [...Array(5)].map((_, i) => (
                   <tr key={i}>
-                    <td colSpan={7} className="px-5 py-4">
+                    <td colSpan={8} className="px-5 py-4">
                       <div className="h-8 bg-gray-100 rounded-lg animate-pulse" />
                     </td>
                   </tr>
                 ))
               ) : rows.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="text-center py-14 text-gray-400">
+                  <td colSpan={8} className="text-center py-14 text-gray-400">
                     No payments in the pipeline.
                   </td>
                 </tr>
@@ -141,6 +141,24 @@ const PaymentTracking = () => {
                     <td className="px-5 py-4">
                       <p className="font-semibold text-gray-800">{e.userId?.name}</p>
                       <p className="text-xs text-gray-400">{e.userId?.email}</p>
+                    </td>
+                    <td className="px-5 py-4">
+                      {e.propertyId ? (
+                        <div className="flex items-center gap-2">
+                          {e.propertyId.mainImage && (
+                            <img
+                              src={e.propertyId.mainImage}
+                              alt={e.propertyId.name}
+                              className="w-10 h-7 object-cover rounded flex-shrink-0"
+                            />
+                          )}
+                          <p className="font-semibold text-gray-800 text-xs truncate max-w-[150px]" title={e.propertyId.name}>
+                            {e.propertyId.name}
+                          </p>
+                        </div>
+                      ) : (
+                        <span className="text-gray-300 text-xs">—</span>
+                      )}
                     </td>
                     <td className="px-5 py-4">
                       <p className="font-semibold text-gray-800">

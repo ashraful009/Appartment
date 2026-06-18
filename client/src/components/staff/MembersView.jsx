@@ -64,7 +64,7 @@ const MembersView = ({ basePath, title = "Members", subtitle }) => {
           {rows.map((m) => (
             <button
               key={m._id}
-              onClick={() => setOpenUser(m.userId?._id)}
+              onClick={() => setOpenUser(m._id)}
               className="text-left bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow p-5"
             >
               <div className="flex items-center justify-between gap-2 mb-3">
@@ -89,6 +89,22 @@ const MembersView = ({ basePath, title = "Members", subtitle }) => {
               {m.overdueCount > 0 && (
                 <div className="mb-3 inline-flex items-center gap-1.5 px-2.5 py-1 bg-red-50 text-red-700 rounded-lg text-xs font-bold">
                   <AlertTriangle size={13} /> {m.overdueCount} overdue installment(s)
+                </div>
+              )}
+
+              {m.propertyId && (
+                <div className="mb-3 flex items-center gap-2 p-2 bg-gray-50 border border-gray-100 rounded-xl">
+                  {m.propertyId.mainImage && (
+                    <img
+                      src={m.propertyId.mainImage}
+                      alt={m.propertyId.name}
+                      className="w-8 h-8 rounded object-cover flex-shrink-0"
+                    />
+                  )}
+                  <div className="min-w-0">
+                    <p className="text-[9px] font-bold text-gray-400 uppercase tracking-wide">Property</p>
+                    <p className="text-xs font-bold text-gray-800 truncate leading-tight">{m.propertyId.name}</p>
+                  </div>
                 </div>
               )}
 

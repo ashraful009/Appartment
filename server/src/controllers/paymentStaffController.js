@@ -23,6 +23,7 @@ const makeStageHandlers = (stageKey) => {
     try {
       const entries = await InvestmentLedger.find({ status: inputStatus })
         .populate("userId", USER_FIELDS)
+        .populate("propertyId", "name mainImage")
         .populate(AUDIT_POPULATE)
         .sort({ submittedAt: 1, createdAt: 1 });
       res.status(200).json(entries);
@@ -45,6 +46,7 @@ const makeStageHandlers = (stageKey) => {
 
       const populated = await InvestmentLedger.findById(entry._id)
         .populate("userId", USER_FIELDS)
+        .populate("propertyId", "name mainImage")
         .populate(AUDIT_POPULATE);
       res.status(200).json({ message: "Payment confirmed.", entry: populated });
     } catch (error) {
@@ -135,7 +137,9 @@ const getMembers = async (req, res) => {
   try {
     const memberships = await Membership.find({
       status: { $in: ["member", "investor"] },
-    }).populate("userId", USER_FIELDS);
+    })
+      .populate("userId", USER_FIELDS)
+      .populate("propertyId", "name mainImage address");
 
     const ids = memberships.map((m) => m._id);
     const ledger = await InvestmentLedger.find({ membershipId: { $in: ids } });
@@ -153,6 +157,7 @@ const getMembers = async (req, res) => {
       status: m.status,
       shares: m.shares,
       totalApprovedPaid: m.totalApprovedPaid,
+      propertyId: m.propertyId,
       ...computeStats(byMembership[m._id.toString()] || [], now),
     }));
 
@@ -166,9 +171,18 @@ const getMembers = async (req, res) => {
 
 const getMemberProfile = async (req, res) => {
   try {
-    const membership = await Membership.findOne({
-      userId: req.params.userId,
-    }).populate("userId", USER_FIELDS);
+    let membership = await Membership.findById(req.params.userId)
+      .populate("userId", USER_FIELDS)
+      .populate("propertyId", "name mainImage address");
+
+    if (!membership) {
+      membership = await Membership.findOne({
+        userId: req.params.userId,
+      })
+        .populate("userId", USER_FIELDS)
+        .populate("propertyId", "name mainImage address");
+    }
+
     if (!membership) return res.status(404).json({ message: "Membership not found." });
 
     const ledger = await InvestmentLedger.find({ membershipId: membership._id })
@@ -176,7 +190,7 @@ const getMemberProfile = async (req, res) => {
       .sort({ type: 1, installmentNumber: 1, createdAt: 1 });
 
     const propertiesBought = await ApartmentUnit.countDocuments({
-      customerId: req.params.userId,
+      customerId: membership.userId?._id,
       status: { $in: ["Sold", "Booked"] },
     });
 

@@ -24,7 +24,11 @@ const membershipSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
-      unique: true,
+    },
+    propertyId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Property",
+      default: null,
     },
     status: {
       type: String,
@@ -51,5 +55,8 @@ const membershipSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+// One investment journey per user per property
+membershipSchema.index({ userId: 1, propertyId: 1 }, { unique: true });
 
 module.exports = mongoose.model("Membership", membershipSchema);

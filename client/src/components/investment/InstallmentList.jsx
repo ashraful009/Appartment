@@ -30,7 +30,7 @@ const matchesFilter = (inst, filter) => {
 const isOverdue = (inst) =>
   inst.status === "Unpaid" && inst.dueDate && new Date(inst.dueDate) < new Date();
 
-const InstallmentList = ({ installments }) => {
+const InstallmentList = ({ installments, membershipId }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [selected, setSelected] = useState([]);
@@ -54,6 +54,7 @@ const InstallmentList = ({ installments }) => {
         installmentIds: ids,
         total,
         count,
+        membershipId,
         returnTo: location.pathname,
       },
     });

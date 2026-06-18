@@ -2,6 +2,7 @@ const Membership         = require("../models/Membership");
 const InvestmentLedger   = require("../models/InvestmentLedger");
 const InvestmentSettings = require("../models/InvestmentSettings");
 const User               = require("../models/User");
+const Property           = require("../models/Property");
 const { BOOKING_MONEY } = require("../config/investmentConstants");
 const {
   finalizeEntry,
@@ -18,17 +19,19 @@ const STAGE_LABEL = {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// @desc    List all memberships (with user info + cached totals)
-// @route   GET /api/admin/memberships?status=
+// @desc    List all memberships (with user + property info + cached totals)
+// @route   GET /api/admin/memberships?status=&propertyId=
 // @access  Private (Admin)
 // ─────────────────────────────────────────────────────────────────────────────
 const listMemberships = async (req, res) => {
   try {
     const filter = {};
     if (req.query.status) filter.status = req.query.status;
+    if (req.query.propertyId) filter.propertyId = req.query.propertyId;
 
     const memberships = await Membership.find(filter)
       .populate("userId", "name email phone profilePhoto")
+      .populate("propertyId", "name mainImage address status")
       .sort({ updatedAt: -1 });
 
     // Attach a count of payments still moving through the confirmation pipeline.
@@ -54,16 +57,27 @@ const listMemberships = async (req, res) => {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// @desc    Full payment detail for one user (the "all info" page)
-// @route   GET /api/admin/memberships/:userId
+// @desc    Full payment detail for one membership (the "all info" page)
+// @route   GET /api/admin/memberships/:membershipId
 // @access  Private (Admin)
 // ─────────────────────────────────────────────────────────────────────────────
 const getMembershipDetail = async (req, res) => {
   try {
-    const membership = await Membership.findOne({ userId: req.params.userId }).populate(
-      "userId",
-      "name email phone profilePhoto"
-    );
+    // Try by membershipId first, fall back to userId for backward compat
+    let membership;
+    const paramId = req.params.membershipId || req.params.userId;
+
+    membership = await Membership.findById(paramId)
+      .populate("userId", "name email phone profilePhoto")
+      .populate("propertyId", "name mainImage address status");
+
+    // Backward compat: if not found by _id, try as userId (old single-membership URLs)
+    if (!membership) {
+      membership = await Membership.findOne({ userId: paramId })
+        .populate("userId", "name email phone profilePhoto")
+        .populate("propertyId", "name mainImage address status");
+    }
+
     if (!membership) {
       return res.status(404).json({ message: "Membership not found." });
     }
@@ -100,26 +114,33 @@ const getMembershipDetail = async (req, res) => {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// @desc    Admin manually creates a booking/membership for a user
+// @desc    Admin manually creates a booking/membership for a user + property
 // @route   POST /api/admin/memberships
 // @access  Private (Admin)
-//          body: { userId, autoApprove?: boolean }
+//          body: { userId, propertyId, autoApprove?: boolean }
 // ─────────────────────────────────────────────────────────────────────────────
 const createBookingForUser = async (req, res) => {
   try {
-    const { userId, autoApprove } = req.body;
+    const { userId, propertyId, autoApprove } = req.body;
     if (!userId) return res.status(400).json({ message: "userId is required." });
+    if (!propertyId) return res.status(400).json({ message: "propertyId is required." });
 
     const user = await User.findById(userId);
     if (!user) return res.status(404).json({ message: "User not found." });
 
-    const existing = await Membership.findOne({ userId });
+    const property = await Property.findById(propertyId);
+    if (!property) return res.status(404).json({ message: "Property not found." });
+
+    const existing = await Membership.findOne({ userId, propertyId });
     if (existing) {
-      return res.status(400).json({ message: "This user already has a membership." });
+      return res.status(400).json({
+        message: "This user already has a membership for this property.",
+      });
     }
 
     const membership = await Membership.create({
       userId,
+      propertyId,
       status: "pending_booking",
       bookingMoney: BOOKING_MONEY,
     });
@@ -127,6 +148,7 @@ const createBookingForUser = async (req, res) => {
     const entry = await InvestmentLedger.create({
       membershipId: membership._id,
       userId,
+      propertyId,
       type: "booking",
       amount: BOOKING_MONEY,
       dueDate: new Date(),
@@ -141,10 +163,16 @@ const createBookingForUser = async (req, res) => {
       await finalizeEntry(entry, req.user._id);
     }
 
-    const fresh = await Membership.findById(membership._id);
+    const fresh = await Membership.findById(membership._id)
+      .populate("propertyId", "name mainImage address status");
     res.status(201).json({ message: "Membership created.", membership: fresh });
   } catch (error) {
     console.error("Error creating membership:", error);
+    if (error.code === 11000) {
+      return res.status(400).json({
+        message: "This user already has a membership for this property.",
+      });
+    }
     res.status(500).json({ message: "Server error creating membership." });
   }
 };
@@ -163,6 +191,7 @@ const getPaymentTracking = async (req, res) => {
 
     const entries = await InvestmentLedger.find(filter)
       .populate("userId", "name email phone profilePhoto")
+      .populate("propertyId", "name mainImage")
       .populate("audit.accountant.by", "name")
       .populate("audit.dataEntry.by", "name")
       .populate("audit.management.by", "name")
@@ -224,6 +253,26 @@ const setInstallmentDueDay = async (req, res) => {
   }
 };
 
+// ─────────────────────────────────────────────────────────────────────────────
+// @desc    Get list of properties for membership creation dropdown
+// @route   GET /api/admin/memberships/properties-list
+// @access  Private (Admin)
+// ─────────────────────────────────────────────────────────────────────────────
+const getPropertiesForMembership = async (req, res) => {
+  try {
+    const properties = await Property.find({
+      status: { $in: ["Ongoing", "Upcoming"] },
+    })
+      .select("name address mainImage status")
+      .sort({ displayOrder: 1, name: 1 });
+
+    res.status(200).json({ properties });
+  } catch (error) {
+    console.error("getPropertiesForMembership error:", error);
+    res.status(500).json({ message: "Server error fetching properties." });
+  }
+};
+
 module.exports = {
   listMemberships,
   getMembershipDetail,
@@ -231,4 +280,5 @@ module.exports = {
   getPaymentTracking,
   getInstallmentDueDay,
   setInstallmentDueDay,
+  getPropertiesForMembership,
 };

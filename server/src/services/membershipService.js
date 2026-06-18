@@ -103,7 +103,10 @@ const recomputeTotals = async (membership) => {
 const generateInstallments = async (membership, completedAt) => {
   if (membership.installmentsGenerated) return [];
 
-  const remaining = Math.max(0, TOTAL_TARGET - (membership.downPaymentAmount || 0));
+  const remaining = Math.max(
+    0,
+    TOTAL_TARGET - (membership.bookingMoney || 0) - (membership.downPaymentAmount || 0)
+  );
   if (remaining <= 0) {
     membership.installmentsGenerated = true;
     return [];
@@ -124,10 +127,11 @@ const generateInstallments = async (membership, completedAt) => {
     docs.push({
       membershipId: membership._id,
       userId: membership.userId,
+      propertyId: membership.propertyId || null,
       type: "installment",
       installmentNumber: i + 1,
       amount,
-      dueDate: computeInstallmentDueDate(completedAt, i + 1, installmentDueDay),
+      dueDate: computeInstallmentDueDate(completedAt, i, installmentDueDay),
       status: "Unpaid",
     });
   }
@@ -171,6 +175,10 @@ const applyDueDayToAllInstallments = async (dueDay) => {
  *   - booking      → become member (+role, +6-month deadline)
  *   - downpayment  → become investor (swap role, generate installments)
  *
+ * Multi-membership aware: user gets 'member' if ANY membership is member/investor,
+ * 'Investor' only if ANY membership is investor. Roles are never stripped if another
+ * membership still warrants them.
+ *
  * Saves the entry, membership, and user. Returns { entry, membership }.
  * Used by the Management stage and by admin auto-approve (createBookingForUser).
  */
@@ -201,7 +209,15 @@ const finalizeEntry = async (entry, staffId) => {
     membership.status = "investor";
     membership.downPaymentCompletedAt = now;
     if (user) {
-      removeRole(user, "member");
+      // Only remove 'member' role if no OTHER membership is still in member status
+      const otherMemberCount = await Membership.countDocuments({
+        userId: membership.userId,
+        _id: { $ne: membership._id },
+        status: "member",
+      });
+      if (otherMemberCount === 0) {
+        removeRole(user, "member");
+      }
       addRole(user, "Investor");
       await user.save();
     }
@@ -259,8 +275,16 @@ const lapseExpiredMembers = async () => {
 
     const user = await User.findById(membership.userId);
     if (user) {
-      removeRole(user, "member");
-      await user.save();
+      // Only remove 'member' role if no OTHER membership is still active (member/investor)
+      const otherActiveCount = await Membership.countDocuments({
+        userId: membership.userId,
+        _id: { $ne: membership._id },
+        status: { $in: ["member", "investor"] },
+      });
+      if (otherActiveCount === 0) {
+        removeRole(user, "member");
+        await user.save();
+      }
     }
     count++;
   }

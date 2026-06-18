@@ -30,6 +30,7 @@ import MembershipManagement from "./pages/admin/MembershipManagement";
 import MemberPaymentDetail from "./pages/admin/MemberPaymentDetail";
 import ProjectsManagement from "./pages/admin/ProjectsManagement";
 import PaymentTracking from "./pages/admin/PaymentTracking";
+import Analysis from "./pages/admin/Analysis";
 
 // Seller Panel
 import SellerLayout from "./pages/seller/SellerLayout";
@@ -130,8 +131,9 @@ function App() {
                 <Route path="areas" element={<AreaManagement />} />
                 <Route path="short-term-requests" element={<ShortTermRequests />} />
                 <Route path="memberships" element={<MembershipManagement />} />
-                <Route path="memberships/:userId" element={<MemberPaymentDetail />} />
+                <Route path="memberships/:membershipId" element={<MemberPaymentDetail />} />
                 <Route path="payment-tracking" element={<PaymentTracking />} />
+                <Route path="analysis" element={<Analysis />} />
                 <Route path="projects" element={<ProjectsManagement />} />
               </Route>
 
@@ -186,6 +188,7 @@ function App() {
                 <Route path="pending" element={<ManagementPending />} />
                 <Route path="members" element={<ManagementMembers />} />
                 <Route path="allocate" element={<BuildingAllocate />} />
+                <Route path="analysis" element={<Analysis />} />
               </Route>
 
               {/* Universal investment-journey entry — any logged-in user */}

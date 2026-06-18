@@ -31,6 +31,7 @@ const {
     getPaymentTracking,
     getInstallmentDueDay,
     setInstallmentDueDay,
+    getPropertiesForMembership,
 } = require("../controllers/adminMembershipController");
 const {
     getProjects,
@@ -118,8 +119,9 @@ const { getShortTermRequests } = require("../controllers/shortTermRequestControl
 router.get("/short-term-requests", adminGuard, getShortTermRequests);
 
 // ─── Membership / Investor Management ─────────────────────────────────────────
+router.get("/memberships/properties-list", adminGuard, getPropertiesForMembership);
 router.get("/memberships", adminGuard, listMemberships);
-router.get("/memberships/:userId", adminGuard, getMembershipDetail);
+router.get("/memberships/:membershipId", adminGuard, getMembershipDetail);
 router.post("/memberships", adminGuard, createBookingForUser);
 
 // ─── Payment Tracking (full pipeline monitoring) ──────────────────────────────

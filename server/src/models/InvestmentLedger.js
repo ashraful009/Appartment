@@ -36,6 +36,11 @@ const investmentLedgerSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
+    propertyId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Property",
+      default: null,
+    },
 
     type: {
       type: String,
@@ -90,5 +95,6 @@ investmentLedgerSchema.index({ userId: 1, type: 1 });
 investmentLedgerSchema.index({ membershipId: 1 });
 investmentLedgerSchema.index({ status: 1 });
 investmentLedgerSchema.index({ batchId: 1 });
+investmentLedgerSchema.index({ propertyId: 1 });
 
 module.exports = mongoose.model("InvestmentLedger", investmentLedgerSchema);

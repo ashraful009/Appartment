@@ -76,24 +76,33 @@ const getInvestors = async (req, res) => {
 
     const allocMap = {};
     for (const u of allocated) {
-      allocMap[u.allocatedTo.toString()] = {
-        unitId: u._id,
-        unitName: u.unitName,
-        floor: u.floor,
-        building: u.propertyId?.name || "—",
-        buildingId: u.propertyId?._id,
-        handoverMonth: u.handoverMonth,
-        handoverYear: u.handoverYear,
-      };
+      if (u.allocatedTo && u.propertyId) {
+        const key = `${u.allocatedTo.toString()}_${u.propertyId._id.toString()}`;
+        allocMap[key] = {
+          unitId: u._id,
+          unitName: u.unitName,
+          floor: u.floor,
+          building: u.propertyId.name || "—",
+          buildingId: u.propertyId._id,
+          handoverMonth: u.handoverMonth,
+          handoverYear: u.handoverYear,
+        };
+      }
     }
 
-    const result = memberships.map((m) => ({
-      _id: m._id,
-      userId: m.userId,
-      shares: m.shares,
-      totalApprovedPaid: m.totalApprovedPaid,
-      allocatedUnit: m.userId ? allocMap[m.userId._id.toString()] || null : null,
-    }));
+    const result = memberships.map((m) => {
+      const uId = m.userId?._id?.toString() || m.userId?.toString() || "";
+      const pId = m.propertyId?._id?.toString() || m.propertyId?.toString() || "";
+      const key = uId && pId ? `${uId}_${pId}` : "";
+      return {
+        _id: m._id,
+        userId: m.userId,
+        shares: m.shares,
+        totalApprovedPaid: m.totalApprovedPaid,
+        propertyId: m.propertyId,
+        allocatedUnit: key ? allocMap[key] || null : null,
+      };
+    });
 
     res.status(200).json(result);
   } catch (error) {
@@ -124,21 +133,21 @@ const allocateUnit = async (req, res) => {
       return res.status(400).json({ message: "Select a valid handover year." });
     }
 
-    // The target must be an active investor.
-    const membership = await Membership.findOne({ userId: investorId, status: "investor" });
-    if (!membership) {
-      return res.status(400).json({ message: "Selected user is not an active investor." });
-    }
-
     const unit = await ApartmentUnit.findById(unitId);
     if (!unit) return res.status(404).json({ message: "Unit not found." });
     if (unit.status !== "Unsold" || unit.allocatedTo) {
       return res.status(400).json({ message: "This unit is not available for allocation." });
     }
 
-    // One unit per investor — free any unit currently allocated to this investor.
+    // The target must be an active investor for this specific property.
+    const membership = await Membership.findOne({ userId: investorId, propertyId: unit.propertyId, status: "investor" });
+    if (!membership) {
+      return res.status(400).json({ message: "Selected user is not an active investor for this property." });
+    }
+
+    // One unit per investor per property — free any unit currently allocated to this investor in the SAME property.
     await ApartmentUnit.updateMany(
-      { allocatedTo: investorId },
+      { allocatedTo: investorId, propertyId: unit.propertyId },
       {
         $set: { status: "Unsold" },
         $unset: { allocatedTo: "", allocatedBy: "", allocatedAt: "", handoverMonth: "", handoverYear: "" },

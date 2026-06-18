@@ -5,6 +5,7 @@ const { protect } = require("../middleware/authMiddleware");
 const { uploadInvoice } = require("../middleware/uploadMiddleware");
 const {
   getMyMembership,
+  getMyMembershipDetail,
   submitBooking,
   submitDownPayment,
   payInstallments,
@@ -14,6 +15,7 @@ const {
 router.use(protect);
 
 router.get("/me", getMyMembership);
+router.get("/me/:membershipId", getMyMembershipDetail);
 router.post("/booking", uploadInvoice, submitBooking);
 router.post("/downpayment", uploadInvoice, submitDownPayment);
 router.post("/installments/pay", uploadInvoice, payInstallments);

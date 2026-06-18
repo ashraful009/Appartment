@@ -29,6 +29,7 @@ const navItems = [
   { to: "/admin-panel/users", label: "Manage Users", icon: Users },
   { to: "/admin-panel/memberships", label: "Memberships", icon: PieChart },
   { to: "/admin-panel/payment-tracking", label: "Payment Tracking", icon: Activity },
+  { to: "/admin-panel/analysis", label: "Analysis", icon: BarChart2 },
   { to: "/admin-panel/projects", label: "Projects", icon: Layers },
   { to: "/admin-panel/areas", label: "Manage Areas", icon: MapPin },
   { to: "/admin-panel/short-term-requests", label: "Short-term Inquiries", icon: ClipboardList },

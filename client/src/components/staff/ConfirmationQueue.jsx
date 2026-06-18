@@ -178,6 +178,9 @@ const ConfirmationQueue = ({ basePath, stageKey, title, subtitle }) => {
                   <div>
                     <p className="font-bold text-gray-900">{u.name}</p>
                     <p className="text-xs text-gray-400">{u.email} · {u.phone}</p>
+                    {lead.propertyId && (
+                      <p className="text-xs text-brand-700 font-bold mt-0.5">Property: {lead.propertyId.name}</p>
+                    )}
                     <div className="mt-1.5"><MethodDetails entry={lead} /></div>
                     <AuditTrail audit={lead.audit} />
                   </div>
@@ -185,7 +188,7 @@ const ConfirmationQueue = ({ basePath, stageKey, title, subtitle }) => {
                     <p className="text-lg font-extrabold text-brand-700">{fmtTk(total)}</p>
                     <p className="text-[11px] text-gray-400">Submitted {fmtDate(lead.submittedAt)}</p>
                     <button
-                      onClick={() => setProfileUser(u._id)}
+                      onClick={() => setProfileUser(lead.membershipId)}
                       className="mt-1 inline-flex items-center gap-1 text-[11px] font-semibold text-brand-600 hover:text-brand-800"
                     >
                       <UserSearch size={12} /> View full info

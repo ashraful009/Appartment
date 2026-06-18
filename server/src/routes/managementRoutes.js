@@ -35,4 +35,19 @@ router.get("/investors", getInvestors);
 router.post("/allocate", allocateUnit);
 router.post("/deallocate", deallocateUnit);
 
+// ── Analysis Dashboard ───────────────────────────────────────────────────────
+const {
+  getAnalysisMemberships,
+  extendDueDate,
+  resetLedgerEntry,
+  updateHandoverTime,
+  getPropertiesForAnalysis,
+} = require("../controllers/analysisController");
+
+router.get("/analysis/memberships", getAnalysisMemberships);
+router.get("/analysis/properties", getPropertiesForAnalysis);
+router.put("/analysis/ledger/:id/extend", extendDueDate);
+router.put("/analysis/ledger/:id/reset", resetLedgerEntry);
+router.put("/analysis/unit/:unitId/handover", updateHandoverTime);
+
 module.exports = router;

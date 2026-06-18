@@ -41,7 +41,16 @@ const PaymentPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const state = location.state || {};
-  const { kind, installmentIds = [], amount, total = 0, returnTo = "/membership", count } = state;
+  const {
+    kind,
+    installmentIds = [],
+    amount,
+    total = 0,
+    returnTo = "/membership",
+    count,
+    propertyId,
+    membershipId,
+  } = state;
 
   const [method, setMethod] = useState("");
   const [provider, setProvider] = useState("");
@@ -89,12 +98,15 @@ const PaymentPage = () => {
     let url = "";
     if (kind === "booking") {
       url = "/api/membership/booking";
+      if (propertyId) fd.append("propertyId", propertyId);
     } else if (kind === "downpayment") {
       url = "/api/membership/downpayment";
       fd.append("amount", amount);
+      if (membershipId) fd.append("membershipId", membershipId);
     } else if (kind === "installment") {
       url = "/api/membership/installments/pay";
       installmentIds.forEach((id) => fd.append("installmentIds[]", id));
+      if (membershipId) fd.append("membershipId", membershipId);
     }
 
     setLoading(true);

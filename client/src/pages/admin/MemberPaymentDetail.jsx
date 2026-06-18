@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import axios from "axios";
 import { useParams, Link } from "react-router-dom";
 import toast from "react-hot-toast";
-import { ArrowLeft, FileText, Check, Clock } from "lucide-react";
+import { ArrowLeft, FileText, Check, Clock, Building2 } from "lucide-react";
 
 const fmtTk = (n) => `৳ ${Number(n || 0).toLocaleString("en-BD")}`;
 const fmtDate = (d) =>
@@ -64,7 +64,7 @@ const Trail = ({ audit = {} }) => {
 };
 
 const MemberPaymentDetail = () => {
-  const { userId } = useParams();
+  const { membershipId } = useParams();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("All");
@@ -72,7 +72,7 @@ const MemberPaymentDetail = () => {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const { data } = await axios.get(`/api/admin/memberships/${userId}`, {
+      const { data } = await axios.get(`/api/admin/memberships/${membershipId}`, {
         withCredentials: true,
       });
       setData(data);
@@ -81,7 +81,7 @@ const MemberPaymentDetail = () => {
     } finally {
       setLoading(false);
     }
-  }, [userId]);
+  }, [membershipId]);
 
   useEffect(() => {
     load();
@@ -114,21 +114,43 @@ const MemberPaymentDetail = () => {
       </Link>
 
       {/* Header */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-6 flex items-center gap-4">
-        <div className="w-12 h-12 rounded-full bg-brand-100 text-brand-700 flex items-center justify-center font-bold text-lg">
-          {user?.name?.[0]?.toUpperCase()}
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-6">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 rounded-full bg-brand-100 text-brand-700 flex items-center justify-center font-bold text-lg">
+            {user?.name?.[0]?.toUpperCase()}
+          </div>
+          <div className="flex-1">
+            <h1 className="text-xl font-extrabold text-gray-900">{user?.name}</h1>
+            <p className="text-sm text-gray-500">
+              {user?.email} · {user?.phone}
+            </p>
+          </div>
+          <div className="text-right">
+            <p className="text-xs text-gray-400 uppercase font-semibold">Status</p>
+            <p className="font-bold text-gray-800 capitalize">{membership.status.replace("_", " ")}</p>
+            <p className="text-xs text-gray-500 mt-0.5">{membership.shares} share(s)</p>
+          </div>
         </div>
-        <div className="flex-1">
-          <h1 className="text-xl font-extrabold text-gray-900">{user?.name}</h1>
-          <p className="text-sm text-gray-500">
-            {user?.email} · {user?.phone}
-          </p>
-        </div>
-        <div className="text-right">
-          <p className="text-xs text-gray-400 uppercase font-semibold">Status</p>
-          <p className="font-bold text-gray-800 capitalize">{membership.status.replace("_", " ")}</p>
-          <p className="text-xs text-gray-500 mt-0.5">{membership.shares} share(s)</p>
-        </div>
+        {/* Property info */}
+        {membership.propertyId && (
+          <div className="mt-4 pt-4 border-t border-gray-100 flex items-center gap-3">
+            {membership.propertyId.mainImage ? (
+              <img
+                src={membership.propertyId.mainImage}
+                alt={membership.propertyId.name}
+                className="w-10 h-10 rounded-lg object-cover flex-shrink-0"
+              />
+            ) : (
+              <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0">
+                <Building2 size={16} className="text-gray-300" />
+              </div>
+            )}
+            <div>
+              <p className="text-sm font-bold text-gray-800">{membership.propertyId.name}</p>
+              <p className="text-xs text-gray-400">{membership.propertyId.address}</p>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Summary cards */}

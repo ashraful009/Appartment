@@ -4,20 +4,16 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { Landmark, ArrowRight } from "lucide-react";
 import { fmtTk } from "./fmt";
 
-const DOWNPAYMENT_TARGET = 500000;
-const BOOKING_MONEY = 20000;
+const DOWNPAYMENT_TARGET = 480000;
 
 /**
- * Shown to an active member. Lets them choose a down payment (>= 5 lakh), then
- * sends them to the shared payment page with the new cash to collect (chosen
- * amount − booking money already paid).
+ * Shown to an active member. Lets them choose a down payment (>= 4.80 lakh), then
+ * sends them to the shared payment page with the cash to collect.
  */
 const DownPaymentCTA = ({ membership, pending }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [amount, setAmount] = useState(DOWNPAYMENT_TARGET);
-
-  const newCash = Math.max(0, Number(amount || 0) - BOOKING_MONEY);
 
   const goPay = () => {
     if (Number(amount) < DOWNPAYMENT_TARGET)
@@ -26,7 +22,8 @@ const DownPaymentCTA = ({ membership, pending }) => {
       state: {
         kind: "downpayment",
         amount: Number(amount),
-        total: newCash,
+        total: Number(amount),
+        membershipId: membership._id,
         returnTo: location.pathname,
       },
     });
@@ -41,8 +38,7 @@ const DownPaymentCTA = ({ membership, pending }) => {
         <div>
           <h2 className="text-lg font-extrabold text-gray-900">Complete Down Payment</h2>
           <p className="text-gray-500 text-sm">
-            Pay at least {fmtTk(DOWNPAYMENT_TARGET)} (including your {fmtTk(BOOKING_MONEY)}{" "}
-            booking) to become an investor.
+            Pay at least {fmtTk(DOWNPAYMENT_TARGET)} to become an investor.
           </p>
         </div>
       </div>
@@ -67,8 +63,7 @@ const DownPaymentCTA = ({ membership, pending }) => {
               className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 font-semibold"
             />
             <p className="text-[11px] text-gray-400 mt-1.5">
-              New cash to collect now: <strong>{fmtTk(newCash)}</strong> (booking already
-              paid). Remaining after this will be split into ৳25,000 monthly installments.
+              Cash to collect now: <strong>{fmtTk(amount)}</strong>. Remaining target after this will be split into ৳25,000 monthly installments.
             </p>
           </div>
           <button
