@@ -88,6 +88,8 @@ const AddBuilding = () => {
     setTimeout(() => setToast(null), 4500);
   };
 
+  const handleChange = (e) => {
+    const { name, value } = e.target;
     setForm((p) => ({ ...p, [name]: value }));
   };
 
