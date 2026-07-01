@@ -1,16 +1,8 @@
-/**
- * membershipService.js
- * ─────────────────────────────────────────────────────────────────────────────
- * Shared business logic for the membership / investor journey, used by both the
- * admin controller (approvals) and the cron (lapse pass). Keeping it here avoids
- * duplicating the role-transition and installment-generation rules.
- */
-
-const Membership         = require("../models/Membership");
-const InvestmentLedger   = require("../models/InvestmentLedger");
-const InvestmentSettings = require("../models/InvestmentSettings");
-const User               = require("../models/User");
-const ApartmentUnit      = require("../models/ApartmentUnit");
+const membershipRepository = require("../repositories/MembershipRepository");
+const investmentLedgerRepository = require("../repositories/InvestmentLedgerRepository");
+const investmentSettingRepository = require("../repositories/InvestmentSettingRepository");
+const userRepository = require("../repositories/UserRepository");
+const apartmentUnitRepository = require("../repositories/ApartmentUnitRepository");
 const {
   TOTAL_TARGET,
   INSTALLMENT_AMOUNT,
@@ -18,24 +10,17 @@ const {
   MEMBER_WINDOW_MONTHS,
 } = require("../config/investmentConstants");
 
-// Elevated roles mirror adminController — when present, the base "user" role is stripped.
 const ELEVATED_ROLES = [
   "admin", "seller", "customer", "Director", "GM", "AGM",
   "Accountant", "DataEntry", "Management", "member", "Investor",
 ];
 
-/**
- * The sequential confirmation pipeline. Each stage moves a ledger entry from its
- * `input` status to `output`, logging the staff member under `auditKey`.
- *   Pending → AccountantConfirmed → DataEntryConfirmed → Paid
- */
 const STAGE = {
   accountant: { input: "Pending",             output: "AccountantConfirmed", auditKey: "accountant" },
   dataEntry:  { input: "AccountantConfirmed", output: "DataEntryConfirmed",  auditKey: "dataEntry"  },
   management: { input: "DataEntryConfirmed",  output: "Paid",                auditKey: "management" },
 };
 
-/** Add a role to a user doc (in memory); strip "user" when any elevated role is present. */
 const addRole = (user, role) => {
   const roles = new Set(user.roles || []);
   roles.add(role);
@@ -45,216 +30,215 @@ const addRole = (user, role) => {
   }
   if (next.length === 0) next = ["user"];
   user.roles = next;
+  return next;
 };
 
-/** Remove a role from a user doc (in memory); fall back to ["user"] when nothing elevated remains. */
 const removeRole = (user, role) => {
   let next = (user.roles || []).filter((r) => r !== role);
   const hasElevated = next.some((r) => ELEVATED_ROLES.includes(r));
   if (!hasElevated) next = ["user"];
   if (next.length === 0) next = ["user"];
   user.roles = next;
+  return next;
 };
 
-/** Add N calendar months to a date. */
 const addMonths = (date, months) => {
   const d = new Date(date);
   d.setMonth(d.getMonth() + months);
   return d;
 };
 
-/** Number of days in the given (year, monthIndex) — monthIndex is 0-based. */
 const daysInMonth = (year, monthIndex) => new Date(year, monthIndex + 1, 0).getDate();
 
-/**
- * Due date for an installment: take the base date, advance `monthOffset` months,
- * and pin it to the admin-controlled `dueDay` (clamped to the month's length so
- * e.g. day 31 in February becomes the 28th/29th).
- */
 const computeInstallmentDueDate = (baseDate, monthOffset, dueDay) => {
   const base = new Date(baseDate);
   const year = base.getFullYear();
   const monthIndex = base.getMonth() + monthOffset;
-  // Normalise year/month overflow via a throwaway date.
   const norm = new Date(year, monthIndex, 1);
   const day = Math.min(dueDay, daysInMonth(norm.getFullYear(), norm.getMonth()));
   return new Date(norm.getFullYear(), norm.getMonth(), day);
 };
 
-/**
- * Recompute cached totals on a membership from its Paid ledger entries.
- * Mutates the membership in memory (does NOT save).
- */
 const recomputeTotals = async (membership) => {
-  const paid = await InvestmentLedger.find({
-    membershipId: membership._id,
-    status: "Paid",
-  }).select("amount");
+  const paid = await investmentLedgerRepository.db('investment_ledgers')
+    .where({ membership_id: membership.id, status: "Paid" })
+    .select("amount");
 
-  const total = paid.reduce((sum, e) => sum + (e.amount || 0), 0);
-  membership.totalApprovedPaid = total;
+  const total = paid.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
+  membership.total_approved_paid = total;
   membership.shares = Math.floor(total / SHARE_UNIT);
+  
+  await membershipRepository.update(membership.id, {
+      total_approved_paid: total,
+      shares: membership.shares
+  });
+  
   return total;
 };
 
-/**
- * Generate all installment ledger entries at once, starting one month after the
- * given completion date. Idempotent via membership.installmentsGenerated.
- */
 const generateInstallments = async (membership, completedAt) => {
-  if (membership.installmentsGenerated) return [];
+  if (membership.installments_generated) return [];
 
   const remaining = Math.max(
     0,
-    TOTAL_TARGET - (membership.bookingMoney || 0) - (membership.downPaymentAmount || 0)
+    TOTAL_TARGET - (Number(membership.booking_money) || 0) - (Number(membership.down_payment_amount) || 0)
   );
   if (remaining <= 0) {
-    membership.installmentsGenerated = true;
+    await membershipRepository.update(membership.id, { installments_generated: true });
     return [];
   }
 
-  // Month/year auto-advance per installment; the day-of-month is the global,
-  // admin-controlled setting (applies to every investor).
-  const { installmentDueDay } = await InvestmentSettings.getSettings();
+  const settingsDoc = await investmentSettingRepository.findByKey('installment_due_day') || { value: { installmentDueDay: 10 } };
+  const installmentDueDay = settingsDoc.value?.installmentDueDay || 10;
 
-  const count = Math.ceil(remaining / INSTALLMENT_AMOUNT);
+  const SPECIAL_INSTALLMENT_AMOUNT = 500000;
+  let currentRemaining = remaining;
+  let currentInstallmentNumber = 1;
   const docs = [];
-  for (let i = 0; i < count; i++) {
-    const isLast = i === count - 1;
-    const amount = isLast
-      ? remaining - INSTALLMENT_AMOUNT * (count - 1)
-      : INSTALLMENT_AMOUNT;
 
+  // First 2 installments of 5 lakh each
+  for (let i = 0; i < 2; i++) {
+    if (currentRemaining <= 0) break;
+    const amount = Math.min(SPECIAL_INSTALLMENT_AMOUNT, currentRemaining);
     docs.push({
-      membershipId: membership._id,
-      userId: membership.userId,
-      propertyId: membership.propertyId || null,
+      membership_id: membership.id,
+      user_id: membership.user_id,
+      property_id: membership.property_id || null,
       type: "installment",
-      installmentNumber: i + 1,
+      installment_number: currentInstallmentNumber,
       amount,
-      dueDate: computeInstallmentDueDate(completedAt, i, installmentDueDay),
+      due_date: computeInstallmentDueDate(completedAt, currentInstallmentNumber - 1, installmentDueDay),
       status: "Unpaid",
     });
+    currentRemaining -= amount;
+    currentInstallmentNumber++;
   }
 
-  const created = await InvestmentLedger.insertMany(docs);
-  membership.installmentsGenerated = true;
+  // Rest of the installments with regular INSTALLMENT_AMOUNT
+  if (currentRemaining > 0) {
+    const count = Math.ceil(currentRemaining / INSTALLMENT_AMOUNT);
+    for (let i = 0; i < count; i++) {
+      const isLast = i === count - 1;
+      const amount = isLast
+        ? currentRemaining - INSTALLMENT_AMOUNT * (count - 1)
+        : INSTALLMENT_AMOUNT;
+
+      docs.push({
+        membership_id: membership.id,
+        user_id: membership.user_id,
+        property_id: membership.property_id || null,
+        type: "installment",
+        installment_number: currentInstallmentNumber,
+        amount,
+        due_date: computeInstallmentDueDate(completedAt, currentInstallmentNumber - 1, installmentDueDay),
+        status: "Unpaid",
+      });
+      currentInstallmentNumber++;
+    }
+  }
+
+  const created = await investmentLedgerRepository.db('investment_ledgers').insert(docs).returning('*');
+  await membershipRepository.update(membership.id, { installments_generated: true });
   return created;
 };
 
-/**
- * Re-pin every installment's due date to a new global day-of-month, keeping each
- * entry's existing month & year (only the day changes). Applied to ALL investors
- * when the admin updates the global due day. Returns the number updated.
- */
 const applyDueDayToAllInstallments = async (dueDay) => {
-  const installments = await InvestmentLedger.find({ type: "installment" }).select(
-    "_id dueDate"
-  );
+  const installments = await investmentLedgerRepository.db('investment_ledgers')
+    .where({ type: "installment" })
+    .select("id", "due_date");
 
-  const ops = installments.map((inst) => {
-    const d = inst.dueDate ? new Date(inst.dueDate) : new Date();
+  let updatedCount = 0;
+  // Doing it sequentially since we need to compute for each. Better for knex than raw complex updates unless we use raw sql
+  for (const inst of installments) {
+    const d = inst.due_date ? new Date(inst.due_date) : new Date();
     const day = Math.min(dueDay, daysInMonth(d.getFullYear(), d.getMonth()));
     const newDue = new Date(d.getFullYear(), d.getMonth(), day);
-    return {
-      updateOne: {
-        filter: { _id: inst._id },
-        update: { $set: { dueDate: newDue } },
-      },
-    };
-  });
+    
+    await investmentLedgerRepository.update(inst.id, { due_date: newDue });
+    updatedCount++;
+  }
 
-  if (ops.length) await InvestmentLedger.bulkWrite(ops);
-  return ops.length;
+  return updatedCount;
 };
 
-/**
- * Final step — mark a ledger entry Paid (Management confirmation) and apply every
- * side effect:
- *   - mark entry Paid + log management audit
- *   - recompute membership totals & shares
- *   - booking      → become member (+role, +6-month deadline)
- *   - downpayment  → become investor (swap role, generate installments)
- *
- * Multi-membership aware: user gets 'member' if ANY membership is member/investor,
- * 'Investor' only if ANY membership is investor. Roles are never stripped if another
- * membership still warrants them.
- *
- * Saves the entry, membership, and user. Returns { entry, membership }.
- * Used by the Management stage and by admin auto-approve (createBookingForUser).
- */
 const finalizeEntry = async (entry, staffId) => {
-  const membership = await Membership.findById(entry.membershipId);
+  const membership = await membershipRepository.findById(entry.membership_id);
   if (!membership) throw new Error("Membership not found for ledger entry.");
 
   const now = new Date();
 
-  // 1. Mark the entry paid + record the management confirmation
+  const audit = entry.audit || {};
+  audit.management = { by: staffId || null, at: now };
+  
+  await investmentLedgerRepository.update(entry.id, { 
+      status: "Paid", 
+      audit: audit 
+  });
+  
   entry.status = "Paid";
-  entry.audit = entry.audit || {};
-  entry.audit.management = { by: staffId || null, at: now };
-  await entry.save();
+  entry.audit = audit;
 
-  // 2. Stage transitions
-  const user = await User.findById(membership.userId);
+  const user = await userRepository.findById(membership.user_id);
 
   if (entry.type === "booking" && membership.status === "pending_booking") {
-    membership.status = "member";
-    membership.becameMemberAt = now;
-    membership.memberDeadline = addMonths(now, MEMBER_WINDOW_MONTHS);
+    const updates = {
+        status: "member",
+        became_member_at: now,
+        member_deadline: addMonths(now, MEMBER_WINDOW_MONTHS)
+    };
+    Object.assign(membership, updates);
+    await membershipRepository.update(membership.id, updates);
+
     if (user) {
-      addRole(user, "member");
-      await user.save();
+      const newRoles = addRole(user, "member");
+      await userRepository.update(user.id, { roles: newRoles });
     }
-    if (membership.unitId) {
-      const unit = await ApartmentUnit.findById(membership.unitId);
+    if (membership.unit_id) {
+      const unit = await apartmentUnitRepository.findById(membership.unit_id);
       if (unit && unit.status === "Unsold") {
-        unit.status = "Booked";
-        unit.allocatedTo = membership.userId;
-        unit.allocatedBy = staffId || null;
-        unit.allocatedAt = now;
-        await unit.save();
+        await apartmentUnitRepository.update(unit.id, {
+            status: "Booked",
+            allocated_to: membership.user_id,
+            allocated_by: staffId || null,
+            allocated_at: now
+        });
       }
     }
   } else if (entry.type === "downpayment" && membership.status === "member") {
-    membership.status = "investor";
-    membership.downPaymentCompletedAt = now;
+    const updates = {
+        status: "investor",
+        down_payment_completed_at: now
+    };
+    Object.assign(membership, updates);
+    await membershipRepository.update(membership.id, updates);
+
     if (user) {
-      // Only remove 'member' role if no OTHER membership is still in member status
-      const otherMemberCount = await Membership.countDocuments({
-        userId: membership.userId,
-        _id: { $ne: membership._id },
-        status: "member",
-      });
+      const otherMemberCountRecord = await membershipRepository.db('memberships')
+        .where({ user_id: membership.user_id, status: "member" })
+        .whereNot({ id: membership.id })
+        .count('id as count').first();
+      
+      const otherMemberCount = parseInt(otherMemberCountRecord.count, 10);
       if (otherMemberCount === 0) {
         removeRole(user, "member");
       }
-      addRole(user, "Investor");
-      await user.save();
+      const newRoles = addRole(user, "Investor");
+      await userRepository.update(user.id, { roles: newRoles });
     }
-    if (membership.unitId) {
-      const unit = await ApartmentUnit.findById(membership.unitId);
-      if (unit && unit.status === "Booked" && String(unit.allocatedTo) === String(membership.userId)) {
-        unit.status = "Sold";
-        await unit.save();
+    if (membership.unit_id) {
+      const unit = await apartmentUnitRepository.findById(membership.unit_id);
+      if (unit && unit.status === "Booked" && String(unit.allocated_to) === String(membership.user_id)) {
+        await apartmentUnitRepository.update(unit.id, { status: "Sold" });
       }
     }
     await generateInstallments(membership, now);
   }
 
-  // 3. Recompute cached totals & shares, then save
   await recomputeTotals(membership);
-  await membership.save();
 
   return { entry, membership };
 };
 
-/**
- * Advance one ledger entry through a single confirmation stage. Validates that
- * the entry is at the expected input status, logs the staff member in the audit
- * trail, and either moves to the next status or finalizes (Management stage).
- * Throws on an invalid stage transition. Returns { entry, membership? }.
- */
 const advanceLedgerEntry = async (entry, stageKey, staffId) => {
   const stage = STAGE[stageKey];
   if (!stage) throw new Error("Unknown confirmation stage.");
@@ -267,41 +251,40 @@ const advanceLedgerEntry = async (entry, stageKey, staffId) => {
     return finalizeEntry(entry, staffId);
   }
 
-  entry.audit = entry.audit || {};
-  entry.audit[stage.auditKey] = { by: staffId || null, at: new Date() };
-  entry.status = stage.output;
-  await entry.save();
-  return { entry };
+  const audit = entry.audit || {};
+  audit[stage.auditKey] = { by: staffId || null, at: new Date() };
+  
+  const updatedEntry = await investmentLedgerRepository.update(entry.id, {
+      status: stage.output,
+      audit: audit
+  });
+
+  return { entry: updatedEntry };
 };
 
-/**
- * Lapse pass — revoke membership from members who missed the downpayment window.
- * Returns the number of memberships lapsed.
- */
 const lapseExpiredMembers = async () => {
   const now = new Date();
-  const expired = await Membership.find({
-    status: "member",
-    downPaymentCompletedAt: null,
-    memberDeadline: { $lt: now },
-  });
+  const expired = await membershipRepository.db('memberships')
+    .where({ status: "member" })
+    .whereNull('down_payment_completed_at')
+    .andWhere('member_deadline', '<', now);
 
   let count = 0;
   for (const membership of expired) {
-    membership.status = "lapsed";
-    await membership.save();
+    await membershipRepository.update(membership.id, { status: "lapsed" });
 
-    const user = await User.findById(membership.userId);
+    const user = await userRepository.findById(membership.user_id);
     if (user) {
-      // Only remove 'member' role if no OTHER membership is still active (member/investor)
-      const otherActiveCount = await Membership.countDocuments({
-        userId: membership.userId,
-        _id: { $ne: membership._id },
-        status: { $in: ["member", "investor"] },
-      });
+      const otherActiveCountRecord = await membershipRepository.db('memberships')
+        .where({ user_id: membership.user_id })
+        .whereIn('status', ["member", "investor"])
+        .whereNot({ id: membership.id })
+        .count('id as count').first();
+        
+      const otherActiveCount = parseInt(otherActiveCountRecord.count, 10);
       if (otherActiveCount === 0) {
-        removeRole(user, "member");
-        await user.save();
+        const newRoles = removeRole(user, "member");
+        await userRepository.update(user.id, { roles: newRoles });
       }
     }
     count++;

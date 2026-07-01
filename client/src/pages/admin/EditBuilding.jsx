@@ -22,7 +22,7 @@ const INITIAL_FORM = {
   name: "", address: "", totalUnits: "", floors: "",
   landSize: "", handoverTime: "", parkingArea: "",
   area: "", status: "Ongoing",
-  totalPrice: "", totalSqft: "",
+  totalPrice: "", totalSqft: "", progressVideoUrl: "",
 };
 
 const DEFAULT_MAP_LOCATION = { lat: 23.7942, lng: 90.4132 };
@@ -36,6 +36,8 @@ const EditBuilding = () => {
   const [mainPreview, setMainPreview] = useState(null); // url to show
   const [extraFiles, setExtraFiles]   = useState([]); // new files
   const [extraPreviews, setExtraPreviews] = useState([]); // urls to show
+  const [progressFiles, setProgressFiles] = useState([]);
+  const [progressPreviews, setProgressPreviews] = useState([]);
   const [aptSizes, setAptSizes]       = useState([{ type: "", size: "", description: "" }]);
   const [mapLocation, setMapLocation] = useState(DEFAULT_MAP_LOCATION);
   const [showMapModal, setShowMapModal] = useState(false);
@@ -53,6 +55,7 @@ const EditBuilding = () => {
 
   const mainInputRef  = useRef(null);
   const extraInputRef = useRef(null);
+  const progressInputRef = useRef(null);
 
   const showToast = (type, msg) => {
     setToast({ type, msg });
@@ -91,6 +94,7 @@ const EditBuilding = () => {
         status: prop.status || "Ongoing",
         totalPrice: prop.totalPrice ?? "",
         totalSqft: prop.totalSqft ?? "",
+        progressVideoUrl: prop.progressVideoUrl || "",
       });
 
       // Set cascading location state from the loaded area
@@ -111,6 +115,10 @@ const EditBuilding = () => {
       if (prop.extraImages && prop.extraImages.length > 0) {
          // for edit form we only show preview strings for now since we replace the entire array if new ones are uploaded
          setExtraPreviews(prop.extraImages);
+      }
+
+      if (prop.progressImages && prop.progressImages.length > 0) {
+         setProgressPreviews(prop.progressImages);
       }
 
       if (prop.apartmentSizes && prop.apartmentSizes.length > 0) {
@@ -180,6 +188,19 @@ const EditBuilding = () => {
     setExtraPreviews((p) => p.filter((_, i) => i !== idx));
   };
 
+  // ── Progress Images ─────────────────────────────────────────────────────
+  const handleProgressImages = (e) => {
+    const selected = Array.from(e.target.files);
+    const merged = [...progressFiles, ...selected].slice(0, 10);
+    setProgressFiles(merged);
+    setProgressPreviews(merged.map((f) => URL.createObjectURL(f)));
+  };
+
+  const removeProgress = (idx) => {
+    setProgressFiles((p) => p.filter((_, i) => i !== idx));
+    setProgressPreviews((p) => p.filter((_, i) => i !== idx));
+  };
+
   // ── Apartment Sizes ─────────────────────────────────────────────────────
   const addSizeRow    = () => setAptSizes((p) => [...p, { type: "", size: "", description: "" }]);
   const removeSizeRow = (idx) => setAptSizes((p) => p.filter((_, i) => i !== idx));
@@ -205,6 +226,10 @@ const EditBuilding = () => {
       
       if (extraFiles.length > 0) {
          extraFiles.forEach((f) => fd.append("extraImages", f));
+      }
+
+      if (progressFiles.length > 0) {
+         progressFiles.forEach((f) => fd.append("progressImages", f));
       }
       
       const filteredSizes = aptSizes.filter((r) => r.type.trim() || r.size.trim());
@@ -639,6 +664,55 @@ const EditBuilding = () => {
             />
           </div>
 
+        </div>
+
+        {/* ── Section: Construction Progress ── */}
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+          <h2 className="text-sm font-bold text-gray-700 uppercase tracking-wide mb-4">Construction Progress</h2>
+          
+          <div className="space-y-6">
+            <div>
+              <label className="text-sm font-semibold text-gray-600 mb-1.5 block">Progress Video URL</label>
+              <input
+                name="progressVideoUrl"
+                value={form.progressVideoUrl}
+                onChange={handleChange}
+                placeholder="e.g. YouTube or Vimeo link"
+                className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:bg-white transition-all"
+              />
+            </div>
+            
+            <div>
+              <label className="text-sm font-semibold text-gray-600 mb-1.5 block">Progress Images (max 10)</label>
+              <div className="bg-amber-50 border border-amber-200 text-amber-700 text-xs rounded-xl p-3 mb-4">
+                Note: Selecting new photos will overwrite the existing progress images.
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-3">
+                {progressPreviews.map((src, i) => (
+                  <div key={i} className="relative group aspect-video rounded-xl overflow-hidden shadow-sm border border-gray-100">
+                    <img src={src} className="w-full h-full object-cover" />
+                    <button
+                      type="button"
+                      onClick={() => removeProgress(i)}
+                      className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <Trash2 size={16} className="text-white" />
+                    </button>
+                  </div>
+                ))}
+                {progressFiles.length < 10 && (
+                  <label
+                    htmlFor="progressImages"
+                    className="aspect-video rounded-xl border-2 border-dashed border-indigo-200 bg-gray-50 flex flex-col items-center justify-center cursor-pointer hover:border-indigo-400 hover:bg-indigo-50/40 transition-all"
+                  >
+                    <Plus size={20} className="text-indigo-400" />
+                    <span className="text-[10px] text-indigo-400 font-bold mt-1">Upload</span>
+                  </label>
+                )}
+              </div>
+              <input ref={progressInputRef} id="progressImages" type="file" accept="image/*" multiple onChange={handleProgressImages} className="hidden" />
+            </div>
+          </div>
         </div>
 
         {/* ── Section: Apartment Sizes ── */}

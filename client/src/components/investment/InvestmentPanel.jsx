@@ -8,6 +8,7 @@ import DownPaymentCTA from "./DownPaymentCTA";
 import InstallmentList from "./InstallmentList";
 import AllocatedUnitCard from "./AllocatedUnitCard";
 import ProjectsSection from "./ProjectsSection";
+import BuildingProgress from "./BuildingProgress";
 import { fmtTk } from "./fmt";
 
 const STATUS_PILL = {
@@ -222,6 +223,14 @@ const InvestmentPanel = ({ title = "Investment Dashboard" }) => {
                       <div>
                         <h3 className="text-sm font-bold text-gray-700 mb-2">Allocated Unit</h3>
                         <AllocatedUnitCard unit={allocatedUnit} />
+                      </div>
+                    )}
+
+                    {/* Member/Investor → Construction Progress */}
+                    {(status === "member" || status === "investor") && (property?.progressVideoUrl || (property?.progressImages && property?.progressImages.length > 0)) && (
+                      <div>
+                        <h3 className="text-sm font-bold text-gray-700 mb-2">Construction Progress</h3>
+                        <BuildingProgress videoUrl={property.progressVideoUrl} images={property.progressImages} />
                       </div>
                     )}
 

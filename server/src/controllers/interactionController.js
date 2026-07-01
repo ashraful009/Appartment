@@ -1,13 +1,8 @@
-const PriceRequest  = require("../models/PriceRequest");
-const Interaction   = require("../models/Interaction");
-const Notification  = require("../models/Notification");
-const User          = require("../models/User");
+const priceRequestRepository = require("../repositories/PriceRequestRepository");
+const interactionRepository = require("../repositories/InteractionRepository");
+const notificationRepository = require("../repositories/NotificationRepository");
+const userRepository = require("../repositories/UserRepository");
 
-// ─────────────────────────────────────────────────────────────
-// @desc   Add a new interaction / touchpoint for a lead
-// @route  POST /api/interactions
-// @access Private (seller)
-// ─────────────────────────────────────────────────────────────
 const addInteraction = async (req, res) => {
   try {
     const {
@@ -23,110 +18,135 @@ const addInteraction = async (req, res) => {
       return res.status(400).json({ message: "leadId, interactionType, and notes are required." });
     }
 
-    // Verify this lead is actually assigned to this seller
-    const lead = await PriceRequest.findOne({ _id: leadId, assignedTo: req.user._id })
-      .populate("user", "name");
+    const lead = await priceRequestRepository.db('price_requests')
+        .where({ 'price_requests.id': leadId, 'price_requests.assigned_to': req.user.id })
+        .leftJoin('users', 'price_requests.user_id', 'users.id')
+        .select('price_requests.*', 'users.name as userName')
+        .first();
+
     if (!lead) {
       return res.status(404).json({ message: "Lead not found or not assigned to you." });
     }
 
-    const interaction = await Interaction.create({
-      leadId,
-      sellerId:          req.user._id,
-      interactionType,
+    const interaction = await interactionRepository.create({
+      lead_id: leadId,
+      seller_id: req.user.id,
+      interaction_type: interactionType,
       notes,
-      nextMeetingDate:   nextMeetingDate   || null,
-      nextMeetingAgenda: nextMeetingAgenda || "",
-      isJointMeeting:    isJointMeeting    || false,
+      next_meeting_date: nextMeetingDate || null,
+      next_meeting_agenda: nextMeetingAgenda || "",
+      is_joint_meeting: isJointMeeting || false,
     });
 
-    // Automatically update the parent lead's lastInteractionDate
-    lead.lastInteractionDate = new Date();
-    await lead.save();
+    await priceRequestRepository.update(leadId, { last_interaction_date: new Date() });
 
-    // ── @admin mention detection ──────────────────────────────
     if (/@admin/i.test(notes)) {
-      const seller  = req.user;     // populated by protect middleware
-      const admins  = await User.find({ roles: "admin" }).select("_id");
-      const leadName = lead.user?.name || "Unknown Lead";
+      const seller = req.user;
+      const admins = await userRepository.db('users').whereRaw("'admin' = ANY(roles)").select('id');
+      const leadName = lead.userName || "Unknown Lead";
 
       if (admins.length) {
         const adminNotifications = admins.map((a) => ({
-          recipientId: a._id,
-          senderId:    seller._id,
-          message:     `Seller ${seller.name} mentioned you in a lead: ${leadName}.`,
-          type:        "MentorRequest", // reuse closest type
+          recipient_id: a.id,
+          sender_id: seller.id,
+          message: `Seller ${seller.name} mentioned you in a lead: ${leadName}.`,
+          type: "MentorRequest",
         }));
-        await Notification.insertMany(adminNotifications);
+        await notificationRepository.db('notifications').insert(adminNotifications);
       }
     }
 
-    res.status(201).json({ message: "Interaction logged successfully.", interaction });
+    const formattedInteraction = {
+        _id: interaction.id,
+        leadId: interaction.lead_id,
+        sellerId: interaction.seller_id,
+        interactionType: interaction.interaction_type,
+        notes: interaction.notes,
+        nextMeetingDate: interaction.next_meeting_date,
+        nextMeetingAgenda: interaction.next_meeting_agenda,
+        isJointMeeting: interaction.is_joint_meeting,
+        isMentorRequested: interaction.is_mentor_requested,
+        adminNote: interaction.admin_note,
+        followUpStatus: interaction.follow_up_status,
+        date: interaction.date
+    };
+
+    res.status(201).json({ message: "Interaction logged successfully.", interaction: formattedInteraction });
   } catch (error) {
     console.error("addInteraction error:", error);
     res.status(500).json({ message: "Failed to log interaction." });
   }
 };
 
-// ─────────────────────────────────────────────────────────────
-// @desc   Get all interactions for a specific lead (newest first)
-// @route  GET /api/interactions/:leadId
-// @access Private (seller)
-// ─────────────────────────────────────────────────────────────
 const getInteractionsByLead = async (req, res) => {
   try {
     const { leadId } = req.params;
 
-    // Verify the seller has access to this lead
-    const lead = await PriceRequest.findOne({ _id: leadId, assignedTo: req.user._id });
+    const lead = await priceRequestRepository.findOne({ id: leadId, assigned_to: req.user.id });
     if (!lead) {
       return res.status(404).json({ message: "Lead not found or not assigned to you." });
     }
 
-    const interactions = await Interaction.find({ leadId })
-      .populate("sellerId", "name")
-      .sort({ date: -1 });
+    const interactions = await interactionRepository.db('interactions')
+      .where({ lead_id: leadId })
+      .leftJoin('users', 'interactions.seller_id', 'users.id')
+      .orderBy('date', 'desc')
+      .select('interactions.*', 'users.name as sellerName');
 
-    res.status(200).json({ interactions });
+    const formattedInteractions = interactions.map(interaction => ({
+        _id: interaction.id,
+        leadId: interaction.lead_id,
+        sellerId: { _id: interaction.seller_id, name: interaction.sellerName },
+        interactionType: interaction.interaction_type,
+        notes: interaction.notes,
+        nextMeetingDate: interaction.next_meeting_date,
+        nextMeetingAgenda: interaction.next_meeting_agenda,
+        isJointMeeting: interaction.is_joint_meeting,
+        isMentorRequested: interaction.is_mentor_requested,
+        adminNote: interaction.admin_note,
+        followUpStatus: interaction.follow_up_status,
+        date: interaction.date
+    }));
+
+    res.status(200).json({ interactions: formattedInteractions });
   } catch (error) {
     console.error("getInteractionsByLead error:", error);
     res.status(500).json({ message: "Failed to fetch interactions." });
   }
 };
 
-// ─────────────────────────────────────────────────────────────
-// @desc   Request mentor help on a specific interaction
-// @route  PUT /api/interactions/:id/request-mentor
-// @access Private (seller)
-// ─────────────────────────────────────────────────────────────
 const requestMentorHelp = async (req, res) => {
   try {
-    const interaction = await Interaction.findOne({
-      _id:      req.params.id,
-      sellerId: req.user._id,
+    const interaction = await interactionRepository.findOne({
+      id: req.params.id,
+      seller_id: req.user.id,
     });
 
     if (!interaction) {
       return res.status(404).json({ message: "Interaction not found or not yours." });
     }
 
-    interaction.isMentorRequested = true;
-    await interaction.save();
+    const updatedInteraction = await interactionRepository.update(interaction.id, { is_mentor_requested: true });
 
-    // Notify the parent seller (mentor)
-    const currentSeller = await User.findById(req.user._id).select("referredBy name");
-    if (currentSeller?.referredBy) {
-      await Notification.create({
-        recipientId: currentSeller.referredBy,
-        senderId:    req.user._id,
-        message:     `${currentSeller.name} is requesting your mentorship on a lead interaction.`,
-        type:        "MentorRequest",
+    const currentSeller = await userRepository.findById(req.user.id, ['referred_by', 'name']);
+    if (currentSeller?.referred_by) {
+      await notificationRepository.create({
+        recipient_id: currentSeller.referred_by,
+        sender_id: req.user.id,
+        message: `${currentSeller.name} is requesting your mentorship on a lead interaction.`,
+        type: "MentorRequest",
       });
     }
 
+    const formattedInteraction = {
+        ...updatedInteraction,
+        _id: updatedInteraction.id,
+        isMentorRequested: updatedInteraction.is_mentor_requested
+    };
+
     res.status(200).json({
       message: "Mentor help requested. Your mentor has been notified.",
-      interaction,
+      interaction: formattedInteraction,
     });
   } catch (error) {
     console.error("requestMentorHelp error:", error);
@@ -134,11 +154,6 @@ const requestMentorHelp = async (req, res) => {
   }
 };
 
-// ─────────────────────────────────────────────────────────────
-// @desc   Admin sets / updates a directive (adminNote) on an interaction
-// @route  PUT /api/interactions/:id/admin-note
-// @access Private (admin)
-// ─────────────────────────────────────────────────────────────
 const setAdminNote = async (req, res) => {
   try {
     const { adminNote } = req.body;
@@ -146,25 +161,29 @@ const setAdminNote = async (req, res) => {
       return res.status(400).json({ message: "adminNote is required." });
     }
 
-    const interaction = await Interaction.findById(req.params.id);
+    const interaction = await interactionRepository.findById(req.params.id);
     if (!interaction) {
       return res.status(404).json({ message: "Interaction not found." });
     }
 
-    interaction.adminNote = adminNote.trim();
-    await interaction.save();
+    const updatedInteraction = await interactionRepository.update(interaction.id, { admin_note: adminNote.trim() });
 
-    // Notify the seller who logged this interaction
-    await Notification.create({
-      recipientId: interaction.sellerId,
-      senderId:    req.user._id,
-      message:     "Admin left a directive on your lead.",
-      type:        "General",
+    await notificationRepository.create({
+      recipient_id: interaction.seller_id,
+      sender_id: req.user.id,
+      message: "Admin left a directive on your lead.",
+      type: "General",
     });
+
+    const formattedInteraction = {
+        ...updatedInteraction,
+        _id: updatedInteraction.id,
+        adminNote: updatedInteraction.admin_note
+    };
 
     res.status(200).json({
       message: "Admin note saved. Seller has been notified.",
-      interaction,
+      interaction: formattedInteraction,
     });
   } catch (error) {
     console.error("setAdminNote error:", error);
@@ -172,11 +191,6 @@ const setAdminNote = async (req, res) => {
   }
 };
 
-// ─────────────────────────────────────────────────────────────
-// @desc   Update the follow-up status of a specific interaction
-// @route  PUT /api/interactions/:id/followup-status
-// @access Private (seller)
-// ─────────────────────────────────────────────────────────────
 const VALID_FOLLOWUP_STATUSES = ["Pending", "Completed", "Unable to Contact"];
 
 const updateFollowUpStatus = async (req, res) => {
@@ -189,22 +203,26 @@ const updateFollowUpStatus = async (req, res) => {
       });
     }
 
-    // Security: seller can only update interactions that belong to them
-    const interaction = await Interaction.findOne({
-      _id: req.params.id,
-      sellerId: req.user._id,
+    const interaction = await interactionRepository.findOne({
+      id: req.params.id,
+      seller_id: req.user.id,
     });
 
     if (!interaction) {
       return res.status(404).json({ message: "Interaction not found or not yours." });
     }
 
-    interaction.followUpStatus = status;
-    await interaction.save();
+    const updatedInteraction = await interactionRepository.update(interaction.id, { follow_up_status: status });
+
+    const formattedInteraction = {
+        ...updatedInteraction,
+        _id: updatedInteraction.id,
+        followUpStatus: updatedInteraction.follow_up_status
+    };
 
     res.status(200).json({
       message: `Follow-up status updated to "${status}".`,
-      interaction,
+      interaction: formattedInteraction,
     });
   } catch (error) {
     console.error("updateFollowUpStatus error:", error);

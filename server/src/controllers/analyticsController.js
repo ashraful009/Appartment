@@ -1,6 +1,6 @@
-const PriceRequest = require("../models/PriceRequest");
+const priceRequestRepository = require("../repositories/PriceRequestRepository");
+const userRepository = require("../repositories/UserRepository");
 
-// Ordered pipeline stages for correct funnel ordering
 const STAGE_ORDER = [
   "New",
   "Contacted",
@@ -10,31 +10,14 @@ const STAGE_ORDER = [
   "Closed Lost",
 ];
 
-// ─────────────────────────────────────────────────────────────────────────────
-// @desc   Count leads per pipeline stage (Sales Funnel)
-// @route  GET /api/admin/analytics/pipeline-funnel
-// @access Private (admin)
-// ─────────────────────────────────────────────────────────────────────────────
 const getPipelineFunnel = async (_req, res) => {
   try {
-    const raw = await PriceRequest.aggregate([
-      {
-        $group: {
-          _id: "$pipelineStage",
-          count: { $sum: 1 },
-        },
-      },
-      {
-        $project: {
-          _id: 0,
-          stage: "$_id",
-          count: 1,
-        },
-      },
-    ]);
+    const raw = await priceRequestRepository.db('price_requests')
+      .select('pipeline_stage as stage')
+      .count('id as count')
+      .groupBy('pipeline_stage');
 
-    // Ensure all stages are represented (even 0-count ones) and sorted correctly
-    const countMap = Object.fromEntries(raw.map((r) => [r.stage, r.count]));
+    const countMap = Object.fromEntries(raw.map((r) => [r.stage, parseInt(r.count, 10)]));
     const funnel = STAGE_ORDER.map((stage) => ({
       stage,
       count: countMap[stage] ?? 0,
@@ -47,32 +30,17 @@ const getPipelineFunnel = async (_req, res) => {
   }
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
-// @desc   Count leads per source (Lead Source Breakdown)
-// @route  GET /api/admin/analytics/lead-sources
-// @access Private (admin)
-// ─────────────────────────────────────────────────────────────────────────────
 const getLeadSources = async (_req, res) => {
   try {
-    const sources = await PriceRequest.aggregate([
-      {
-        $group: {
-          _id: "$leadSource",
-          count: { $sum: 1 },
-        },
-      },
-      {
-        $project: {
-          _id: 0,
-          source: "$_id",
-          count: 1,
-        },
-      },
-      { $sort: { count: -1 } },
-    ]);
+    const sourcesRaw = await priceRequestRepository.db('price_requests')
+      .select('lead_source as source')
+      .count('id as count')
+      .groupBy('lead_source')
+      .orderBy('count', 'desc');
+
+    const sources = sourcesRaw.map(s => ({ source: s.source, count: parseInt(s.count, 10) }));
 
     const total = sources.reduce((s, x) => s + x.count, 0);
-    // Append percentage
     const withPct = sources.map((s) => ({
       ...s,
       pct: total ? Math.round((s.count / total) * 100) : 0,
@@ -85,39 +53,28 @@ const getLeadSources = async (_req, res) => {
   }
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
-// @desc   Build a nested agency hierarchy tree using $graphLookup
-// @route  GET /api/admin/analytics/genealogy-tree
-// @access Private (admin)
-// ─────────────────────────────────────────────────────────────────────────────
 const getGenealogyTree = async (_req, res) => {
   try {
-    const User = require("../models/User");
+    const allUsers = await userRepository.db('users').select('id', 'name', 'roles', 'referred_by');
 
-    // Fetch all users (id, name, roles, referredBy)
-    const allUsers = await User.find({}, { name: 1, roles: 1, referredBy: 1 }).lean();
-
-    // Build a quick lookup map
     const byId = {};
-    allUsers.forEach((u) => { byId[u._id.toString()] = { ...u, children: [] }; });
+    allUsers.forEach((u) => { byId[u.id.toString()] = { _id: u.id, name: u.name, roles: u.roles || [], referredBy: u.referred_by, children: [] }; });
 
-    // Find root nodes — admins OR sellers with no referredBy (top-tier sellers)
     const roots = [];
     allUsers.forEach((u) => {
-      if (!u.referredBy) {
-        // admin or unsponsored user
-        if (u.roles.includes("admin") || u.roles.includes("seller")) {
-          roots.push(byId[u._id.toString()]);
+      const roles = u.roles || [];
+      if (!u.referred_by) {
+        if (roles.includes("admin") || roles.includes("seller")) {
+          roots.push(byId[u.id.toString()]);
         }
       } else {
-        const parentId = u.referredBy.toString();
+        const parentId = u.referred_by.toString();
         if (byId[parentId]) {
-          byId[parentId].children.push(byId[u._id.toString()]);
+          byId[parentId].children.push(byId[u.id.toString()]);
         }
       }
     });
 
-    // Only expose needed fields
     const clean = (node) => ({
       _id:      node._id,
       name:     node.name,
@@ -133,60 +90,51 @@ const getGenealogyTree = async (_req, res) => {
   }
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
-// @desc   Rank parent sellers by their team's total Closed Won leads
-// @route  GET /api/admin/analytics/team-leaderboard
-// @access Private (admin)
-// ─────────────────────────────────────────────────────────────────────────────
 const getTeamLeaderboard = async (_req, res) => {
   try {
-    const User = require("../models/User");
+    const subSellers = await userRepository.db('users')
+      .whereNotNull('referred_by')
+      .whereRaw("'seller' = ANY(roles)")
+      .select('referred_by', 'id');
 
-    // 1. Find all sellers who are parents (have sub-sellers under them)
-    const subSellers = await User.find(
-      { referredBy: { $ne: null }, roles: "seller" },
-      { referredBy: 1 }
-    ).lean();
-
-    // Map: parentId -> [subSeller ids]
     const teamMap = {};
     subSellers.forEach((s) => {
-      const pid = s.referredBy.toString();
+      const pid = s.referred_by.toString();
       if (!teamMap[pid]) teamMap[pid] = [];
-      teamMap[pid].push(s._id);
+      teamMap[pid].push(s.id);
     });
 
     if (!Object.keys(teamMap).length) {
       return res.status(200).json({ leaderboard: [] });
     }
 
-    // 2. For each parent, gather team leads and count Closed Won
     const parentIds = Object.keys(teamMap);
-    const parents   = await User.find(
-      { _id: { $in: parentIds }, roles: "seller" },
-      { name: 1, phone: 1 }
-    ).lean();
+    const parents = await userRepository.db('users')
+      .whereIn('id', parentIds)
+      .whereRaw("'seller' = ANY(roles)")
+      .select('id', 'name', 'phone');
 
     const leaderboard = await Promise.all(
       parents.map(async (parent) => {
-        const teamIds = [parent._id, ...(teamMap[parent._id.toString()] || [])];
+        const teamIds = [parent.id, ...(teamMap[parent.id.toString()] || [])];
 
-        const [closedWon] = await PriceRequest.aggregate([
-          { $match: { assignedTo: { $in: teamIds }, pipelineStage: "Closed Won" } },
-          { $count: "total" },
-        ]);
+        const closedWonRec = await priceRequestRepository.db('price_requests')
+          .whereIn('assigned_to', teamIds)
+          .where({ pipeline_stage: "Closed Won" })
+          .count('id as total').first();
+          
+        const totalSales = parseInt(closedWonRec?.total || 0, 10);
 
         return {
-          _id:        parent._id,
+          _id:        parent.id,
           name:       parent.name,
           phone:      parent.phone,
-          teamSize:   teamIds.length,       // parent + sub-sellers
-          totalSales: closedWon?.total ?? 0,
+          teamSize:   teamIds.length,
+          totalSales: totalSales,
         };
       })
     );
 
-    // Sort by sales descending
     leaderboard.sort((a, b) => b.totalSales - a.totalSales);
 
     res.status(200).json({ leaderboard });

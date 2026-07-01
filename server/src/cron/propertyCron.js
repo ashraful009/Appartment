@@ -1,5 +1,5 @@
 const cron = require("node-cron");
-const Property = require("../models/Property");
+const propertyRepository = require("../repositories/PropertyRepository");
 
 // Helper function to parse 'Month Year' into a Date object
 const parseHandoverTime = (timeStr) => {
@@ -34,16 +34,15 @@ const startPropertyCron = () => {
     try {
       const now = new Date();
       // Find properties that are not yet Completed and have a handoverTime
-      const properties = await Property.find({
-        status: { $in: ["Ongoing", "Upcoming"] },
-        handoverTime: { $exists: true, $ne: "" },
-      });
+      const properties = await propertyRepository.db('properties')
+        .whereIn('status', ["Ongoing", "Upcoming"])
+        .whereNotNull('handover_time')
+        .where('handover_time', '!=', '');
 
       for (const prop of properties) {
-        const handoverDate = parseHandoverTime(prop.handoverTime);
+        const handoverDate = parseHandoverTime(prop.handover_time);
         if (handoverDate && handoverDate < now) {
-          prop.status = "Completed";
-          await prop.save();
+          await propertyRepository.update(prop.id, { status: "Completed" });
           updatedCount++;
         }
       }

@@ -260,7 +260,7 @@ const FilteredProperties = () => {
 
             <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-5 lg:gap-8">
               {filteredProperties.map((property, i) => (
-                <PropertyCard key={property._id} property={property} index={i} />
+                <PropertyCard key={property.id || property._id} property={property} index={i} />
               ))}
             </div>
           </>

@@ -1,12 +1,13 @@
 const jwt = require("jsonwebtoken");
-const User = require("../models/User");
+const bcrypt = require("bcryptjs");
+const userRepository = require("../repositories/UserRepository");
 const { generateUniqueReferralCode } = require("../utils/referralCodeUtil");
 
 /**
  * Helper: Generate JWT (7-day) and set it as an HttpOnly cookie
  */
 const sendTokenCookie = (res, user) => {
-  const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+  const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
     expiresIn: "7d",
   });
 
@@ -15,8 +16,6 @@ const sendTokenCookie = (res, user) => {
   res.cookie("token", token, {
     httpOnly: true,                      // JS cannot access this cookie
     secure: isProduction,                // HTTPS only in production
-    // Production: cross-origin (Vercel → Render) requires SameSite=None + Secure
-    // Development: SameSite=Lax works fine for same-origin localhost proxy
     sameSite: isProduction ? "none" : "lax",
     maxAge: 7 * 24 * 60 * 60 * 1000,   // 7 days in ms
   });
@@ -25,7 +24,7 @@ const sendTokenCookie = (res, user) => {
 };
 
 // ─────────────────────────────────────────────
-// @desc    Register user (with optional avatar)
+// @desc    Register user
 // @route   POST /api/auth/register
 // @access  Public
 // ─────────────────────────────────────────────
@@ -37,39 +36,39 @@ const register = async (req, res) => {
       return res.status(400).json({ message: "Name, email, phone, and password are required." });
     }
 
-    const existingUser = await User.findOne({ email });
+    const existingUser = await userRepository.findByEmail(email);
     if (existingUser) {
       return res
         .status(409)
         .json({ message: "An account with this email already exists." });
     }
 
-    // ── Validate referral code → resolve to a seller ObjectId ────────────────
     let referredBy = null;
     if (referralCode) {
-      const seller = await User.findOne({
-        referralCode: referralCode.trim().toUpperCase(),
-        roles: "seller",
-      }).select("_id");
-      if (seller) referredBy = seller._id;
+      const seller = await userRepository.findOne({ referral_code: referralCode.trim().toUpperCase() });
+      if (seller && seller.roles && seller.roles.includes("seller")) {
+        referredBy = seller.id;
+      }
     }
 
-    // Generate a unique referral code for the new user (every user gets one)
     let newUserReferralCode = null;
     try {
       newUserReferralCode = await generateUniqueReferralCode();
     } catch (codeErr) {
       console.error("Could not generate referral code on register:", codeErr);
-      // Non-fatal — proceed without a referral code
     }
 
-    const user = await User.create({
+    const salt = await bcrypt.genSalt(12);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    const user = await userRepository.create({
       name,
       email,
-      password,
+      password: hashedPassword,
       phone,
-      referralCode: newUserReferralCode, // user's OWN unique code (not the input one)
-      referredBy,                        // the seller who referred them (if any)
+      referral_code: newUserReferralCode,
+      referred_by: referredBy,
+      roles: ["user"],
     });
 
     sendTokenCookie(res, user);
@@ -77,20 +76,16 @@ const register = async (req, res) => {
     res.status(201).json({
       message: "Registration successful.",
       user: {
-        _id: user._id,
+        id: user.id,
         name: user.name,
         email: user.email,
         phone: user.phone,
-        referralCode: user.referralCode,
+        referralCode: user.referral_code,
         roles: user.roles,
       },
     });
   } catch (error) {
     console.error("Register error:", error);
-    if (error.name === "ValidationError") {
-      const messages = Object.values(error.errors).map((e) => e.message);
-      return res.status(400).json({ message: messages.join(". ") });
-    }
     res.status(500).json({ message: "Server error. Please try again." });
   }
 };
@@ -104,50 +99,43 @@ const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Validate input
     if (!email || !password) {
       return res
         .status(400)
         .json({ message: "Email and password are required." });
     }
 
-    // Find user — explicitly select password (it's excluded by default)
-    const user = await User.findOne({ email }).select("+password");
+    const user = await userRepository.findByEmailWithPassword(email);
     if (!user) {
       return res.status(401).json({ message: "Invalid email or password." });
     }
 
-    // Compare passwords
-    const isMatch = await user.matchPassword(password);
+    const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return res.status(401).json({ message: "Invalid email or password." });
     }
 
-    // If this user is a seller but has no referralCode yet (existing sellers before the
-    // 4-char code update), auto-generate and persist one now.
-    if (user.roles.includes("seller") && !user.referralCode) {
+    if (user.roles && user.roles.includes("seller") && !user.referral_code) {
       try {
-        user.referralCode = await generateUniqueReferralCode();
-        await user.save();
+        const newCode = await generateUniqueReferralCode();
+        await userRepository.update(user.id, { referral_code: newCode });
+        user.referral_code = newCode;
       } catch (codeErr) {
         console.error("Could not auto-generate referral code on login:", codeErr);
-        // Non-fatal — proceed with login even if code generation fails
       }
     }
 
-    // Generate token and set HttpOnly cookie
     sendTokenCookie(res, user);
 
-    // Return user info (never return password)
     res.status(200).json({
       message: "Login successful.",
       user: {
-        _id: user._id,
+        id: user.id,
         name: user.name,
         email: user.email,
-        avatar: user.avatar,
+        avatar: user.profile_photo,
         roles: user.roles,
-        referralCode: user.referralCode ?? null,
+        referralCode: user.referral_code ?? null,
       },
     });
   } catch (error) {
@@ -186,12 +174,11 @@ const getMe = async (req, res) => {
   try {
     let user = req.user;
 
-    // If this user is a seller but has no referralCode yet (existing sellers before the update),
-    // we backfill it seamlessly during their session check.
-    if (user.roles?.includes("seller") && !user.referralCode) {
+    if (user.roles?.includes("seller") && !user.referral_code) {
       try {
-        user.referralCode = await generateUniqueReferralCode();
-        await user.save();
+        const newCode = await generateUniqueReferralCode();
+        await userRepository.update(user.id, { referral_code: newCode });
+        user.referral_code = newCode;
       } catch (codeErr) {
         console.error("Could not auto-generate referral code on getMe:", codeErr);
       }

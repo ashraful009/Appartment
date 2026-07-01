@@ -31,7 +31,7 @@ const PropertyGrid = ({ properties, loading }) => {
       {/* 2-col on mobile → 2-col on md → 3-col on lg */}
       <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-5 lg:gap-8 w-full">
         {properties.map((property, i) => (
-          <PropertyCard key={property._id} property={property} index={i} />
+          <PropertyCard key={property.id || property._id} property={property} index={i} />
         ))}
       </div>
     </div>

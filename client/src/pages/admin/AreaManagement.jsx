@@ -184,7 +184,7 @@ const AreaManagement = () => {
           <div className="divide-y divide-gray-100">
             {areas.map((area, i) => (
               <div
-                key={area._id}
+                key={area.id || area._id}
                 className="flex items-center justify-between py-3 px-2 group hover:bg-gray-50 rounded-lg transition-colors -mx-2"
               >
                 <div className="flex items-center gap-3">
@@ -196,11 +196,11 @@ const AreaManagement = () => {
                   </span>
                 </div>
                 <button
-                  onClick={() => handleDelete(area._id, area.name)}
-                  disabled={deletingId === area._id}
+                  onClick={() => handleDelete(area.id || area._id, area.name)}
+                  disabled={deletingId === (area.id || area._id)}
                   className="flex items-center gap-1.5 text-xs font-medium text-gray-400 hover:text-red-600 hover:bg-red-50 px-2.5 py-1.5 rounded-lg transition-all opacity-0 group-hover:opacity-100 disabled:opacity-50"
                 >
-                  {deletingId === area._id ? (
+                  {deletingId === (area.id || area._id) ? (
                     <span className="w-3.5 h-3.5 border-2 border-red-400 border-t-transparent rounded-full animate-spin" />
                   ) : (
                     <Trash2 size={13} />

@@ -1,8 +1,8 @@
-const Membership         = require("../models/Membership");
-const InvestmentLedger   = require("../models/InvestmentLedger");
-const InvestmentSettings = require("../models/InvestmentSettings");
-const User               = require("../models/User");
-const Property           = require("../models/Property");
+const membershipRepository = require("../repositories/MembershipRepository");
+const investmentLedgerRepository = require("../repositories/InvestmentLedgerRepository");
+const investmentSettingRepository = require("../repositories/InvestmentSettingRepository");
+const userRepository = require("../repositories/UserRepository");
+const propertyRepository = require("../repositories/PropertyRepository");
 const { BOOKING_MONEY } = require("../config/investmentConstants");
 const {
   finalizeEntry,
@@ -19,34 +19,45 @@ const STAGE_LABEL = {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// @desc    List all memberships (with user + property info + cached totals)
-// @route   GET /api/admin/memberships?status=&propertyId=
-// @access  Private (Admin)
+// @desc    List all memberships
 // ─────────────────────────────────────────────────────────────────────────────
 const listMemberships = async (req, res) => {
   try {
     const filter = {};
-    if (req.query.status) filter.status = req.query.status;
-    if (req.query.propertyId) filter.propertyId = req.query.propertyId;
+    if (req.query.status) filter['memberships.status'] = req.query.status;
+    if (req.query.propertyId) filter['memberships.property_id'] = req.query.propertyId;
 
-    const memberships = await Membership.find(filter)
-      .populate("userId", "name email phone profilePhoto")
-      .populate("propertyId", "name mainImage address status")
-      .sort({ updatedAt: -1 });
+    const memberships = await membershipRepository.db('memberships')
+      .where(filter)
+      .leftJoin('users', 'memberships.user_id', 'users.id')
+      .leftJoin('properties', 'memberships.property_id', 'properties.id')
+      .orderBy('memberships.updated_at', 'desc')
+      .select(
+          'memberships.*',
+          'users.name as userName', 'users.email as userEmail', 'users.phone as userPhone', 'users.profile_photo as userProfilePhoto',
+          'properties.name as propertyName', 'properties.main_image as propertyMainImage', 'properties.address as propertyAddress', 'properties.status as propertyStatus'
+      );
 
-    // Attach a count of payments still moving through the confirmation pipeline.
-    const ids = memberships.map((m) => m._id);
-    const counts = await InvestmentLedger.aggregate([
-      { $match: { membershipId: { $in: ids }, status: { $in: IN_PROGRESS } } },
-      { $group: { _id: "$membershipId", count: { $sum: 1 } } },
-    ]);
+    const ids = memberships.map((m) => m.id);
+    let counts = [];
+    if (ids.length > 0) {
+        counts = await investmentLedgerRepository.db('investment_ledgers')
+        .whereIn('membership_id', ids)
+        .whereIn('status', IN_PROGRESS)
+        .groupBy('membership_id')
+        .select('membership_id')
+        .count('id as count');
+    }
     const inProgressMap = Object.fromEntries(
-      counts.map((c) => [c._id.toString(), c.count])
+      counts.map((c) => [c.membership_id.toString(), parseInt(c.count, 10)])
     );
 
     const result = memberships.map((m) => ({
-      ...m.toObject(),
-      inProgressCount: inProgressMap[m._id.toString()] || 0, // payments in the pipeline
+      ...m,
+      _id: m.id,
+      userId: { _id: m.user_id, name: m.userName, email: m.userEmail, phone: m.userPhone, profilePhoto: m.userProfilePhoto },
+      propertyId: { _id: m.property_id, name: m.propertyName, mainImage: m.propertyMainImage, address: m.propertyAddress, status: m.propertyStatus },
+      inProgressCount: inProgressMap[m.id.toString()] || 0,
     }));
 
     res.status(200).json(result);
@@ -57,42 +68,42 @@ const listMemberships = async (req, res) => {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// @desc    Full payment detail for one membership (the "all info" page)
-// @route   GET /api/admin/memberships/:membershipId
-// @access  Private (Admin)
+// @desc    Full payment detail for one membership
 // ─────────────────────────────────────────────────────────────────────────────
 const getMembershipDetail = async (req, res) => {
   try {
-    // Try by membershipId first, fall back to userId for backward compat
-    let membership;
     const paramId = req.params.membershipId || req.params.userId;
 
-    membership = await Membership.findById(paramId)
-      .populate("userId", "name email phone profilePhoto")
-      .populate("propertyId", "name mainImage address status");
-
-    // Backward compat: if not found by _id, try as userId (old single-membership URLs)
-    if (!membership) {
-      membership = await Membership.findOne({ userId: paramId })
-        .populate("userId", "name email phone profilePhoto")
-        .populate("propertyId", "name mainImage address status");
-    }
+    let membership = await membershipRepository.db('memberships')
+        .where({ 'memberships.id': paramId })
+        .orWhere({ 'memberships.user_id': paramId })
+        .leftJoin('users', 'memberships.user_id', 'users.id')
+        .leftJoin('properties', 'memberships.property_id', 'properties.id')
+        .select(
+            'memberships.*',
+            'users.name as userName', 'users.email as userEmail', 'users.phone as userPhone', 'users.profile_photo as userProfilePhoto',
+            'properties.name as propertyName', 'properties.main_image as propertyMainImage', 'properties.address as propertyAddress', 'properties.status as propertyStatus'
+        ).first();
 
     if (!membership) {
       return res.status(404).json({ message: "Membership not found." });
     }
+    
+    // Format membership
+    const formattedMembership = {
+      ...membership,
+      _id: membership.id,
+      userId: { _id: membership.user_id, name: membership.userName, email: membership.userEmail, phone: membership.userPhone, profilePhoto: membership.userProfilePhoto },
+      propertyId: { _id: membership.property_id, name: membership.propertyName, mainImage: membership.propertyMainImage, address: membership.propertyAddress, status: membership.propertyStatus }
+    };
 
-    const ledger = await InvestmentLedger.find({ membershipId: membership._id })
-      .populate("audit.accountant.by", "name")
-      .populate("audit.dataEntry.by", "name")
-      .populate("audit.management.by", "name")
-      .sort({
-        type: 1,
-        installmentNumber: 1,
-        createdAt: 1,
-      });
+    const ledger = await investmentLedgerRepository.db('investment_ledgers')
+      .where({ membership_id: membership.id })
+      .orderBy('type', 'asc')
+      .orderBy('installment_number', 'asc')
+      .orderBy('created_at', 'asc');
 
-    const sum = (arr) => arr.reduce((s, e) => s + (e.amount || 0), 0);
+    const sum = (arr) => arr.reduce((s, e) => s + (Number(e.amount) || 0), 0);
     const totals = {
       booking:       sum(ledger.filter((e) => e.type === "booking" && e.status === "Paid")),
       downpayment:   sum(ledger.filter((e) => e.type === "downpayment" && e.status === "Paid")),
@@ -103,7 +114,7 @@ const getMembershipDetail = async (req, res) => {
     };
 
     res.status(200).json({
-      membership,
+      membership: formattedMembership,
       ledger,
       totals,
     });
@@ -114,10 +125,7 @@ const getMembershipDetail = async (req, res) => {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// @desc    Admin manually creates a booking/membership for a user + property
-// @route   POST /api/admin/memberships
-// @access  Private (Admin)
-//          body: { userId, propertyId, autoApprove?: boolean }
+// @desc    Admin manually creates a booking/membership
 // ─────────────────────────────────────────────────────────────────────────────
 const createBookingForUser = async (req, res) => {
   try {
@@ -125,50 +133,53 @@ const createBookingForUser = async (req, res) => {
     if (!userId) return res.status(400).json({ message: "userId is required." });
     if (!propertyId) return res.status(400).json({ message: "propertyId is required." });
 
-    const user = await User.findById(userId);
+    const user = await userRepository.findById(userId);
     if (!user) return res.status(404).json({ message: "User not found." });
 
-    const property = await Property.findById(propertyId);
+    const property = await propertyRepository.findById(propertyId);
     if (!property) return res.status(404).json({ message: "Property not found." });
 
-    const existing = await Membership.findOne({ userId, propertyId });
-    if (existing) {
-      return res.status(400).json({
-        message: "This user already has a membership for this property.",
-      });
-    }
+    // The user can now invest multiple times in the same property
 
-    const membership = await Membership.create({
-      userId,
-      propertyId,
+    const membership = await membershipRepository.create({
+      user_id: userId,
+      property_id: propertyId,
       status: "pending_booking",
-      bookingMoney: BOOKING_MONEY,
+      booking_money: BOOKING_MONEY,
     });
 
-    const entry = await InvestmentLedger.create({
-      membershipId: membership._id,
-      userId,
-      propertyId,
+    const entry = await investmentLedgerRepository.create({
+      membership_id: membership.id,
+      user_id: userId,
+      property_id: propertyId,
       type: "booking",
       amount: BOOKING_MONEY,
-      dueDate: new Date(),
+      due_date: new Date(),
       status: "Pending",
       description: "Created by admin",
-      submittedAt: new Date(),
+      submitted_at: new Date(),
     });
 
-    // Optionally finalize immediately so the user becomes a member at once
-    // (admin shortcut that bypasses the staff confirmation pipeline).
     if (autoApprove) {
-      await finalizeEntry(entry, req.user._id);
+      await finalizeEntry(entry, req.user.id);
     }
 
-    const fresh = await Membership.findById(membership._id)
-      .populate("propertyId", "name mainImage address status");
-    res.status(201).json({ message: "Membership created.", membership: fresh });
+    const fresh = await membershipRepository.db('memberships')
+        .where({ 'memberships.id': membership.id })
+        .leftJoin('properties', 'memberships.property_id', 'properties.id')
+        .select('memberships.*', 'properties.name as propertyName', 'properties.main_image as propertyMainImage', 'properties.address as propertyAddress', 'properties.status as propertyStatus')
+        .first();
+        
+    const formattedFresh = {
+      ...fresh,
+      _id: fresh.id,
+      propertyId: { _id: fresh.property_id, name: fresh.propertyName, mainImage: fresh.propertyMainImage, address: fresh.propertyAddress, status: fresh.propertyStatus }
+    };
+        
+    res.status(201).json({ message: "Membership created.", membership: formattedFresh });
   } catch (error) {
     console.error("Error creating membership:", error);
-    if (error.code === 11000) {
+    if (error.code === '23505') {
       return res.status(400).json({
         message: "This user already has a membership for this property.",
       });
@@ -178,27 +189,35 @@ const createBookingForUser = async (req, res) => {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// @desc    Payment Tracking — the full confirmation pipeline for monitoring.
-//          Returns every submitted/in-flight/completed payment with its current
-//          stage and the full audit trail (who confirmed each step and when).
-// @route   GET /api/admin/payment-tracking?status=
-// @access  Private (Admin)
+// @desc    Payment Tracking — the full confirmation pipeline
 // ─────────────────────────────────────────────────────────────────────────────
 const getPaymentTracking = async (req, res) => {
   try {
-    const filter = { status: { $ne: "Unpaid" } }; // only payments that exist in the pipeline
-    if (req.query.status) filter.status = req.query.status;
+    const filter = {};
+    if (req.query.status) filter['investment_ledgers.status'] = req.query.status;
 
-    const entries = await InvestmentLedger.find(filter)
-      .populate("userId", "name email phone profilePhoto")
-      .populate("propertyId", "name mainImage")
-      .populate("audit.accountant.by", "name")
-      .populate("audit.dataEntry.by", "name")
-      .populate("audit.management.by", "name")
-      .sort({ updatedAt: -1 });
+    const query = investmentLedgerRepository.db('investment_ledgers')
+      .whereNot({ 'investment_ledgers.status': "Unpaid" });
+      
+    if (req.query.status) {
+        query.where(filter);
+    }
+      
+    const entries = await query
+      .leftJoin('users', 'investment_ledgers.user_id', 'users.id')
+      .leftJoin('properties', 'investment_ledgers.property_id', 'properties.id')
+      .orderBy('investment_ledgers.updated_at', 'desc')
+      .select(
+        'investment_ledgers.*',
+        'users.name as userName', 'users.email as userEmail', 'users.phone as userPhone', 'users.profile_photo as userProfilePhoto',
+        'properties.name as propertyName', 'properties.main_image as propertyMainImage'
+      );
 
     const result = entries.map((e) => ({
-      ...e.toObject(),
+      ...e,
+      _id: e.id,
+      userId: { _id: e.user_id, name: e.userName, email: e.userEmail, phone: e.userPhone, profilePhoto: e.userProfilePhoto },
+      propertyId: { _id: e.property_id, name: e.propertyName, mainImage: e.propertyMainImage },
       stageLabel: STAGE_LABEL[e.status] || e.status,
     }));
 
@@ -211,13 +230,12 @@ const getPaymentTracking = async (req, res) => {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // @desc    Get the global installment due day-of-month
-// @route   GET /api/admin/settings/installment-due-day
-// @access  Private (Admin)
 // ─────────────────────────────────────────────────────────────────────────────
 const getInstallmentDueDay = async (req, res) => {
   try {
-    const settings = await InvestmentSettings.getSettings();
-    res.status(200).json({ installmentDueDay: settings.installmentDueDay });
+    const settings = await investmentSettingRepository.findByKey('installment_due_day');
+    const day = settings?.value?.installmentDueDay || 10;
+    res.status(200).json({ installmentDueDay: day });
   } catch (error) {
     console.error("getInstallmentDueDay error:", error);
     res.status(500).json({ message: "Server error fetching due day." });
@@ -226,8 +244,6 @@ const getInstallmentDueDay = async (req, res) => {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // @desc    Set the global installment due day; re-pins ALL installment due dates
-// @route   PUT /api/admin/settings/installment-due-day
-// @access  Private (Admin)
 // ─────────────────────────────────────────────────────────────────────────────
 const setInstallmentDueDay = async (req, res) => {
   try {
@@ -236,9 +252,12 @@ const setInstallmentDueDay = async (req, res) => {
       return res.status(400).json({ message: "Due day must be a whole number between 1 and 31." });
     }
 
-    const settings = await InvestmentSettings.getSettings();
-    settings.installmentDueDay = day;
-    await settings.save();
+    const existing = await investmentSettingRepository.findByKey('installment_due_day');
+    if (existing) {
+        await investmentSettingRepository.update(existing.id, { value: { installmentDueDay: day }});
+    } else {
+        await investmentSettingRepository.create({ key: 'installment_due_day', value: { installmentDueDay: day }});
+    }
 
     const updated = await applyDueDayToAllInstallments(day);
 
@@ -255,16 +274,14 @@ const setInstallmentDueDay = async (req, res) => {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // @desc    Get list of properties for membership creation dropdown
-// @route   GET /api/admin/memberships/properties-list
-// @access  Private (Admin)
 // ─────────────────────────────────────────────────────────────────────────────
 const getPropertiesForMembership = async (req, res) => {
   try {
-    const properties = await Property.find({
-      status: { $in: ["Ongoing", "Upcoming"] },
-    })
-      .select("name address mainImage status")
-      .sort({ displayOrder: 1, name: 1 });
+    const properties = await propertyRepository.db('properties')
+      .whereIn('status', ["Ongoing", "Upcoming"])
+      .select('id as _id', 'name', 'address', 'main_image as mainImage', 'status')
+      .orderBy('display_order', 'asc')
+      .orderBy('name', 'asc');
 
     res.status(200).json({ properties });
   } catch (error) {

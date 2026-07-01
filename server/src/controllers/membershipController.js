@@ -1,16 +1,12 @@
 const crypto = require("crypto");
-const Membership       = require("../models/Membership");
-const InvestmentLedger = require("../models/InvestmentLedger");
-const ApartmentUnit    = require("../models/ApartmentUnit");
+const membershipRepository = require("../repositories/MembershipRepository");
+const investmentLedgerRepository = require("../repositories/InvestmentLedgerRepository");
+const apartmentUnitRepository = require("../repositories/ApartmentUnitRepository");
 const {
   BOOKING_MONEY,
   DOWNPAYMENT_TARGET,
 } = require("../config/investmentConstants");
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Helper — validate & normalise the payment method + details from the body.
-// Returns { method, details } on success, or { error } on validation failure.
-// ─────────────────────────────────────────────────────────────────────────────
 const buildPaymentInfo = (body = {}) => {
   const method = body.paymentMethod;
   if (!["MFS", "Bank", "Cash"].includes(method)) {
@@ -40,14 +36,11 @@ const buildPaymentInfo = (body = {}) => {
   return { method, details };
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Helper — build a per-membership summary used by the panels.
-// ─────────────────────────────────────────────────────────────────────────────
 const IN_PROGRESS = ["Pending", "AccountantConfirmed", "DataEntryConfirmed"];
 
 const buildSummary = (ledger) => {
   const installments = ledger.filter((e) => e.type === "installment");
-  const sum = (arr) => arr.reduce((s, e) => s + (e.amount || 0), 0);
+  const sum = (arr) => arr.reduce((s, e) => s + (Number(e.amount) || 0), 0);
   const inProgress = (e) => IN_PROGRESS.includes(e.status);
 
   return {
@@ -61,95 +54,150 @@ const buildSummary = (ledger) => {
   };
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
-// @desc    Get all of the current user's memberships (multi-property)
-// @route   GET /api/membership/me
-// @access  Private
-// ─────────────────────────────────────────────────────────────────────────────
 const getMyMembership = async (req, res) => {
   try {
-    const memberships = await Membership.find({ userId: req.user._id })
-      .populate("propertyId", "name mainImage address status")
-      .sort({ createdAt: -1 });
+    const memberships = await membershipRepository.db('memberships')
+      .where({ user_id: req.user.id })
+      .leftJoin('properties', 'memberships.property_id', 'properties.id')
+      .orderBy('memberships.created_at', 'desc')
+      .select(
+          'memberships.*',
+          'properties.name as propertyName', 'properties.main_image as propertyMainImage', 'properties.address as propertyAddress', 'properties.status as propertyStatus', 'properties.progress_video_url as propertyProgressVideoUrl', 'properties.progress_images as propertyProgressImages'
+      );
 
     if (memberships.length === 0) {
       return res.status(200).json({ memberships: [], items: [] });
     }
 
-    // Fetch all ledger entries across all memberships in one query
-    const membershipIds = memberships.map((m) => m._id);
-    const allLedger = await InvestmentLedger.find({
-      membershipId: { $in: membershipIds },
-    }).sort({ type: 1, installmentNumber: 1, createdAt: 1 });
+    const formattedMemberships = memberships.map(m => {
+        let progressImages = [];
+        try { progressImages = typeof m.propertyProgressImages === 'string' ? JSON.parse(m.propertyProgressImages) : m.propertyProgressImages || []; } catch(e) {}
+        
+        return {
+            ...m,
+            _id: m.id,
+            totalApprovedPaid: m.total_approved_paid,
+            totalTarget: m.total_target,
+            memberDeadline: m.member_deadline,
+            shares: m.shares,
+            propertyId: { _id: m.property_id, name: m.propertyName, mainImage: m.propertyMainImage, address: m.propertyAddress, status: m.propertyStatus, progressVideoUrl: m.propertyProgressVideoUrl, progressImages }
+        };
+    });
 
-    // Fetch all allocated units for this user
-    const allocatedUnits = await ApartmentUnit.find({ allocatedTo: req.user._id })
-      .populate("propertyId", "name address mainImage handoverTime")
-      .select("unitName floor status handoverMonth handoverYear propertyId");
+    const membershipIds = memberships.map((m) => m.id);
+    const allLedger = await investmentLedgerRepository.db('investment_ledgers')
+        .whereIn('membership_id', membershipIds)
+        .orderBy('type', 'asc')
+        .orderBy('installment_number', 'asc')
+        .orderBy('created_at', 'asc');
 
-    // Group ledger by membershipId
+    const unitIds = memberships.map(m => m.unit_id).filter(Boolean);
+    let allocatedUnits = [];
+    if (unitIds.length > 0) {
+      allocatedUnits = await apartmentUnitRepository.db('apartment_units')
+          .whereIn('apartment_units.id', unitIds)
+          .leftJoin('properties', 'apartment_units.property_id', 'properties.id')
+          .select(
+              'apartment_units.id as id', 'apartment_units.unit_name as unitName', 'apartment_units.floor', 'apartment_units.status', 'apartment_units.handover_month as handoverMonth', 'apartment_units.handover_year as handoverYear', 'apartment_units.property_id as propertyId',
+              'properties.name as propertyName', 'properties.address as propertyAddress', 'properties.main_image as propertyMainImage', 'properties.handover_time as propertyHandoverTime'
+          );
+    }
+
     const ledgerByMembership = {};
     for (const entry of allLedger) {
-      const key = entry.membershipId.toString();
+      const key = entry.membership_id.toString();
       (ledgerByMembership[key] ||= []).push(entry);
     }
 
-    // Group units by propertyId (allocated units may match membership properties)
-    const unitsByProperty = {};
+    const unitsById = {};
     for (const unit of allocatedUnits) {
-      const key = unit.propertyId?._id?.toString();
-      if (key) (unitsByProperty[key] ||= []).push(unit);
+      unitsById[unit.id] = {
+          unitName: unit.unitName,
+          floor: unit.floor,
+          status: unit.status,
+          handoverMonth: unit.handoverMonth,
+          handoverYear: unit.handoverYear,
+          propertyId: { _id: unit.propertyId, name: unit.propertyName, address: unit.propertyAddress, mainImage: unit.propertyMainImage, handoverTime: unit.propertyHandoverTime }
+      };
     }
 
-    // Build response items — one per membership with its ledger + summary
-    const items = memberships.map((m) => {
-      const mId = m._id.toString();
-      const pId = m.propertyId?._id?.toString();
+    const items = formattedMemberships.map((m) => {
+      const mId = m.id.toString();
+      const pId = m.property_id?.toString();
       const ledger = ledgerByMembership[mId] || [];
       return {
         membership: m,
         ledger,
         summary: buildSummary(ledger),
-        allocatedUnit: pId ? (unitsByProperty[pId] || [])[0] || null : null,
+        allocatedUnit: m.unit_id ? (unitsById[m.unit_id] || null) : null,
       };
     });
 
-    res.status(200).json({ memberships, items });
+    res.status(200).json({ memberships: formattedMemberships, items });
   } catch (error) {
     console.error("Error fetching memberships:", error);
     res.status(500).json({ message: "Server error fetching memberships." });
   }
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
-// @desc    Get a single membership detail (for expanded view)
-// @route   GET /api/membership/me/:membershipId
-// @access  Private
-// ─────────────────────────────────────────────────────────────────────────────
 const getMyMembershipDetail = async (req, res) => {
   try {
-    const membership = await Membership.findOne({
-      _id: req.params.membershipId,
-      userId: req.user._id,
-    }).populate("propertyId", "name mainImage address status");
+    const membership = await membershipRepository.db('memberships')
+        .where({ 'memberships.id': req.params.membershipId, 'memberships.user_id': req.user.id })
+        .leftJoin('properties', 'memberships.property_id', 'properties.id')
+        .select(
+            'memberships.*',
+            'properties.name as propertyName', 'properties.main_image as propertyMainImage', 'properties.address as propertyAddress', 'properties.status as propertyStatus', 'properties.progress_video_url as propertyProgressVideoUrl', 'properties.progress_images as propertyProgressImages'
+        ).first();
 
     if (!membership) {
       return res.status(404).json({ message: "Membership not found." });
     }
 
-    const ledger = await InvestmentLedger.find({
-      membershipId: membership._id,
-    }).sort({ type: 1, installmentNumber: 1, createdAt: 1 });
+    let progressImages = [];
+    try { progressImages = typeof membership.propertyProgressImages === 'string' ? JSON.parse(membership.propertyProgressImages) : membership.propertyProgressImages || []; } catch(e) {}
 
-    const allocatedUnit = await ApartmentUnit.findOne({
-      allocatedTo: req.user._id,
-      propertyId: membership.propertyId,
-    })
-      .populate("propertyId", "name address mainImage handoverTime")
-      .select("unitName floor status handoverMonth handoverYear propertyId");
+    const formattedMembership = {
+        ...membership,
+        _id: membership.id,
+        totalApprovedPaid: membership.total_approved_paid,
+        totalTarget: membership.total_target,
+        memberDeadline: membership.member_deadline,
+        shares: membership.shares,
+        propertyId: { _id: membership.property_id, name: membership.propertyName, mainImage: membership.propertyMainImage, address: membership.propertyAddress, status: membership.propertyStatus, progressVideoUrl: membership.propertyProgressVideoUrl, progressImages }
+    };
+
+    const ledger = await investmentLedgerRepository.db('investment_ledgers')
+      .where({ membership_id: membership.id })
+      .orderBy('type', 'asc')
+      .orderBy('installment_number', 'asc')
+      .orderBy('created_at', 'asc');
+
+    let allocatedUnitRecord = null;
+    if (membership.unit_id) {
+        allocatedUnitRecord = await apartmentUnitRepository.db('apartment_units')
+            .where({ 'apartment_units.id': membership.unit_id })
+            .leftJoin('properties', 'apartment_units.property_id', 'properties.id')
+            .select(
+                'apartment_units.unit_name as unitName', 'apartment_units.floor', 'apartment_units.status', 'apartment_units.handover_month as handoverMonth', 'apartment_units.handover_year as handoverYear', 'apartment_units.property_id as propertyId',
+                'properties.name as propertyName', 'properties.address as propertyAddress', 'properties.main_image as propertyMainImage', 'properties.handover_time as propertyHandoverTime'
+            ).first();
+    }
+
+    let allocatedUnit = null;
+    if (allocatedUnitRecord) {
+        allocatedUnit = {
+            unitName: allocatedUnitRecord.unitName,
+            floor: allocatedUnitRecord.floor,
+            status: allocatedUnitRecord.status,
+            handoverMonth: allocatedUnitRecord.handoverMonth,
+            handoverYear: allocatedUnitRecord.handoverYear,
+            propertyId: { _id: allocatedUnitRecord.propertyId, name: allocatedUnitRecord.propertyName, address: allocatedUnitRecord.propertyAddress, mainImage: allocatedUnitRecord.propertyMainImage, handoverTime: allocatedUnitRecord.propertyHandoverTime }
+        };
+    }
 
     res.status(200).json({
-      membership,
+      membership: formattedMembership,
       ledger,
       summary: buildSummary(ledger),
       allocatedUnit,
@@ -160,11 +208,6 @@ const getMyMembershipDetail = async (req, res) => {
   }
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
-// @desc    Submit booking money for a specific property
-// @route   POST /api/membership/booking
-// @access  Private  (multipart: field "invoice")
-// ─────────────────────────────────────────────────────────────────────────────
 const submitBooking = async (req, res) => {
   try {
     const { propertyId, unitId } = req.body;
@@ -172,16 +215,7 @@ const submitBooking = async (req, res) => {
       return res.status(400).json({ message: "propertyId is required." });
     }
 
-    // Check for existing membership for this user + property combo
-    const existing = await Membership.findOne({
-      userId: req.user._id,
-      propertyId,
-    });
-    if (existing) {
-      return res.status(400).json({
-        message: "You already have an investment journey for this property.",
-      });
-    }
+    // The user can now invest multiple times in the same property
 
     const invoiceUrl = req.file?.path || "";
     if (!invoiceUrl) {
@@ -191,36 +225,36 @@ const submitBooking = async (req, res) => {
     const payment = buildPaymentInfo(req.body);
     if (payment.error) return res.status(400).json({ message: payment.error });
 
-    const membership = await Membership.create({
-      userId: req.user._id,
-      propertyId,
-      unitId: unitId || null,
+    const membership = await membershipRepository.create({
+      user_id: req.user.id,
+      property_id: propertyId,
+      unit_id: unitId || null,
       status: "pending_booking",
-      bookingMoney: BOOKING_MONEY,
+      booking_money: BOOKING_MONEY,
     });
 
-    await InvestmentLedger.create({
-      membershipId: membership._id,
-      userId: req.user._id,
-      propertyId,
+    await investmentLedgerRepository.create({
+      membership_id: membership.id,
+      user_id: req.user.id,
+      property_id: propertyId,
       type: "booking",
       amount: BOOKING_MONEY,
-      dueDate: new Date(),
+      due_date: new Date(),
       status: "Pending",
-      paymentMethod: payment.method,
-      paymentDetails: payment.details,
-      invoiceUrl,
+      payment_method: payment.method,
+      payment_details: payment.details, // jsonb handles object
+      invoice_url: invoiceUrl,
       description: req.body.description || "",
-      submittedAt: new Date(),
+      submitted_at: new Date(),
     });
 
     res.status(201).json({
       message: "Booking submitted. Awaiting admin approval.",
-      membership,
+      membership: { ...membership, _id: membership.id },
     });
   } catch (error) {
     console.error("Error submitting booking:", error);
-    if (error.code === 11000) {
+    if (error.code === '23505') {
       return res.status(400).json({
         message: "You already have an investment journey for this property.",
       });
@@ -229,11 +263,6 @@ const submitBooking = async (req, res) => {
   }
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
-// @desc    Submit the down payment for a specific membership (property)
-// @route   POST /api/membership/downpayment
-// @access  Private  (multipart: field "invoice")
-// ─────────────────────────────────────────────────────────────────────────────
 const submitDownPayment = async (req, res) => {
   try {
     const { membershipId } = req.body;
@@ -241,9 +270,9 @@ const submitDownPayment = async (req, res) => {
       return res.status(400).json({ message: "membershipId is required." });
     }
 
-    const membership = await Membership.findOne({
-      _id: membershipId,
-      userId: req.user._id,
+    const membership = await membershipRepository.findOne({
+      id: membershipId,
+      user_id: req.user.id,
     });
     if (!membership) {
       return res.status(404).json({ message: "Membership not found." });
@@ -253,7 +282,7 @@ const submitDownPayment = async (req, res) => {
         message: "Down payment can only be submitted by an active member.",
       });
     }
-    if (membership.memberDeadline && new Date() > membership.memberDeadline) {
+    if (membership.member_deadline && new Date() > new Date(membership.member_deadline)) {
       return res.status(400).json({
         message: "Your 6-month membership window has expired.",
       });
@@ -274,42 +303,39 @@ const submitDownPayment = async (req, res) => {
     const payment = buildPaymentInfo(req.body);
     if (payment.error) return res.status(400).json({ message: payment.error });
 
-    // The new cash collected now = chosen downpayment amount (no booking deduction)
     const newCash = amount;
 
-    membership.downPaymentAmount = amount;
-    await membership.save();
+    await membershipRepository.update(membership.id, { down_payment_amount: amount });
 
-    // Reuse an existing un-approved downpayment entry if the member re-submits.
-    let entry = await InvestmentLedger.findOne({
-      membershipId: membership._id,
+    let entry = await investmentLedgerRepository.db('investment_ledgers').where({
+      membership_id: membership.id,
       type: "downpayment",
-      status: { $ne: "Paid" },
-    });
+    }).whereNot({ status: "Paid" }).first();
 
     if (entry) {
-      entry.amount = newCash;
-      entry.paymentMethod = payment.method;
-      entry.paymentDetails = payment.details;
-      entry.invoiceUrl = invoiceUrl;
-      entry.description = req.body.description || "";
-      entry.status = "Pending";
-      entry.submittedAt = new Date();
-      await entry.save();
+      entry = await investmentLedgerRepository.update(entry.id, {
+          amount: newCash,
+          payment_method: payment.method,
+          payment_details: payment.details,
+          invoice_url: invoiceUrl,
+          description: req.body.description || "",
+          status: "Pending",
+          submitted_at: new Date()
+      });
     } else {
-      entry = await InvestmentLedger.create({
-        membershipId: membership._id,
-        userId: req.user._id,
-        propertyId: membership.propertyId || null,
+      entry = await investmentLedgerRepository.create({
+        membership_id: membership.id,
+        user_id: req.user.id,
+        property_id: membership.property_id || null,
         type: "downpayment",
         amount: newCash,
-        dueDate: new Date(),
+        due_date: new Date(),
         status: "Pending",
-        paymentMethod: payment.method,
-        paymentDetails: payment.details,
-        invoiceUrl,
+        payment_method: payment.method,
+        payment_details: payment.details,
+        invoice_url: invoiceUrl,
         description: req.body.description || "",
-        submittedAt: new Date(),
+        submitted_at: new Date(),
       });
     }
 
@@ -323,11 +349,6 @@ const submitDownPayment = async (req, res) => {
   }
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
-// @desc    Submit one or more installments together (one invoice covers all)
-// @route   POST /api/membership/installments/pay
-// @access  Private  (multipart: field "invoice", body installmentIds[])
-// ─────────────────────────────────────────────────────────────────────────────
 const payInstallments = async (req, res) => {
   try {
     const { membershipId } = req.body;
@@ -335,15 +356,14 @@ const payInstallments = async (req, res) => {
       return res.status(400).json({ message: "membershipId is required." });
     }
 
-    const membership = await Membership.findOne({
-      _id: membershipId,
-      userId: req.user._id,
+    const membership = await membershipRepository.findOne({
+      id: membershipId,
+      user_id: req.user.id,
     });
     if (!membership || membership.status !== "investor") {
       return res.status(400).json({ message: "Only investors can pay installments." });
     }
 
-    // installmentIds can arrive as an array or a single value (form-data)
     let ids = req.body.installmentIds;
     if (!ids) return res.status(400).json({ message: "No installments selected." });
     if (!Array.isArray(ids)) ids = [ids];
@@ -356,10 +376,8 @@ const payInstallments = async (req, res) => {
     const payment = buildPaymentInfo(req.body);
     if (payment.error) return res.status(400).json({ message: payment.error });
 
-    // Only allow the caller's own, currently-Unpaid installments for this membership.
-    const entries = await InvestmentLedger.find({
-      _id: { $in: ids },
-      membershipId: membership._id,
+    const entries = await investmentLedgerRepository.db('investment_ledgers').whereIn('id', ids).andWhere({
+      membership_id: membership.id,
       type: "installment",
       status: "Unpaid",
     });
@@ -371,20 +389,17 @@ const payInstallments = async (req, res) => {
     const batchId = crypto.randomUUID();
     const now = new Date();
 
-    await InvestmentLedger.updateMany(
-      { _id: { $in: entries.map((e) => e._id) } },
-      {
-        $set: {
+    await investmentLedgerRepository.db('investment_ledgers')
+      .whereIn('id', entries.map((e) => e.id))
+      .update({
           status: "Pending",
-          paymentMethod: payment.method,
-          paymentDetails: payment.details,
-          invoiceUrl,
+          payment_method: payment.method,
+          payment_details: JSON.stringify(payment.details),
+          invoice_url: invoiceUrl,
           description: req.body.description || "",
-          batchId,
-          submittedAt: now,
-        },
-      }
-    );
+          batch_id: batchId,
+          submitted_at: now,
+      });
 
     res.status(200).json({
       message: `${entries.length} installment(s) submitted. Awaiting admin approval.`,

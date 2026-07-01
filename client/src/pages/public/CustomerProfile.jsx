@@ -411,22 +411,22 @@ const CustomerProfile = () => {
               <div className="space-y-3">
                 {wishlist.slice(0, 3).map((property) => (
                   <a 
-                    key={property._id}
-                    href={`/property/${property._id}`}
+                    key={property.id || property._id}
+                    href={`/property/${property.id || property._id}`}
                     className="flex gap-3 p-2 rounded-xl hover:bg-gray-50 transition-colors border border-transparent hover:border-gray-100 group"
                   >
                     <div className="w-16 h-16 rounded-lg bg-gray-200 overflow-hidden flex-shrink-0">
                       <img 
-                        src={property.images?.[0] || "/placeholder.jpg"} 
-                        alt={property.title} 
+                        src={property.main_image || property.mainImage || "/placeholder.jpg"} 
+                        alt={property.name || "Property"} 
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform"
                       />
                     </div>
                     <div>
-                      <h4 className="text-sm font-semibold text-gray-900 line-clamp-1">{property.title}</h4>
-                      <p className="text-xs text-gray-500 mt-1 line-clamp-1">{property.location?.address}</p>
+                      <h4 className="text-sm font-semibold text-gray-900 line-clamp-1">{property.name}</h4>
+                      <p className="text-xs text-gray-500 mt-1 line-clamp-1">{property.address}</p>
                       <p className="text-xs font-bold text-brand-600 mt-1.5 flex items-center gap-1">
-                        ৳{property.price?.toLocaleString()}
+                        ৳{(property.total_price || property.totalPrice || 0).toLocaleString()}
                         {property.status === "rent" && <span className="text-[10px] text-gray-400 font-normal">/mo</span>}
                       </p>
                     </div>

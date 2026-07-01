@@ -1,18 +1,13 @@
-const PriceRequest = require("../models/PriceRequest");
-const User         = require("../models/User");
-const ApartmentUnit = require("../models/ApartmentUnit");
+const priceRequestRepository = require("../repositories/PriceRequestRepository");
+const userRepository = require("../repositories/UserRepository");
+const apartmentUnitRepository = require("../repositories/ApartmentUnitRepository");
+const interactionRepository = require("../repositories/InteractionRepository");
 
-// ─────────────────────────────────────────────────────────────────────────────
-// @desc   Seller requests conversion of an assigned lead to a seller (affiliate)
-// @route  PUT /api/requests/:id/request-seller-conversion
-// @access Private (seller)
-// ─────────────────────────────────────────────────────────────────────────────
 const requestSellerConversion = async (req, res) => {
   try {
-    // Security: only the assigned seller can initiate this
-    const request = await PriceRequest.findOne({
-      _id:        req.params.id,
-      assignedTo: req.user._id,
+    const request = await priceRequestRepository.findOne({
+      id: req.params.id,
+      assigned_to: req.user.id,
     });
 
     if (!request) {
@@ -21,18 +16,17 @@ const requestSellerConversion = async (req, res) => {
       });
     }
 
-    if (request.sellerConversionStatus !== "none") {
+    if (request.seller_conversion_status !== "none") {
       return res.status(400).json({
-        message: `Seller conversion already ${request.sellerConversionStatus}. Cannot re-submit.`,
+        message: `Seller conversion already ${request.seller_conversion_status}. Cannot re-submit.`,
       });
     }
 
-    request.sellerConversionStatus = "pending_approval";
-    await request.save();
+    const updatedRequest = await priceRequestRepository.update(request.id, { seller_conversion_status: "pending_approval" });
 
     res.status(200).json({
       message: "Seller conversion request submitted. Awaiting admin approval.",
-      request,
+      request: { ...updatedRequest, _id: updatedRequest.id, sellerConversionStatus: updatedRequest.seller_conversion_status },
     });
   } catch (error) {
     console.error("requestSellerConversion error:", error);
@@ -40,61 +34,26 @@ const requestSellerConversion = async (req, res) => {
   }
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
-// @desc   Get the seller's sub-seller team (users they referred who became sellers)
-// @route  GET /api/seller/my-team
-// @access Private (seller)
-// ─────────────────────────────────────────────────────────────────────────────
 const getMyTeam = async (req, res) => {
   try {
-    const mongoose = require("mongoose");
+    const teamRaw = await userRepository.db('users')
+      .where({ referred_by: req.user.id })
+      .whereRaw("'seller' = ANY(roles)")
+      .leftJoin('price_requests', 'users.id', 'price_requests.assigned_to')
+      .groupBy('users.id')
+      .select(
+        'users.id', 'users.name', 'users.phone',
+        userRepository.db.raw('COUNT(price_requests.id) as totalAssigned'),
+        userRepository.db.raw(`COUNT(CASE WHEN price_requests.conversion_status = 'approved' THEN 1 END) as totalConverted`)
+      );
 
-    const team = await User.aggregate([
-      // 1. Match sub-sellers referred by this seller who have the 'seller' role
-      {
-        $match: {
-          referredBy: new mongoose.Types.ObjectId(req.user._id),
-          roles:      "seller",
-        },
-      },
-
-      // 2. Join with pricerequests where assignedTo = this sub-seller's _id
-      {
-        $lookup: {
-          from:         "pricerequests",
-          localField:   "_id",
-          foreignField: "assignedTo",
-          as:           "leadData",
-        },
-      },
-
-      // 3. Compute stats from the joined leadData array
-      {
-        $addFields: {
-          totalAssigned: { $size: "$leadData" },
-          totalConverted: {
-            $size: {
-              $filter: {
-                input: "$leadData",
-                as:    "lead",
-                cond:  { $eq: ["$$lead.conversionStatus", "approved"] },
-              },
-            },
-          },
-        },
-      },
-
-      // 4. Project only the fields the frontend needs
-      {
-        $project: {
-          _id:            1,
-          name:           1,
-          phone:          1,
-          totalAssigned:  1,
-          totalConverted: 1,
-        },
-      },
-    ]);
+    const team = teamRaw.map(u => ({
+        _id: u.id,
+        name: u.name,
+        phone: u.phone,
+        totalAssigned: parseInt(u.totalassigned, 10) || 0,
+        totalConverted: parseInt(u.totalconverted, 10) || 0
+    }));
 
     res.status(200).json({ team });
   } catch (error) {
@@ -103,39 +62,38 @@ const getMyTeam = async (req, res) => {
   }
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
-// @desc   Get seller's scheduled tasks (today + overdue/previous follow-ups)
-//         Excludes tasks that have already been marked as 'Completed'.
-// @route  GET /api/seller/tasks
-// @access Private (seller)
-// ─────────────────────────────────────────────────────────────────────────────
 const getSellerTasks = async (req, res) => {
   try {
-    const Interaction = require("../models/Interaction");
-
     const now = new Date();
     const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
     const todayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
 
-    // Fetch all non-completed follow-ups for this seller that have a scheduled date
-    const allTasks = await Interaction.find({
-      sellerId: req.user._id,
-      nextMeetingDate: { $ne: null, $exists: true },
-      followUpStatus: { $ne: "Completed" },   // ← exclude completed tasks
-    })
-      .populate({
-        path: "leadId",
-        select: "user",
-        populate: { path: "user", select: "name phone" },
-      })
-      .sort({ nextMeetingDate: 1 });
+    const allTasks = await interactionRepository.db('interactions')
+      .where({ seller_id: req.user.id })
+      .whereNotNull('next_meeting_date')
+      .whereNot({ follow_up_status: "Completed" })
+      .leftJoin('price_requests', 'interactions.lead_id', 'price_requests.id')
+      .leftJoin('users', 'price_requests.user_id', 'users.id')
+      .orderBy('next_meeting_date', 'asc')
+      .select(
+        'interactions.*',
+        'price_requests.id as priceRequestId', 'price_requests.user_id as priceRequestUserId',
+        'users.name as userName', 'users.phone as userPhone'
+      );
+      
+    const formattedTasks = allTasks.map(t => ({
+        ...t,
+        _id: t.id,
+        leadId: { _id: t.priceRequestId, user: { _id: t.priceRequestUserId, name: t.userName, phone: t.userPhone } },
+        nextMeetingDate: t.next_meeting_date,
+        followUpStatus: t.follow_up_status
+    }));
 
-    // ── Split into today vs previous (overdue) ────────────────────────────
-    const todayTasks = allTasks.filter(t =>
-      t.nextMeetingDate >= todayStart && t.nextMeetingDate <= todayEnd
+    const todayTasks = formattedTasks.filter(t =>
+      new Date(t.nextMeetingDate) >= todayStart && new Date(t.nextMeetingDate) <= todayEnd
     );
-    const previousTasks = allTasks.filter(t =>
-      t.nextMeetingDate < todayStart
+    const previousTasks = formattedTasks.filter(t =>
+      new Date(t.nextMeetingDate) < todayStart
     );
 
     res.status(200).json({ todayTasks, previousTasks });
@@ -145,22 +103,24 @@ const getSellerTasks = async (req, res) => {
   }
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
-// @desc   Get seller's specific unit sales
-// @route  GET /api/seller/my-sales
-// @access Private (seller)
-// ─────────────────────────────────────────────────────────────────────────────
 const getMySales = async (req, res) => {
   try {
-    const units = await ApartmentUnit.find({ actionBy: req.user._id })
-      .populate('propertyId', 'name address')
-      .sort({ updatedAt: -1 });
+    const units = await apartmentUnitRepository.db('apartment_units')
+      .where({ action_by: req.user.id })
+      .leftJoin('properties', 'apartment_units.property_id', 'properties.id')
+      .orderBy('apartment_units.updated_at', 'desc')
+      .select('apartment_units.*', 'properties.name as propertyName', 'properties.address as propertyAddress');
 
     const mappedUnits = units.map((u) => {
-      const unitObj = u.toObject();
-      // If the customer phone matches the seller's phone, it was booked "for self"
-      unitObj.ownerType = unitObj.customerPhone === req.user.phone ? 'self' : 'customer';
-      return unitObj;
+      return {
+          ...u,
+          _id: u.id,
+          propertyId: { _id: u.property_id, name: u.propertyName, address: u.propertyAddress },
+          customerName: u.customer_name,
+          customerPhone: u.customer_phone,
+          isDocumentReady: u.is_document_ready,
+          ownerType: u.customer_phone === req.user.phone ? 'self' : 'customer'
+      };
     });
 
     res.status(200).json({ success: true, units: mappedUnits });
@@ -170,17 +130,12 @@ const getMySales = async (req, res) => {
   }
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
-// @desc   Convert Booked unit to Sold or re-assign to Customer
-// @route  PUT /api/seller/units/:id/convert
-// @access Private (seller)
-// ─────────────────────────────────────────────────────────────────────────────
 const convertUnitAction = async (req, res) => {
   try {
     const { id } = req.params;
     const { actionType, customerName, customerPhone } = req.body;
 
-    const unit = await ApartmentUnit.findOne({ _id: id, actionBy: req.user._id });
+    const unit = await apartmentUnitRepository.findOne({ id, action_by: req.user.id });
 
     if (!unit) {
       return res.status(404).json({ success: false, message: "Unit not found or unauthorized." });
@@ -194,25 +149,25 @@ const convertUnitAction = async (req, res) => {
       return res.status(400).json({ success: false, message: "Customer name and phone are required for conversion." });
     }
 
-    unit.status = actionType;
-    unit.customerName = customerName;
-    unit.customerPhone = customerPhone;
-    unit.isDocumentReady = false; // Reset for accountant to re-process
+    const updates = {
+        status: actionType,
+        customer_name: customerName,
+        customer_phone: customerPhone,
+        is_document_ready: false
+    };
 
-    // Auto-conversion: link registered user + promote to 'customer'
-    const existingUser = await User.findOne({ phone: customerPhone });
+    const existingUser = await userRepository.findOne({ phone: customerPhone });
     if (existingUser) {
-      unit.customerId = existingUser._id;
-      const updatedRoles = [...new Set([...existingUser.roles, "customer"])].filter(r => r !== "user");
-      if (JSON.stringify(updatedRoles.sort()) !== JSON.stringify([...existingUser.roles].sort())) {
-        existingUser.roles = updatedRoles;
-        await existingUser.save();
+      updates.customer_id = existingUser.id;
+      const updatedRoles = [...new Set([...(existingUser.roles || []), "customer"])].filter(r => r !== "user");
+      if (JSON.stringify(updatedRoles.sort()) !== JSON.stringify([...(existingUser.roles || [])].sort())) {
+        await userRepository.update(existingUser.id, { roles: updatedRoles });
       }
     }
 
-    await unit.save();
+    const updatedUnit = await apartmentUnitRepository.update(unit.id, updates);
 
-    res.status(200).json({ success: true, message: `Unit converted to ${actionType} successfully.`, unit });
+    res.status(200).json({ success: true, message: `Unit converted to ${actionType} successfully.`, unit: { ...updatedUnit, _id: updatedUnit.id } });
   } catch (error) {
     console.error("convertUnitAction error:", error);
     res.status(500).json({ success: false, message: "Failed to convert unit." });
@@ -226,4 +181,3 @@ module.exports = {
   getMySales,
   convertUnitAction
 };
-

@@ -1,7 +1,42 @@
-const Property = require("../models/Property");
-const ApartmentUnit = require("../models/ApartmentUnit");
-const User = require("../models/User");
+const propertyRepository = require("../repositories/PropertyRepository");
+const apartmentUnitRepository = require("../repositories/ApartmentUnitRepository");
+const userRepository = require("../repositories/UserRepository");
+const areaRepository = require("../repositories/AreaRepository");
 const cloudinary = require("../config/cloudinary");
+
+const formatProperty = (p) => {
+  if (!p) return p;
+  
+  let extraImages = [];
+  try { extraImages = typeof p.extra_images === 'string' ? JSON.parse(p.extra_images) : p.extra_images || []; } catch(e) {}
+  
+  let apartmentSizes = [];
+  try { apartmentSizes = typeof p.apartment_sizes === 'string' ? JSON.parse(p.apartment_sizes) : p.apartment_sizes || []; } catch(e) {}
+
+  let progressImages = [];
+  try { progressImages = typeof p.progress_images === 'string' ? JSON.parse(p.progress_images) : p.progress_images || []; } catch(e) {}
+
+  let mapLocation = { lat: null, lng: null };
+  try { mapLocation = typeof p.map_location === 'string' ? JSON.parse(p.map_location) : p.map_location || {lat:null, lng:null}; } catch(e) {}
+
+  return {
+    ...p,
+    _id: p.id,
+    mainImage: p.main_image,
+    extraImages,
+    totalUnits: p.total_units,
+    landSize: p.land_size,
+    handoverTime: p.handover_time,
+    parkingArea: p.parking_area,
+    mapLocation,
+    displayOrder: p.display_order,
+    apartmentSizes,
+    totalPrice: p.total_price,
+    totalSqft: p.total_sqft,
+    progressVideoUrl: p.progress_video_url,
+    progressImages,
+  };
+};
 
 // ─────────────────────────────────────────────
 // @desc   Create a new property / building
@@ -19,13 +54,14 @@ const createProperty = async (req, res) => {
       handoverTime,
       parkingArea,
       description,
-      mapLocation,       // JSON string or object from FormData
+      mapLocation,
       displayOrder,
-      apartmentSizes,    // JSON string from FormData
-      area,              // Area ObjectId
-      status,            // Ongoing | Completed | Upcoming
+      apartmentSizes,
+      area,
+      status,
       totalPrice,
       totalSqft,
+      progressVideoUrl,
     } = req.body;
 
     if (!name || !address || !description) {
@@ -34,33 +70,36 @@ const createProperty = async (req, res) => {
         .json({ message: "Property name, address, and description are required." });
     }
 
-    // Main image (single field upload)
-    let mainImage         = null;
-    let mainImagePublicId = null;
+    let main_image = null;
+    let main_image_public_id = null;
     if (req.files?.mainImage?.[0]) {
-      mainImage         = req.files.mainImage[0].path;
-      mainImagePublicId = req.files.mainImage[0].filename;
+      main_image = req.files.mainImage[0].path;
+      main_image_public_id = req.files.mainImage[0].filename;
     }
 
-    // Extra images (array field upload)
-    let extraImages         = [];
-    let extraImagePublicIds = [];
+    let extra_images = [];
+    let extra_image_public_ids = [];
     if (req.files?.extraImages) {
-      extraImages         = req.files.extraImages.map((f) => f.path);
-      extraImagePublicIds = req.files.extraImages.map((f) => f.filename);
+      extra_images = req.files.extraImages.map((f) => f.path);
+      extra_image_public_ids = req.files.extraImages.map((f) => f.filename);
     }
 
-    // apartmentSizes is sent as a JSON string from FormData
+    let progress_images = [];
+    let progress_image_public_ids = [];
+    if (req.files?.progressImages) {
+      progress_images = req.files.progressImages.map((f) => f.path);
+      progress_image_public_ids = req.files.progressImages.map((f) => f.filename);
+    }
+
     let parsedSizes = [];
     if (apartmentSizes) {
       try {
-        parsedSizes = JSON.parse(apartmentSizes);
+        parsedSizes = typeof apartmentSizes === "string" ? JSON.parse(apartmentSizes) : apartmentSizes;
       } catch {
         parsedSizes = [];
       }
     }
 
-    // mapLocation is sent as a JSON string from FormData
     let parsedMapLocation = { lat: null, lng: null };
     if (mapLocation) {
       try {
@@ -72,75 +111,71 @@ const createProperty = async (req, res) => {
       }
     }
 
-    const property = await Property.create({
+    const property = await propertyRepository.create({
       name,
       address,
-      mainImage,
-      mainImagePublicId,
-      extraImages,
-      extraImagePublicIds,
-      totalUnits:      totalUnits      ? Number(totalUnits)    : 0,
-      floors:          floors          ? Number(floors)        : 0,
-      landSize:        landSize        || "",
-      handoverTime:    handoverTime    || "",
-      parkingArea:     parkingArea     || "",
-      description:     description     || "",
-      mapLocation:     parsedMapLocation,
-      displayOrder:    displayOrder    !== undefined ? Number(displayOrder) : 999,
-      apartmentSizes:  parsedSizes,
-      area:            area            || null,
-      status:          status          || "Ongoing",
-      totalPrice:      totalPrice      ? Number(totalPrice) : 0,
-      totalSqft:       totalSqft       ? Number(totalSqft)  : 0,
+      main_image,
+      main_image_public_id,
+      extra_images: JSON.stringify(extra_images),
+      extra_image_public_ids: JSON.stringify(extra_image_public_ids),
+      total_units: totalUnits ? Number(totalUnits) : 0,
+      floors: floors ? Number(floors) : 0,
+      land_size: landSize || "",
+      handover_time: handoverTime || "",
+      parking_area: parkingArea || "",
+      description: description || "",
+      map_location: JSON.stringify(parsedMapLocation),
+      display_order: displayOrder !== undefined ? Number(displayOrder) : 999,
+      apartment_sizes: JSON.stringify(parsedSizes),
+      area_id: area || null,
+      status: status || "Ongoing",
+      total_price: totalPrice ? Number(totalPrice) : 0,
+      total_sqft: totalSqft ? Number(totalSqft) : 0,
+      progress_video_url: progressVideoUrl || "",
+      progress_images: JSON.stringify(progress_images),
+      progress_image_public_ids: JSON.stringify(progress_image_public_ids),
     });
 
-    // Pre-generate apartment units
-    if (property.totalUnits > 0 && property.floors > 0) {
-      const unitsPerFloor = Math.floor(property.totalUnits / property.floors);
+    if (property.total_units > 0 && property.floors > 0) {
+      const unitsPerFloor = Math.floor(property.total_units / property.floors);
       const unitsArray = [];
 
       for (let f = 1; f <= property.floors; f++) {
         for (let u = 1; u <= unitsPerFloor; u++) {
-          const columnLine = String.fromCharCode(64 + u); // 65 is 'A'
+          const columnLine = String.fromCharCode(64 + u);
           const unitName = `${columnLine}-${f}`;
 
           unitsArray.push({
-            propertyId: property._id,
+            property_id: property.id,
             floor: f,
-            columnLine,
-            unitName,
+            column_line: columnLine,
+            unit_name: unitName,
             status: "Unsold",
           });
         }
       }
 
       if (unitsArray.length > 0) {
-        await ApartmentUnit.insertMany(unitsArray);
+        await apartmentUnitRepository.db('apartment_units').insert(unitsArray);
       }
     }
 
     res.status(201).json({ message: "Property created successfully.", property });
   } catch (error) {
     console.error("createProperty error:", error);
-    if (error.name === "ValidationError") {
-      const messages = Object.values(error.errors).map((e) => e.message);
-      return res.status(400).json({ message: messages.join(". ") });
-    }
     res.status(500).json({ message: "Failed to create property." });
   }
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// @desc   Get ALL properties — ADMIN (no pagination, complete list for management)
-// @route  GET /api/admin/properties
-// @access Private (admin)
+// @desc   Get ALL properties — ADMIN
 // ─────────────────────────────────────────────────────────────────────────────
 const getProperties = async (req, res) => {
   try {
-    // No filters (admins see drafts/unpublished too), no skip/limit
-    const properties = await Property.find({})
-      .sort({ displayOrder: 1, updatedAt: -1 });
-    return res.status(200).json({ success: true, properties });
+    const properties = await propertyRepository.db('properties')
+      .orderBy('display_order', 'asc')
+      .orderBy('updated_at', 'desc');
+    return res.status(200).json({ success: true, properties: properties.map(formatProperty) });
   } catch (error) {
     console.error("getProperties error:", error);
     res.status(500).json({ success: false, message: "Failed to fetch properties." });
@@ -148,9 +183,7 @@ const getProperties = async (req, res) => {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// @desc   Get properties — PUBLIC (supports filtering + optional pagination)
-// @route  GET /api/properties/public?page=1&limit=6&area=...&status=...&installmentType=...&minPrice=...&maxPrice=...&minSqft=...&maxSqft=...&noPaginate=true
-// @access Public
+// @desc   Get properties — PUBLIC
 // ─────────────────────────────────────────────────────────────────────────────
 const getPublicProperties = async (req, res) => {
   try {
@@ -168,71 +201,53 @@ const getPublicProperties = async (req, res) => {
       noPaginate,
     } = req.query;
 
-    // ── Build dynamic filter ──────────────────────────────────────────────
-    const filter = {};
+    const query = propertyRepository.db('properties')
+      .leftJoin('areas', 'properties.area_id', 'areas.id')
+      .select('properties.*', 'areas.name as area_name', 'areas.city as area_city', 'areas.country as area_country');
 
     if (area) {
-      filter.area = area;
+      query.where('properties.area_id', area);
     } else if (country || city) {
-      const areaQuery = {};
-      if (country) areaQuery.country = country;
-      if (city) areaQuery.city = city;
-      
-      const Area = require("../models/Area");
-      const matchedAreas = await Area.find(areaQuery).select("_id");
-      const matchedAreaIds = matchedAreas.map((a) => a._id);
-      
-      filter.area = { $in: matchedAreaIds };
+      if (country) query.where('areas.country', country);
+      if (city) query.where('areas.city', city);
     }
 
-    if (status)          filter.status          = status;
+    if (status) query.where('properties.status', status);
 
-    // Price range: 5 Lakh query buffer
     if (minPrice || maxPrice) {
-      filter.totalPrice = {};
-      if (minPrice) filter.totalPrice.$gte = Number(minPrice) - 500000;
-      if (maxPrice) filter.totalPrice.$lte = Number(maxPrice) + 500000;
+      if (minPrice) query.where('properties.total_price', '>=', Number(minPrice) - 500000);
+      if (maxPrice) query.where('properties.total_price', '<=', Number(maxPrice) + 500000);
     }
 
-    // Sqft range
     if (minSqft || maxSqft) {
-      filter.totalSqft = {};
-      if (minSqft) filter.totalSqft.$gte = Number(minSqft);
-      if (maxSqft) filter.totalSqft.$lte = Number(maxSqft);
+      if (minSqft) query.where('properties.total_sqft', '>=', Number(minSqft));
+      if (maxSqft) query.where('properties.total_sqft', '<=', Number(maxSqft));
     }
 
-    // ── No pagination mode (for carousels / View All pages) ───────────────
-    if (noPaginate === "true") {
-      const properties = await Property.find(filter)
-        .populate("area", "name")
-        .sort({ displayOrder: 1, updatedAt: -1 });
+    query.orderBy('properties.display_order', 'asc').orderBy('properties.updated_at', 'desc');
 
+    if (noPaginate === "true") {
+      const properties = await query;
       return res.status(200).json({
         success: true,
-        properties,
+        properties: properties.map(formatProperty),
         totalProperties: properties.length,
       });
     }
 
-    // ── Paginated mode ────────────────────────────────────────────────────
-    const page  = parseInt(rawPage,  10) || 1;
+    const page = parseInt(rawPage, 10) || 1;
     const limit = parseInt(rawLimit, 10) || 6;
-    const skip  = (page - 1) * limit;
+    const skip = (page - 1) * limit;
 
-    const [properties, total] = await Promise.all([
-      Property.find(filter)
-        .populate("area", "name")
-        .sort({ displayOrder: 1, updatedAt: -1 })
-        .skip(skip)
-        .limit(limit),
-      Property.countDocuments(filter),
-    ]);
+    const properties = await query.clone().offset(skip).limit(limit);
+    const countResult = await propertyRepository.db.from(query.clone().as('t')).count('id as total').first();
+    const total = parseInt(countResult.total, 10);
 
     return res.status(200).json({
-      success:         true,
-      properties,
-      currentPage:     page,
-      totalPages:      Math.ceil(total / limit),
+      success: true,
+      properties: properties.map(formatProperty),
+      currentPage: page,
+      totalPages: Math.ceil(total / limit),
       totalProperties: total,
     });
   } catch (error) {
@@ -243,16 +258,22 @@ const getPublicProperties = async (req, res) => {
 
 // ─────────────────────────────────────────────
 // @desc   Get a single property by ID
-// @route  GET /api/properties/:id
-// @access Public
 // ─────────────────────────────────────────────
 const getPropertyById = async (req, res) => {
   try {
-    const property = await Property.findById(req.params.id);
+    const property = await propertyRepository.findById(req.params.id);
     if (!property) {
       return res.status(404).json({ message: "Property not found." });
     }
-    res.status(200).json({ property });
+
+    if (property.area_id) {
+      const area = await areaRepository.findById(property.area_id);
+      if (area) {
+        property.area = area;
+      }
+    }
+
+    res.status(200).json({ property: formatProperty(property) });
   } catch (error) {
     console.error("getPropertyById error:", error);
     res.status(500).json({ message: "Failed to fetch property." });
@@ -261,13 +282,11 @@ const getPropertyById = async (req, res) => {
 
 // ─────────────────────────────────────────────
 // @desc   Update a property by ID
-// @route  PUT /api/properties/:id
-// @access Private (admin)
 // ─────────────────────────────────────────────
 const updateProperty = async (req, res) => {
   try {
     const { id } = req.params;
-    const property = await Property.findById(id);
+    const property = await propertyRepository.findById(id);
 
     if (!property) {
       return res.status(404).json({ message: "Property not found." });
@@ -282,126 +301,108 @@ const updateProperty = async (req, res) => {
       handoverTime,
       parkingArea,
       description,
-      mapLocation,       // JSON string or object from FormData
+      mapLocation,
       displayOrder,
-      apartmentSizes,    // JSON string from FormData
+      apartmentSizes,
       area,
       status,
       totalPrice,
       totalSqft,
+      progressVideoUrl,
     } = req.body;
 
-    if (name) property.name = name;
-    if (address) property.address = address;
-    if (description !== undefined) property.description = description;
-    if (totalUnits !== undefined) property.totalUnits = Number(totalUnits);
-    if (floors !== undefined) property.floors = Number(floors);
-    if (landSize !== undefined) property.landSize = landSize;
-    if (handoverTime !== undefined) property.handoverTime = handoverTime;
-    if (parkingArea !== undefined) property.parkingArea = parkingArea;
-    if (displayOrder !== undefined) property.displayOrder = Number(displayOrder);
-    if (area !== undefined)            property.area            = area || null;
-    if (status !== undefined)          property.status          = status;
-    if (totalPrice !== undefined)      property.totalPrice      = totalPrice ? Number(totalPrice) : 0;
-    if (totalSqft !== undefined)       property.totalSqft       = totalSqft  ? Number(totalSqft)  : 0;
+    const updates = {};
+    if (name) updates.name = name;
+    if (address) updates.address = address;
+    if (description !== undefined) updates.description = description;
+    if (totalUnits !== undefined) updates.total_units = Number(totalUnits);
+    if (floors !== undefined) updates.floors = Number(floors);
+    if (landSize !== undefined) updates.land_size = landSize;
+    if (handoverTime !== undefined) updates.handover_time = handoverTime;
+    if (parkingArea !== undefined) updates.parking_area = parkingArea;
+    if (displayOrder !== undefined) updates.display_order = Number(displayOrder);
+    if (area !== undefined) updates.area_id = area || null;
+    if (status !== undefined) updates.status = status;
+    if (totalPrice !== undefined) updates.total_price = totalPrice ? Number(totalPrice) : 0;
+    if (totalSqft !== undefined) updates.total_sqft = totalSqft ? Number(totalSqft) : 0;
+    if (progressVideoUrl !== undefined) updates.progress_video_url = progressVideoUrl;
 
     if (mapLocation !== undefined) {
       try {
-        property.mapLocation = typeof mapLocation === "string"
-          ? JSON.parse(mapLocation)
-          : mapLocation;
-      } catch {
-        // keep existing if parse fails
-      }
+        updates.map_location = typeof mapLocation === "string" ? mapLocation : JSON.stringify(mapLocation);
+      } catch {}
     }
 
     if (apartmentSizes) {
       try {
-        property.apartmentSizes = JSON.parse(apartmentSizes);
-      } catch {
-        // keep existing if parse fails
-      }
+        updates.apartment_sizes = typeof apartmentSizes === "string" ? apartmentSizes : JSON.stringify(apartmentSizes);
+      } catch {}
     }
 
-    // Handle new main image
     if (req.files?.mainImage?.[0]) {
-      // Optional: Delete old main image from Cloudinary
-      if (property.mainImagePublicId) {
-        try {
-          await cloudinary.uploader.destroy(property.mainImagePublicId);
-        } catch (err) {
-          console.error("Cloudinary mainImage deletion error:", err);
-        }
+      if (property.main_image_public_id) {
+        try { await cloudinary.uploader.destroy(property.main_image_public_id); } catch (err) {}
       }
-      property.mainImage = req.files.mainImage[0].path;
-      property.mainImagePublicId = req.files.mainImage[0].filename;
+      updates.main_image = req.files.mainImage[0].path;
+      updates.main_image_public_id = req.files.mainImage[0].filename;
     }
 
-    // Handle extra images (Replace old ones)
     if (req.files?.extraImages) {
-      // Optional: Delete old extra images from Cloudinary
-      if (property.extraImagePublicIds && property.extraImagePublicIds.length > 0) {
-        for (const publicId of property.extraImagePublicIds) {
-          try {
-            await cloudinary.uploader.destroy(publicId);
-          } catch (err) {
-            console.error("Cloudinary extraImage deletion error:", err);
-          }
+      if (property.extra_image_public_ids && property.extra_image_public_ids.length > 0) {
+        for (const publicId of property.extra_image_public_ids) {
+          try { await cloudinary.uploader.destroy(publicId); } catch (err) {}
         }
       }
-      property.extraImages = req.files.extraImages.map((f) => f.path);
-      property.extraImagePublicIds = req.files.extraImages.map((f) => f.filename);
+      updates.extra_images = JSON.stringify(req.files.extraImages.map((f) => f.path));
+      updates.extra_image_public_ids = JSON.stringify(req.files.extraImages.map((f) => f.filename));
     }
 
-    await property.save();
+    if (req.files?.progressImages) {
+      if (property.progress_image_public_ids && property.progress_image_public_ids.length > 0) {
+        for (const publicId of property.progress_image_public_ids) {
+          try { await cloudinary.uploader.destroy(publicId); } catch (err) {}
+        }
+      }
+      updates.progress_images = JSON.stringify(req.files.progressImages.map((f) => f.path));
+      updates.progress_image_public_ids = JSON.stringify(req.files.progressImages.map((f) => f.filename));
+    }
 
-    res.status(200).json({ message: "Property updated successfully.", property });
+    const updatedProperty = await propertyRepository.update(id, updates);
+
+    res.status(200).json({ message: "Property updated successfully.", property: updatedProperty });
   } catch (error) {
     console.error("updateProperty error:", error);
-    if (error.name === "ValidationError") {
-      const messages = Object.values(error.errors).map((e) => e.message);
-      return res.status(400).json({ message: messages.join(". ") });
-    }
     res.status(500).json({ message: "Failed to update property." });
   }
 };
 
 // ─────────────────────────────────────────────
 // @desc   Delete a single property by ID
-// @route  DELETE /api/properties/:id
-// @access Private (admin)
 // ─────────────────────────────────────────────
 const deleteProperty = async (req, res) => {
   try {
     const { id } = req.params;
-    const property = await Property.findById(id);
+    const property = await propertyRepository.findById(id);
 
-    if (!property) {
-      return res.status(404).json({ message: "Property not found." });
+    if (!property) return res.status(404).json({ message: "Property not found." });
+
+    if (property.main_image_public_id) {
+      try { await cloudinary.uploader.destroy(property.main_image_public_id); } catch (err) {}
     }
 
-    // Delete Main Image from Cloudinary
-    if (property.mainImagePublicId) {
-      try {
-        await cloudinary.uploader.destroy(property.mainImagePublicId);
-      } catch (err) {
-        console.error("Cloudinary mainImage deletion error:", err);
+    if (property.extra_image_public_ids && property.extra_image_public_ids.length > 0) {
+      for (const publicId of property.extra_image_public_ids) {
+        try { await cloudinary.uploader.destroy(publicId); } catch (err) {}
       }
     }
 
-    // Delete Extra Images from Cloudinary
-    if (property.extraImagePublicIds && property.extraImagePublicIds.length > 0) {
-      for (const publicId of property.extraImagePublicIds) {
-        try {
-          await cloudinary.uploader.destroy(publicId);
-        } catch (err) {
-          console.error("Cloudinary extraImage deletion error:", err);
-        }
+    if (property.progress_image_public_ids && property.progress_image_public_ids.length > 0) {
+      for (const publicId of property.progress_image_public_ids) {
+        try { await cloudinary.uploader.destroy(publicId); } catch (err) {}
       }
     }
 
-    await Property.findByIdAndDelete(id);
-
+    await propertyRepository.delete(id);
     res.status(200).json({ message: "Property deleted successfully." });
   } catch (error) {
     console.error("deleteProperty error:", error);
@@ -411,25 +412,32 @@ const deleteProperty = async (req, res) => {
 
 // ─────────────────────────────────────────────
 // @desc   Get all apartment units for a specific property
-// @route  GET /api/admin/properties/:id/units
-// @access Private (admin)
 // ─────────────────────────────────────────────
 const getPropertyUnits = async (req, res) => {
   try {
     const { id } = req.params;
-    const units = await ApartmentUnit.find({ propertyId: id })
-      .populate("actionBy", "name roles phone")
-      .sort({ floor: 1, columnLine: 1 });
+    const units = await apartmentUnitRepository.db('apartment_units')
+      .where({ property_id: id })
+      .leftJoin('users as actionBy', 'apartment_units.action_by', 'actionBy.id')
+      .select('apartment_units.*', 'actionBy.name as action_by_name', 'actionBy.roles as action_by_roles', 'actionBy.phone as action_by_phone')
+      .orderBy('floor', 'asc')
+      .orderBy('column_line', 'asc');
 
     const isAdmin = req.user?.roles?.includes("admin");
 
     const maskedUnits = units.map((u) => {
-      const unitObj = u.toObject();
-      if (!isAdmin) {
-        delete unitObj.customerName;
-        delete unitObj.customerPhone;
+      // Reconstruct actionBy object
+      if (u.action_by) {
+        u.actionBy = { id: u.action_by, name: u.action_by_name, roles: u.action_by_roles, phone: u.action_by_phone };
+      } else {
+        u.actionBy = null;
       }
-      return unitObj;
+      
+      if (!isAdmin) {
+        delete u.customer_name;
+        delete u.customer_phone;
+      }
+      return u;
     });
 
     res.status(200).json({ success: true, units: maskedUnits });
@@ -440,16 +448,13 @@ const getPropertyUnits = async (req, res) => {
 };
 
 // ─────────────────────────────────────────────
-// @desc   Update unit action (Sold / Booked / Unsold)
-// @route  PUT /api/units/:unitId/action
-// @access Private (admin, seller)
+// @desc   Update unit action
 // ─────────────────────────────────────────────
 const updateUnitAction = async (req, res) => {
   try {
     const { unitId } = req.params;
     const { actionType, customerName, customerPhone, actionRoleContext } = req.body;
 
-    // ── Validate actionRoleContext (required for Sold/Booked) ────────────────
     const VALID_ACTION_ROLES = ["admin", "seller", "Director", "GM", "AGM", "Accountent"];
     if (actionType !== "Unsold") {
       if (!actionRoleContext || !VALID_ACTION_ROLES.includes(actionRoleContext)) {
@@ -470,62 +475,46 @@ const updateUnitAction = async (req, res) => {
       return res.status(400).json({ success: false, message: "Invalid action type." });
     }
 
-    const unit = await ApartmentUnit.findById(unitId);
-    if (!unit) {
-      return res.status(404).json({ success: false, message: "Unit not found." });
-    }
+    const unit = await apartmentUnitRepository.findById(unitId);
+    if (!unit) return res.status(404).json({ success: false, message: "Unit not found." });
 
-    unit.status = actionType;
+    const updates = { status: actionType };
 
     if (actionType === "Unsold") {
-      // ── Clear all customer data ──────────────────────────────────────────
-      unit.actionBy          = null;
-      unit.actionTimestamp   = null;
-      unit.customerName      = null;
-      unit.customerPhone     = null;
-      unit.customerId        = null;
-      unit.actionRoleContext = null;
+      updates.action_by = null;
+      updates.action_timestamp = null;
+      updates.customer_name = null;
+      updates.customer_phone = null;
+      updates.customer_id = null;
+      updates.action_role_context = null;
     } else {
-      // ── Strict fallback to logged in user details ────────────────────────
       const finalCustomerName = customerName || req.user.name;
       const finalCustomerPhone = customerPhone || req.user.phone;
 
-      // ── Record who performed the action ──────────────────────────────────
-      unit.actionBy          = req.user._id;
-      unit.actionTimestamp   = Date.now();
-      unit.customerName      = finalCustomerName;
-      unit.customerPhone     = finalCustomerPhone;
-      unit.actionRoleContext = actionRoleContext  || null;
+      updates.action_by = req.user.id;
+      updates.action_timestamp = apartmentUnitRepository.db.fn.now();
+      updates.customer_name = finalCustomerName;
+      updates.customer_phone = finalCustomerPhone;
+      updates.action_role_context = actionRoleContext || null;
 
-      // ── Auto-conversion: link registered user + promote to 'customer' ────
       if (finalCustomerPhone) {
-        const existingUser = await User.findOne({ phone: finalCustomerPhone });
-
+        const existingUser = await userRepository.findOne({ phone: finalCustomerPhone });
         if (existingUser) {
-          // Attach the strong ObjectId reference to the unit
-          unit.customerId = existingUser._id;
+          updates.customer_id = existingUser.id;
 
-          // Promote to 'customer' and strip the base 'user' role.
-          // Using a filtered Set makes this idempotent — safe to call multiple times.
-          const updatedRoles = [...new Set([...existingUser.roles, "customer"])].filter(
-            (r) => r !== "user"
-          );
-          if (JSON.stringify(updatedRoles.sort()) !== JSON.stringify([...existingUser.roles].sort())) {
-            existingUser.roles = updatedRoles;
-            await existingUser.save();
-            console.info(
-              `[unitAction] User ${existingUser._id} (${existingUser.phone}) promoted to 'customer' (user role removed).`
-            );
+          const currentRoles = existingUser.roles || [];
+          const updatedRoles = [...new Set([...currentRoles, "customer"])].filter((r) => r !== "user");
+          
+          if (JSON.stringify(updatedRoles.sort()) !== JSON.stringify([...currentRoles].sort())) {
+            await userRepository.update(existingUser.id, { roles: updatedRoles });
+            console.info(`[unitAction] User ${existingUser.id} (${existingUser.phone}) promoted to 'customer' (user role removed).`);
           }
-
         }
       }
     }
 
-    await unit.save();
-    await unit.populate("actionBy", "name roles phone");
-
-    res.status(200).json({ success: true, message: "Unit updated successfully.", unit });
+    const updatedUnit = await apartmentUnitRepository.update(unitId, updates);
+    res.status(200).json({ success: true, message: "Unit updated successfully.", unit: updatedUnit });
   } catch (error) {
     console.error("updateUnitAction error:", error);
     res.status(500).json({ success: false, message: "Failed to update unit action." });
@@ -534,8 +523,8 @@ const updateUnitAction = async (req, res) => {
 
 module.exports = {
   createProperty,
-  getProperties,        // admin — all records, no pagination
-  getPublicProperties,  // public home page — paginated
+  getProperties,
+  getPublicProperties,
   getPropertyById,
   updateProperty,
   deleteProperty,

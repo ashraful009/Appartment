@@ -60,7 +60,7 @@ const AllocateModal = ({ investor, buildings, onClose, onDone }) => {
     try {
       const { data } = await axios.post(
         "/api/management/allocate",
-        { unitId, investorId: investor.userId._id, handoverMonth: month, handoverYear: year },
+        { unitId, investorId: investor.userId._id, membershipId: investor._id, handoverMonth: month, handoverYear: year },
         { withCredentials: true }
       );
       toast.success(data.message || "Unit allocated.");

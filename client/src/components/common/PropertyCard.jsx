@@ -16,7 +16,7 @@ const PropertyCard = ({ property, index = 0 }) => {
 
   return (
     <div
-      onClick={() => navigate(`/property/${property._id}`)}
+      onClick={() => navigate(`/property/${property.id || property._id}`)}
       className="group relative w-full flex flex-col rounded-3xl overflow-hidden cursor-pointer shadow-lg hover:shadow-2xl transition-shadow duration-500"
     >
       {/* ── Full-bleed image — height scales with screen size ────────── */}

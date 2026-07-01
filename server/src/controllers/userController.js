@@ -1,64 +1,72 @@
-const User = require("../models/User");
-const PriceRequest = require("../models/PriceRequest");
+const userRepository = require("../repositories/UserRepository");
+const priceRequestRepository = require("../repositories/PriceRequestRepository");
 
 // @desc    Get user profile data (role-specific)
 // @route   GET /api/users/profile
 // @access  Private (protect)
 const getProfile = async (req, res) => {
   try {
-    const userId = req.user._id;
+    const userId = req.user.id; // updated from _id to id
 
-    // Fetch base user and populate wishlist if it exists
-    const user = await User.findById(userId)
-      .populate("wishlist")
-      .populate("referredBy", "name email phone profilePhoto socialLinks"); // for seller mentor
+    // Fetch base user
+    const user = await userRepository.findById(userId);
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    const profileData = user.toObject();
+    // Instead of populate, fetch related info manually for now
+    // Fetch Wishlist
+    const userWishlistRecords = await userRepository.db('user_wishlists')
+      .where({ user_id: userId })
+      .join('properties', 'user_wishlists.property_id', 'properties.id')
+      .select('properties.*');
+      
+    user.wishlist = userWishlistRecords;
+
+    // Fetch Referred By
+    if (user.referred_by) {
+      const referredBy = await userRepository.findById(user.referred_by, ['id', 'name', 'email', 'phone', 'profile_photo', 'social_links']);
+      user.referredBy = referredBy;
+    } else {
+      user.referredBy = null;
+    }
+
+    const profileData = { ...user };
 
     // ── If user is a Customer ──
     if (user.roles.includes("customer")) {
-      // Find the most recently updated active PriceRequest (has an assigned seller,
-      // and pipeline has not closed as Lost).
-      const recentRequest = await PriceRequest.findOne({
-        user: userId,
-        status: "assigned",
-        pipelineStage: { $ne: "Closed Lost" },
-      })
-        .sort({ updatedAt: -1 }) // most recently touched lead first
-        .populate(
-          "assignedTo",
-          "name email phone profilePhoto bio socialLinks expertise"
-        );
+      // Find the most recently updated active PriceRequest
+      const recentRequest = await priceRequestRepository.db('price_requests')
+        .where({ user_id: userId, status: 'assigned' })
+        .whereNot({ pipeline_stage: 'Closed Lost' })
+        .orderBy('updated_at', 'desc')
+        .first();
 
-      profileData.currentAssignedSeller =
-        recentRequest?.assignedTo ?? null;
+      if (recentRequest && recentRequest.assigned_to) {
+        const seller = await userRepository.findById(recentRequest.assigned_to, [
+          'id', 'name', 'email', 'phone', 'profile_photo', 'bio', 'social_links', 'expertise'
+        ]);
+        profileData.currentAssignedSeller = seller;
+      } else {
+        profileData.currentAssignedSeller = null;
+      }
     }
 
     // ── If user is a Seller ──
     if (user.roles.includes("seller")) {
-      // Aggregate stats for this seller
-      const [stats] = await PriceRequest.aggregate([
-        { $match: { assignedTo: user._id } },
-        {
-          $group: {
-            _id: null,
-            totalAssignedLeads: { $sum: 1 },
-            totalConvertedCustomers: {
-              $sum: {
-                $cond: [{ $eq: ["$conversionStatus", "approved"] }, 1, 0],
-              },
-            },
-          },
-        },
-      ]);
+      // Aggregate stats for this seller using Knex raw/builder
+      const stats = await priceRequestRepository.db('price_requests')
+        .where({ assigned_to: userId })
+        .select(
+          priceRequestRepository.db.raw('COUNT(id) as totalAssignedLeads'),
+          priceRequestRepository.db.raw('SUM(CASE WHEN conversion_status = \'approved\' THEN 1 ELSE 0 END) as totalConvertedCustomers')
+        )
+        .first();
 
       profileData.stats = {
-        totalAssignedLeads: stats?.totalAssignedLeads || 0,
-        totalConvertedCustomers: stats?.totalConvertedCustomers || 0,
+        totalAssignedLeads: parseInt(stats?.totalassignedleads || 0, 10),
+        totalConvertedCustomers: parseInt(stats?.totalconvertedcustomers || 0, 10),
       };
     }
 
@@ -74,18 +82,18 @@ const getProfile = async (req, res) => {
 // @access  Private (protect)
 const updateProfile = async (req, res) => {
   try {
-    const userId = req.user._id;
+    const userId = req.user.id;
 
     // Allowed fields strictly filter out roles, email, etc.
     const allowedUpdates = [
       "name",
       "phone",
-      "profilePhoto",
+      "profile_photo",
       "address",
       "occupation",
-      "preferredContactTime",
+      "preferred_contact_time",
       "bio",
-      "socialLinks",
+      "social_links",
       "expertise",
     ];
 
@@ -93,31 +101,35 @@ const updateProfile = async (req, res) => {
     for (const key of allowedUpdates) {
       if (req.body[key] !== undefined) {
         const value = req.body[key];
-        // Expand nested objects into dot-notation to avoid overwriting the
-        // entire sub-document (e.g. use "address.present" not "address")
+        
+        // Handling nested objects like address for JSONB in postgres
         if (value !== null && typeof value === "object" && !Array.isArray(value)) {
-          for (const subKey of Object.keys(value)) {
-            if (value[subKey] !== undefined) {
-              updateData[`${key}.${subKey}`] = value[subKey];
-            }
-          }
+            // Since we are using JSONB we can merge the existing with new 
+            // Actually, for simplicity we will just update the entire JSONB object if passed
+            updateData[key] = value;
         } else {
           updateData[key] = value;
         }
       }
     }
 
-    // Use $set up to top level object (mongoose handles sub-docs like address automatically on $set if defined)
-    const updatedUser = await User.findByIdAndUpdate(
-      userId,
-      { $set: updateData },
-      { new: true, runValidators: true }
-    )
-      .populate("wishlist")
-      .populate("referredBy", "name email phone profilePhoto socialLinks");
+    const updatedUser = await userRepository.update(userId, updateData);
 
     if (!updatedUser) {
       return res.status(404).json({ message: "User not found" });
+    }
+    
+    // Append wishlist and referredBy for response similar to before
+    const userWishlistRecords = await userRepository.db('user_wishlists')
+      .where({ user_id: userId })
+      .join('properties', 'user_wishlists.property_id', 'properties.id')
+      .select('properties.*');
+    updatedUser.wishlist = userWishlistRecords;
+
+    if (updatedUser.referred_by) {
+      updatedUser.referredBy = await userRepository.findById(updatedUser.referred_by, ['id', 'name', 'email', 'phone', 'profile_photo', 'social_links']);
+    } else {
+        updatedUser.referredBy = null;
     }
 
     res.status(200).json({

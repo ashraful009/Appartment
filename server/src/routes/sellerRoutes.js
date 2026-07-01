@@ -5,7 +5,7 @@ const { protect }        = require("../middleware/authMiddleware");
 const { authorizeRoles } = require("../middleware/authMiddleware");
 const { getMyTeam, getSellerTasks, getMySales, convertUnitAction } = require("../controllers/sellerController");
 const { getTeamOverview, broadcastToTeam } = require("../controllers/delegationController");
-const Notification = require("../models/Notification");
+const notificationRepository = require("../repositories/NotificationRepository");
 
 // Seller-only guard
 const sellerGuard = [protect, authorizeRoles("seller")];
@@ -31,13 +31,19 @@ router.post("/broadcast", sellerGuard, broadcastToTeam);
 // GET /api/seller/notifications — fetch unread notifications for the logged-in seller
 router.get("/notifications", sellerGuard, async (req, res) => {
     try {
-        const notifications = await Notification.find({
-            recipientId: req.user._id,
-            read: false,
-        })
-            .populate("senderId", "name")
-            .sort({ createdAt: -1 })
-            .limit(50);
+        const notificationsRaw = await notificationRepository.db('notifications')
+            .where({ recipient_id: req.user.id, read: false })
+            .orderBy('created_at', 'desc')
+            .limit(50)
+            .leftJoin('users', 'notifications.sender_id', 'users.id')
+            .select('notifications.*', 'users.name as senderName');
+
+        const notifications = notificationsRaw.map(n => ({
+            ...n,
+            _id: n.id,
+            recipientId: n.recipient_id,
+            senderId: { _id: n.sender_id, name: n.senderName }
+        }));
 
         res.status(200).json({ notifications });
     } catch (error) {
@@ -49,10 +55,10 @@ router.get("/notifications", sellerGuard, async (req, res) => {
 // PUT /api/seller/notifications/mark-read — mark all notifications as read
 router.put("/notifications/mark-read", sellerGuard, async (req, res) => {
     try {
-        await Notification.updateMany(
-            { recipientId: req.user._id, read: false },
-            { $set: { read: true } }
-        );
+        await notificationRepository.db('notifications')
+            .where({ recipient_id: req.user.id, read: false })
+            .update({ read: true });
+            
         res.status(200).json({ message: "All notifications marked as read." });
     } catch (error) {
         console.error("markRead error:", error);
@@ -61,6 +67,3 @@ router.put("/notifications/mark-read", sellerGuard, async (req, res) => {
 });
 
 module.exports = router;
-
-
-

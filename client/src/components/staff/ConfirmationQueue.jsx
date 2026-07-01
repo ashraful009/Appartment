@@ -17,6 +17,34 @@ import { fmtTk, fmtDate } from "../investment/fmt";
 import { downloadBatchInvoice } from "../../utils/investmentInvoice";
 import MemberProfileModal from "./MemberProfileModal";
 
+const ProofViewerModal = ({ url, onClose }) => {
+  const isPdf = url?.toLowerCase().includes(".pdf");
+  const previewUrl = isPdf ? url.replace(/\.pdf(\?.*)?$/i, ".jpg$1") : url;
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4">
+      <div className="bg-white rounded-2xl w-full max-w-3xl h-[85vh] flex flex-col overflow-hidden relative shadow-2xl">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-gray-50/50">
+          <h3 className="font-extrabold text-gray-900 text-lg">Payment Proof</h3>
+          <div className="flex items-center gap-2">
+            {isPdf && (
+              <a href={url} target="_blank" rel="noreferrer" className="px-3 py-1.5 bg-brand-50 text-brand-700 text-xs font-bold rounded-lg hover:bg-brand-100">
+                Open Original PDF
+              </a>
+            )}
+            <button onClick={onClose} className="p-1.5 text-gray-400 hover:bg-gray-200 rounded-lg transition-colors">
+              <X size={18} />
+            </button>
+          </div>
+        </div>
+        <div className="flex-1 bg-gray-100/50 overflow-auto flex items-center justify-center p-4">
+          <img src={previewUrl} alt="Payment Proof" className="max-w-full max-h-full object-contain rounded-xl shadow-sm" />
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const TYPE_LABEL = { booking: "Booking Money", downpayment: "Down Payment", installment: "Installment" };
 const METHOD_ICON = { MFS: Smartphone, Bank: Landmark, Cash: Banknote };
 const STAGE_OUTPUT = {
@@ -78,6 +106,7 @@ const ConfirmationQueue = ({ basePath, stageKey, title, subtitle }) => {
   const [busy, setBusy] = useState(null);
   const [confirmed, setConfirmed] = useState({});
   const [profileUser, setProfileUser] = useState(null);
+  const [proofUrl, setProofUrl] = useState(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -214,14 +243,12 @@ const ConfirmationQueue = ({ basePath, stageKey, title, subtitle }) => {
                 {/* Footer actions */}
                 <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-gray-50 pt-3">
                   {lead.invoiceUrl && (
-                    <a
-                      href={lead.invoiceUrl}
-                      target="_blank"
-                      rel="noreferrer"
+                    <button
+                      onClick={() => setProofUrl(lead.invoiceUrl)}
                       className="inline-flex items-center gap-1.5 text-xs font-semibold text-brand-600 hover:text-brand-800"
                     >
                       <FileText size={14} /> View uploaded proof
-                    </a>
+                    </button>
                   )}
 
                   <div className="ml-auto flex items-center gap-2">
@@ -265,6 +292,9 @@ const ConfirmationQueue = ({ basePath, stageKey, title, subtitle }) => {
 
       {profileUser && (
         <MemberProfileModal basePath={basePath} userId={profileUser} onClose={() => setProfileUser(null)} />
+      )}
+      {proofUrl && (
+        <ProofViewerModal url={proofUrl} onClose={() => setProofUrl(null)} />
       )}
     </div>
   );

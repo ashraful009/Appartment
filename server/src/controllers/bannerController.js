@@ -1,9 +1,7 @@
-const Banner = require("../models/Banner");
+const bannerRepository = require("../repositories/BannerRepository");
 const cloudinary = require("../config/cloudinary");
+const { logError } = require("../utils/logger");
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Helper — safely delete a Cloudinary asset by public_id
-// ─────────────────────────────────────────────────────────────────────────────
 const destroyCloudinaryAsset = async (publicId, resourceType = "image") => {
   if (!publicId) return;
   try {
@@ -13,80 +11,96 @@ const destroyCloudinaryAsset = async (publicId, resourceType = "image") => {
   }
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
-// @desc   Get all banners (newest first) — admin view (no isActive filter)
-// @route  GET /api/admin/banners
-// @access Private (admin)
-// ─────────────────────────────────────────────────────────────────────────────
 const getBanners = async (req, res) => {
   try {
-    const banners = await Banner.find().sort({ createdAt: -1 });
-    res.status(200).json({ banners });
+    const banners = await bannerRepository.db('banners').orderBy('created_at', 'desc');
+    const formattedBanners = banners.map(b => ({
+        ...b,
+        _id: b.id,
+        mediaType: b.media_type,
+        desktopMediaUrl: b.desktop_media_url,
+        desktopPublicId: b.desktop_public_id,
+        mobileMediaUrl: b.mobile_media_url,
+        mobilePublicId: b.mobile_public_id,
+        isActive: b.is_active
+    }));
+    res.status(200).json({ banners: formattedBanners });
   } catch (error) {
     console.error("getBanners error:", error);
+    logError("getBanners", error);
     res.status(500).json({ message: "Failed to fetch banners." });
   }
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
-// @desc   Get all active banners — public listing
-// @route  GET /api/banners
-// @access Public
-// ─────────────────────────────────────────────────────────────────────────────
 const getPublicBanners = async (req, res) => {
   try {
-    const banners = await Banner.find({ isActive: true }).sort({ createdAt: -1 });
-    res.status(200).json({ banners });
+    const banners = await bannerRepository.db('banners').where({ is_active: true }).orderBy('created_at', 'desc');
+    const formattedBanners = banners.map(b => ({
+        ...b,
+        _id: b.id,
+        mediaType: b.media_type,
+        desktopMediaUrl: b.desktop_media_url,
+        desktopPublicId: b.desktop_public_id,
+        mobileMediaUrl: b.mobile_media_url,
+        mobilePublicId: b.mobile_public_id,
+        isActive: b.is_active
+    }));
+    res.status(200).json({ banners: formattedBanners });
   } catch (error) {
     console.error("getPublicBanners error:", error);
+    logError("getPublicBanners", error);
     res.status(500).json({ message: "Failed to fetch banners." });
   }
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
-// @desc   Get a single banner by ID
-// @route  GET /api/admin/banners/:id
-// @access Private (admin)
-// ─────────────────────────────────────────────────────────────────────────────
 const getBannerById = async (req, res) => {
   try {
-    const banner = await Banner.findById(req.params.id);
+    const banner = await bannerRepository.findById(req.params.id);
     if (!banner) return res.status(404).json({ message: "Banner not found." });
-    res.status(200).json({ banner });
+    
+    const formattedBanner = {
+        ...banner,
+        _id: banner.id,
+        mediaType: banner.media_type,
+        desktopMediaUrl: banner.desktop_media_url,
+        desktopPublicId: banner.desktop_public_id,
+        mobileMediaUrl: banner.mobile_media_url,
+        mobilePublicId: banner.mobile_public_id,
+        isActive: banner.is_active
+    };
+    
+    res.status(200).json({ banner: formattedBanner });
   } catch (error) {
     console.error("getBannerById error:", error);
+    logError("getBannerById", error);
     res.status(500).json({ message: "Failed to fetch banner." });
   }
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
-// @desc   Get the single most-recent active banner (for HomePage hero)
-// @route  GET /api/banners/active         (public route — defined in publicRoutes)
-// @access Public
-// ─────────────────────────────────────────────────────────────────────────────
 const getActiveBanner = async (req, res) => {
   try {
-    const banner = await Banner.findOne({ isActive: true }).sort({ createdAt: -1 });
-    if (!banner) return res.status(404).json({ message: "No active banner found." });
-    res.status(200).json({ banner });
+    const banner = await bannerRepository.db('banners').where({ is_active: true }).orderBy('created_at', 'desc').first();
+    if (!banner) return res.status(200).json({ banner: null });
+    
+    const formattedBanner = {
+        ...banner,
+        _id: banner.id,
+        mediaType: banner.media_type,
+        desktopMediaUrl: banner.desktop_media_url,
+        desktopPublicId: banner.desktop_public_id,
+        mobileMediaUrl: banner.mobile_media_url,
+        mobilePublicId: banner.mobile_public_id,
+        isActive: banner.is_active
+    };
+    
+    res.status(200).json({ banner: formattedBanner });
   } catch (error) {
     console.error("getActiveBanner error:", error);
+    logError("getActiveBanner", error);
     res.status(500).json({ message: "Failed to fetch active banner." });
   }
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
-// @desc   Create a new banner
-// @route  POST /api/admin/banners
-// @access Private (admin)
-//
-// Expected multipart/form-data fields:
-//   title         — optional string
-//   mediaType     — 'image' | 'video'  (default: 'image')
-//   isActive      — boolean string     (default: 'true')
-//   desktopMedia  — file field for desktop asset
-//   mobileMedia   — file field for mobile asset
-// ─────────────────────────────────────────────────────────────────────────────
 const createBanner = async (req, res) => {
   try {
     const { title = "", mediaType = "image", isActive } = req.body;
@@ -100,86 +114,98 @@ const createBanner = async (req, res) => {
       });
     }
 
-    const banner = await Banner.create({
+    const banner = await bannerRepository.create({
       title,
-      mediaType,
-      desktopMediaUrl: desktopFile.path,      // Cloudinary secure_url
-      desktopPublicId: desktopFile.filename,  // Cloudinary public_id
-      mobileMediaUrl:  mobileFile.path,
-      mobilePublicId:  mobileFile.filename,
-      isActive: isActive === "false" ? false : true,
+      media_type: mediaType,
+      desktop_media_url: desktopFile.path,
+      desktop_public_id: desktopFile.filename,
+      mobile_media_url:  mobileFile.path,
+      mobile_public_id:  mobileFile.filename,
+      is_active: isActive === "false" ? false : true,
     });
+    
+    const formattedBanner = {
+        ...banner,
+        _id: banner.id,
+        mediaType: banner.media_type,
+        desktopMediaUrl: banner.desktop_media_url,
+        desktopPublicId: banner.desktop_public_id,
+        mobileMediaUrl: banner.mobile_media_url,
+        mobilePublicId: banner.mobile_public_id,
+        isActive: banner.is_active
+    };
 
-    res.status(201).json({ message: "Banner created successfully.", banner });
+    res.status(201).json({ message: "Banner created successfully.", banner: formattedBanner });
   } catch (error) {
     console.error("createBanner error:", error);
+    logError("createBanner", error);
     res.status(500).json({ message: "Failed to create banner." });
   }
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
-// @desc   Update a banner (edit text fields and/or replace media)
-// @route  PUT /api/admin/banners/:id
-// @access Private (admin)
-//
-// All fields are optional — only supplied fields are updated.
-// New files will replace the old Cloudinary assets.
-// ─────────────────────────────────────────────────────────────────────────────
 const updateBanner = async (req, res) => {
   try {
-    const banner = await Banner.findById(req.params.id);
+    const banner = await bannerRepository.findById(req.params.id);
     if (!banner) return res.status(404).json({ message: "Banner not found." });
 
     const { title, mediaType, isActive } = req.body;
+    const updates = {};
 
-    if (title    !== undefined) banner.title     = title;
-    if (mediaType !== undefined) banner.mediaType = mediaType;
-    if (isActive !== undefined) banner.isActive  = isActive === "false" ? false : Boolean(isActive);
+    if (title !== undefined) updates.title = title;
+    if (mediaType !== undefined) updates.media_type = mediaType;
+    if (isActive !== undefined) updates.is_active = isActive === "false" ? false : Boolean(isActive);
 
-    // ── Replace desktop asset if a new file was uploaded ─────────────────────
     const desktopFile = req.files?.desktopMedia?.[0];
     if (desktopFile) {
-      const resourceType = (mediaType || banner.mediaType) === "video" ? "video" : "image";
-      await destroyCloudinaryAsset(banner.desktopPublicId, resourceType);
-      banner.desktopMediaUrl = desktopFile.path;
-      banner.desktopPublicId = desktopFile.filename;
+      const resourceType = (mediaType || banner.media_type) === "video" ? "video" : "image";
+      await destroyCloudinaryAsset(banner.desktop_public_id, resourceType);
+      updates.desktop_media_url = desktopFile.path;
+      updates.desktop_public_id = desktopFile.filename;
     }
 
-    // ── Replace mobile asset if a new file was uploaded ──────────────────────
     const mobileFile = req.files?.mobileMedia?.[0];
     if (mobileFile) {
-      const resourceType = (mediaType || banner.mediaType) === "video" ? "video" : "image";
-      await destroyCloudinaryAsset(banner.mobilePublicId, resourceType);
-      banner.mobileMediaUrl = mobileFile.path;
-      banner.mobilePublicId = mobileFile.filename;
+      const resourceType = (mediaType || banner.media_type) === "video" ? "video" : "image";
+      await destroyCloudinaryAsset(banner.mobile_public_id, resourceType);
+      updates.mobile_media_url = mobileFile.path;
+      updates.mobile_public_id = mobileFile.filename;
     }
 
-    await banner.save();
-    res.status(200).json({ message: "Banner updated successfully.", banner });
+    const updatedBanner = await bannerRepository.update(banner.id, updates);
+    
+    const formattedBanner = {
+        ...updatedBanner,
+        _id: updatedBanner.id,
+        mediaType: updatedBanner.media_type,
+        desktopMediaUrl: updatedBanner.desktop_media_url,
+        desktopPublicId: updatedBanner.desktop_public_id,
+        mobileMediaUrl: updatedBanner.mobile_media_url,
+        mobilePublicId: updatedBanner.mobile_public_id,
+        isActive: updatedBanner.is_active
+    };
+
+    res.status(200).json({ message: "Banner updated successfully.", banner: formattedBanner });
   } catch (error) {
     console.error("updateBanner error:", error);
+    logError("updateBanner", error);
     res.status(500).json({ message: "Failed to update banner." });
   }
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
-// @desc   Delete a banner and its Cloudinary assets
-// @route  DELETE /api/admin/banners/:id
-// @access Private (admin)
-// ─────────────────────────────────────────────────────────────────────────────
 const deleteBanner = async (req, res) => {
   try {
-    const banner = await Banner.findById(req.params.id);
+    const banner = await bannerRepository.findById(req.params.id);
     if (!banner) return res.status(404).json({ message: "Banner not found." });
 
-    const resourceType = banner.mediaType === "video" ? "video" : "image";
-    await destroyCloudinaryAsset(banner.desktopPublicId, resourceType);
-    await destroyCloudinaryAsset(banner.mobilePublicId,  resourceType);
+    const resourceType = banner.media_type === "video" ? "video" : "image";
+    await destroyCloudinaryAsset(banner.desktop_public_id, resourceType);
+    await destroyCloudinaryAsset(banner.mobile_public_id,  resourceType);
 
-    await banner.deleteOne();
+    await bannerRepository.delete(banner.id);
     res.status(200).json({ message: "Banner deleted successfully." });
   } catch (error) {
     console.error("deleteBanner error:", error);
+    logError("deleteBanner", error);
     res.status(500).json({ message: "Failed to delete banner." });
   }
 };

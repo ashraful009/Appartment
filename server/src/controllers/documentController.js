@@ -1,10 +1,9 @@
 const cloudinary = require("../config/cloudinary");
-const Document   = require("../models/Document");
+const documentRepository = require("../repositories/DocumentRepository");
 
 // ─────────────────────────────────────────────────────────────────────────────
 // POST /api/documents
 // Upload a new document file to Cloudinary and persist the record.
-// Requires: title in req.body, file in req.file (via uploadDocumentFile middleware)
 // ─────────────────────────────────────────────────────────────────────────────
 const uploadDocument = async (req, res) => {
   try {
@@ -18,21 +17,29 @@ const uploadDocument = async (req, res) => {
       return res.status(400).json({ message: "Document title is required." });
     }
 
-    // multer-storage-cloudinary sets these on req.file after upload
-    const fileUrl  = req.file.path;       // Cloudinary secure_url
-    const publicId = req.file.filename;   // Cloudinary public_id
+    const fileUrl  = req.file.path;
+    const publicId = req.file.filename;
 
-    const document = await Document.create({
-      user:     req.user._id,
+    const document = await documentRepository.create({
+      user_id:  req.user.id,
       title,
-      fileUrl,
-      publicId,
+      file_url: fileUrl,
+      public_id: publicId,
     });
+
+    const formattedDoc = {
+        _id: document.id,
+        user: document.user_id,
+        title: document.title,
+        fileUrl: document.file_url,
+        publicId: document.public_id,
+        uploadedAt: document.uploaded_at
+    };
 
     res.status(201).json({
       success:  true,
       message:  "Document uploaded successfully.",
-      document,
+      document: formattedDoc,
     });
   } catch (error) {
     console.error("uploadDocument error:", error);
@@ -46,11 +53,20 @@ const uploadDocument = async (req, res) => {
 // ─────────────────────────────────────────────────────────────────────────────
 const getMyDocuments = async (req, res) => {
   try {
-    const documents = await Document.find({ user: req.user._id })
-      .sort({ uploadedAt: -1 })
-      .lean();
+    const documents = await documentRepository.db('documents')
+      .where({ user_id: req.user.id })
+      .orderBy('uploaded_at', 'desc');
 
-    res.status(200).json({ success: true, documents });
+    const formattedDocs = documents.map(doc => ({
+        _id: doc.id,
+        user: doc.user_id,
+        title: doc.title,
+        fileUrl: doc.file_url,
+        publicId: doc.public_id,
+        uploadedAt: doc.uploaded_at
+    }));
+
+    res.status(200).json({ success: true, documents: formattedDocs });
   } catch (error) {
     console.error("getMyDocuments error:", error);
     res.status(500).json({ success: false, message: "Failed to fetch documents." });
@@ -64,14 +80,13 @@ const getMyDocuments = async (req, res) => {
 // ─────────────────────────────────────────────────────────────────────────────
 const deleteDocument = async (req, res) => {
   try {
-    const document = await Document.findById(req.params.id);
+    const document = await documentRepository.findById(req.params.id);
 
     if (!document) {
       return res.status(404).json({ message: "Document not found." });
     }
 
-    // ── Ownership / admin guard ───────────────────────────────────────────
-    const isOwner = document.user.toString() === req.user._id.toString();
+    const isOwner = document.user_id.toString() === req.user.id.toString();
     const isAdmin = req.user.roles?.includes("admin");
 
     if (!isOwner && !isAdmin) {
@@ -80,14 +95,11 @@ const deleteDocument = async (req, res) => {
         .json({ message: "Not authorised to delete this document." });
     }
 
-    // ── Delete from Cloudinary first ─────────────────────────────────────
-    // Use resource_type: "raw" so PDFs and other non-image files are handled.
-    await cloudinary.uploader.destroy(document.publicId, {
+    await cloudinary.uploader.destroy(document.public_id, {
       resource_type: "raw",
     });
 
-    // ── Delete the MongoDB record ────────────────────────────────────────
-    await document.deleteOne();
+    await documentRepository.delete(document.id);
 
     res
       .status(200)

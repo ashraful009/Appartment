@@ -1,4 +1,4 @@
-const Project = require("../models/Project");
+const projectRepository = require("../repositories/ProjectRepository");
 
 // Parse a "YYYY-MM" month-picker value into a Date at the 1st of that month.
 const parseMonthYear = (value) => {
@@ -17,7 +17,9 @@ const getProjects = async (req, res) => {
   try {
     const filter = {};
     if (req.query.status) filter.status = req.query.status;
-    const projects = await Project.find(filter).sort({ createdAt: -1 });
+    const projects = await projectRepository.db('projects')
+        .where(filter)
+        .orderBy('created_at', 'desc');
     res.status(200).json(projects);
   } catch (error) {
     console.error("Error fetching projects:", error);
@@ -35,14 +37,14 @@ const createProject = async (req, res) => {
     const { name, description, status, expectedCompleteDate } = req.body;
     if (!name) return res.status(400).json({ message: "Project name is required." });
 
-    const coverImage = req.files?.mainImage?.[0]?.path || req.file?.path || "";
+    const cover_image = req.files?.mainImage?.[0]?.path || req.file?.path || "";
 
-    const project = await Project.create({
+    const project = await projectRepository.create({
       name,
       description: description || "",
       status: status === "completed" ? "completed" : "running",
-      expectedCompleteDate: parseMonthYear(expectedCompleteDate),
-      coverImage,
+      expected_complete_date: parseMonthYear(expectedCompleteDate),
+      cover_image,
     });
 
     res.status(201).json({ message: "Project created.", project });
@@ -59,21 +61,23 @@ const createProject = async (req, res) => {
 // ─────────────────────────────────────────────────────────────────────────────
 const updateProject = async (req, res) => {
   try {
-    const project = await Project.findById(req.params.id);
+    const project = await projectRepository.findById(req.params.id);
     if (!project) return res.status(404).json({ message: "Project not found." });
 
     const { name, description, status, expectedCompleteDate } = req.body;
-    if (name !== undefined) project.name = name;
-    if (description !== undefined) project.description = description;
-    if (status !== undefined) project.status = status === "completed" ? "completed" : "running";
+    
+    const updates = {};
+    if (name !== undefined) updates.name = name;
+    if (description !== undefined) updates.description = description;
+    if (status !== undefined) updates.status = status === "completed" ? "completed" : "running";
     if (expectedCompleteDate !== undefined)
-      project.expectedCompleteDate = parseMonthYear(expectedCompleteDate);
+      updates.expected_complete_date = parseMonthYear(expectedCompleteDate);
 
-    const coverImage = req.files?.mainImage?.[0]?.path || req.file?.path;
-    if (coverImage) project.coverImage = coverImage;
+    const cover_image = req.files?.mainImage?.[0]?.path || req.file?.path;
+    if (cover_image) updates.cover_image = cover_image;
 
-    await project.save();
-    res.status(200).json({ message: "Project updated.", project });
+    const updatedProject = await projectRepository.update(req.params.id, updates);
+    res.status(200).json({ message: "Project updated.", project: updatedProject });
   } catch (error) {
     console.error("Error updating project:", error);
     res.status(500).json({ message: "Server error updating project." });
@@ -87,8 +91,10 @@ const updateProject = async (req, res) => {
 // ─────────────────────────────────────────────────────────────────────────────
 const deleteProject = async (req, res) => {
   try {
-    const project = await Project.findByIdAndDelete(req.params.id);
+    const project = await projectRepository.findById(req.params.id);
     if (!project) return res.status(404).json({ message: "Project not found." });
+    
+    await projectRepository.delete(req.params.id);
     res.status(200).json({ message: "Project deleted." });
   } catch (error) {
     console.error("Error deleting project:", error);

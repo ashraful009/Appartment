@@ -102,6 +102,7 @@ const _propertyUpload = multer({
 }).fields([
   { name: "mainImage",   maxCount: 1  },
   { name: "extraImages", maxCount: 10 },
+  { name: "progressImages", maxCount: 10 },
 ]);
 
 const uploadPropertyImages = wrapMulter(_propertyUpload);

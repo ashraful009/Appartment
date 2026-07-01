@@ -4,10 +4,10 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { Landmark, ArrowRight } from "lucide-react";
 import { fmtTk } from "./fmt";
 
-const DOWNPAYMENT_TARGET = 480000;
+const DOWNPAYMENT_TARGET = 500000;
 
 /**
- * Shown to an active member. Lets them choose a down payment (>= 4.80 lakh), then
+ * Shown to an active member. Lets them choose a down payment (>= 5 lakh), then
  * sends them to the shared payment page with the cash to collect.
  */
 const DownPaymentCTA = ({ membership, pending }) => {
@@ -63,7 +63,7 @@ const DownPaymentCTA = ({ membership, pending }) => {
               className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 font-semibold"
             />
             <p className="text-[11px] text-gray-400 mt-1.5">
-              Cash to collect now: <strong>{fmtTk(amount)}</strong>. Remaining target after this will be split into ৳25,000 monthly installments.
+              Cash to collect now: <strong>{fmtTk(amount)}</strong>. Remaining target will be split into two ৳5,00,000 installments, and the rest into ৳25,000 monthly installments.
             </p>
           </div>
           <button

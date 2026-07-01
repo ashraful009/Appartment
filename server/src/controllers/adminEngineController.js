@@ -1,5 +1,5 @@
-const PriceRequest = require("../models/PriceRequest");
-const Target       = require("../models/Target");
+const priceRequestRepository = require("../repositories/PriceRequestRepository");
+const targetRepository = require("../repositories/TargetRepository");
 
 // ─────────────────────────────────────────────────────────────
 // @desc   Get idle leads (assigned but no interaction > 7 days)
@@ -10,17 +10,42 @@ const getIdleLeads = async (req, res) => {
   try {
     const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
 
-    const idleLeads = await PriceRequest.find({
-      assignedTo:          { $ne: null, $exists: true },
-      lastInteractionDate: { $lt: sevenDaysAgo },
-    })
-      .populate("assignedTo", "name phone email")
-      .populate("user",       "name phone email")
-      .sort({ lastInteractionDate: 1 });   // oldest first = most urgent
+    const idleLeads = await priceRequestRepository.db('price_requests')
+      .whereNotNull('assigned_to')
+      .andWhere('last_interaction_date', '<', sevenDaysAgo)
+      .leftJoin('users as assignedUser', 'price_requests.assigned_to', 'assignedUser.id')
+      .leftJoin('users as customerUser', 'price_requests.user_id', 'customerUser.id')
+      .select(
+        'price_requests.*',
+        'assignedUser.name as assigned_to_name',
+        'assignedUser.phone as assigned_to_phone',
+        'assignedUser.email as assigned_to_email',
+        'customerUser.name as user_name',
+        'customerUser.phone as user_phone',
+        'customerUser.email as user_email'
+      )
+      .orderBy('last_interaction_date', 'asc');
+
+    // Format output to match old mongoose populate structure
+    const formattedLeads = idleLeads.map(lead => ({
+        ...lead,
+        assignedTo: {
+            id: lead.assigned_to,
+            name: lead.assigned_to_name,
+            phone: lead.assigned_to_phone,
+            email: lead.assigned_to_email
+        },
+        user: {
+            id: lead.user_id,
+            name: lead.user_name,
+            phone: lead.user_phone,
+            email: lead.user_email
+        }
+    }));
 
     res.status(200).json({
-      count: idleLeads.length,
-      idleLeads,
+      count: formattedLeads.length,
+      idleLeads: formattedLeads,
     });
   } catch (error) {
     console.error("getIdleLeads error:", error);
@@ -44,12 +69,28 @@ const setMonthlyTarget = async (req, res) => {
       return res.status(400).json({ message: "globalTarget must be a non-negative number." });
     }
 
-    // Upsert: create or overwrite the record for this month+year
-    const target = await Target.findOneAndUpdate(
-      { month, year: Number(year) },
-      { globalTarget: Number(globalTarget) },
-      { new: true, upsert: true, runValidators: true }
-    );
+    // Convert month and year to a target_date (1st of the month) to match the migration schema we made
+    const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    const monthIndex = monthNames.indexOf(month);
+    
+    if (monthIndex === -1) {
+        return res.status(400).json({ message: "Invalid month name." });
+    }
+    
+    // We map globalTarget to amount, and month/year to target_date since that's what the migration has
+    const targetDateStr = `${year}-${String(monthIndex + 1).padStart(2, '0')}-01`;
+
+    const existingTarget = await targetRepository.db('targets')
+        .whereRaw('EXTRACT(MONTH FROM target_date) = ?', [monthIndex + 1])
+        .andWhereRaw('EXTRACT(YEAR FROM target_date) = ?', [Number(year)])
+        .first();
+
+    let target;
+    if (existingTarget) {
+        target = await targetRepository.update(existingTarget.id, { amount: Number(globalTarget) });
+    } else {
+        target = await targetRepository.create({ amount: Number(globalTarget), target_date: targetDateStr });
+    }
 
     res.status(200).json({ message: "Monthly target saved.", target });
   } catch (error) {
@@ -69,7 +110,10 @@ const getCurrentTarget = async (req, res) => {
     const month = now.toLocaleString("en-US", { month: "long" }); // e.g. "March"
     const year  = now.getFullYear();
 
-    const target = await Target.findOne({ month, year });
+    const target = await targetRepository.db('targets')
+        .whereRaw('EXTRACT(MONTH FROM target_date) = ?', [now.getMonth() + 1])
+        .andWhereRaw('EXTRACT(YEAR FROM target_date) = ?', [year])
+        .first();
 
     if (!target) {
       return res.status(200).json({
@@ -79,8 +123,16 @@ const getCurrentTarget = async (req, res) => {
         year,
       });
     }
+    
+    // Reformat for the frontend
+    const formattedTarget = {
+        ...target,
+        globalTarget: target.amount,
+        month,
+        year
+    };
 
-    res.status(200).json({ target, month, year });
+    res.status(200).json({ target: formattedTarget, month, year });
   } catch (error) {
     console.error("getCurrentTarget error:", error);
     res.status(500).json({ message: "Failed to fetch current target." });

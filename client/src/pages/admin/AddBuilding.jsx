@@ -44,6 +44,7 @@ const INITIAL_FORM = {
   status: "Ongoing",
   totalPrice: "",
   totalSqft: "",
+  progressVideoUrl: "",
 };
 
 const DEFAULT_MAP_LOCATION = { lat: 23.7942, lng: 90.4132 };
@@ -62,6 +63,9 @@ const AddBuilding = () => {
   const [areas, setAreas] = useState([]);
   const [selectedCountry, setSelectedCountry] = useState("");
   const [selectedCity, setSelectedCity] = useState("");
+  
+  const [progressFiles, setProgressFiles] = useState([]);
+  const [progressPreviews, setProgressPreviews] = useState([]);
 
   useEffect(() => {
     const fetchAreas = async () => {
@@ -82,6 +86,7 @@ const AddBuilding = () => {
 
   const mainInputRef = useRef(null);
   const extraInputRef = useRef(null);
+  const progressInputRef = useRef(null);
 
   const showToast = (type, msg) => {
     setToast({ type, msg });
@@ -129,6 +134,18 @@ const AddBuilding = () => {
     setExtraPreviews((p) => p.filter((_, i) => i !== idx));
   };
 
+  const handleProgressImages = (e) => {
+    const selected = Array.from(e.target.files);
+    const merged = [...progressFiles, ...selected].slice(0, 10);
+    setProgressFiles(merged);
+    setProgressPreviews(merged.map((f) => URL.createObjectURL(f)));
+  };
+
+  const removeProgress = (idx) => {
+    setProgressFiles((p) => p.filter((_, i) => i !== idx));
+    setProgressPreviews((p) => p.filter((_, i) => i !== idx));
+  };
+
   const addSizeRow = () =>
     setAptSizes((p) => [...p, { type: "", size: "", description: "" }]);
 
@@ -158,6 +175,7 @@ const AddBuilding = () => {
 
       if (mainImage) fd.append("mainImage", mainImage);
       extraFiles.forEach((f) => fd.append("extraImages", f));
+      progressFiles.forEach((f) => fd.append("progressImages", f));
 
       const filteredSizes = aptSizes.filter(
         (r) => r.type.trim() || r.size.trim()
@@ -184,9 +202,12 @@ const AddBuilding = () => {
       setMapLocation(DEFAULT_MAP_LOCATION);
       setSelectedCountry("");
       setSelectedCity("");
+      setProgressFiles([]);
+      setProgressPreviews([]);
 
       if (mainInputRef.current) mainInputRef.current.value = "";
       if (extraInputRef.current) extraInputRef.current.value = "";
+      if (progressInputRef.current) progressInputRef.current.value = "";
     } catch (err) {
       showToast(
         "error",
@@ -536,7 +557,7 @@ const AddBuilding = () => {
               >
                 <option value="">— Select Area —</option>
                 {filteredAreas.map((a) => (
-                  <option key={a._id} value={a._id}>{a.name}</option>
+                  <option key={a.id || a._id} value={a.id || a._id}>{a.name}</option>
                 ))}
               </select>
               <p className="text-[11px] text-gray-400 mt-1.5">Manage areas from Admin → Manage Areas.</p>
@@ -692,6 +713,54 @@ const AddBuilding = () => {
               </div>
             ))}
 
+          </div>
+        </div>
+
+        {/* Construction Progress */}
+        <div className="bg-white border rounded-2xl p-6 shadow-sm">
+          <h2 className="text-sm font-semibold uppercase text-gray-700 mb-4">
+            Construction Progress
+          </h2>
+          
+          <div className="space-y-6">
+            <div>
+              <label className="text-sm font-semibold text-gray-600 mb-1.5 block">Progress Video URL</label>
+              <input
+                name="progressVideoUrl"
+                value={form.progressVideoUrl}
+                onChange={handleChange}
+                placeholder="e.g. YouTube or Vimeo link"
+                className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:bg-white transition-all"
+              />
+            </div>
+            
+            <div>
+              <label className="text-sm font-semibold text-gray-600 mb-1.5 block">Progress Images (max 10)</label>
+              <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-3">
+                {progressPreviews.map((src, i) => (
+                  <div key={i} className="relative group aspect-video rounded-xl overflow-hidden shadow-sm border border-gray-100">
+                    <img src={src} className="w-full h-full object-cover" />
+                    <button
+                      type="button"
+                      onClick={() => removeProgress(i)}
+                      className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <Trash2 size={16} className="text-white" />
+                    </button>
+                  </div>
+                ))}
+                {progressFiles.length < 10 && (
+                  <label
+                    htmlFor="progressImages"
+                    className="aspect-video rounded-xl border-2 border-dashed border-indigo-200 bg-gray-50 flex flex-col items-center justify-center cursor-pointer hover:border-indigo-400 hover:bg-indigo-50/40 transition-all"
+                  >
+                    <Plus size={20} className="text-indigo-400" />
+                    <span className="text-[10px] text-indigo-400 font-bold mt-1">Upload</span>
+                  </label>
+                )}
+              </div>
+              <input ref={progressInputRef} id="progressImages" type="file" accept="image/*" multiple onChange={handleProgressImages} className="hidden" />
+            </div>
           </div>
         </div>
 

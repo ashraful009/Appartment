@@ -1,5 +1,5 @@
 const jwt = require("jsonwebtoken");
-const User = require("../models/User");
+const userRepository = require("../repositories/UserRepository");
 
 /**
  * protect — Verify JWT from HttpOnly cookie and attach user to req.user.
@@ -14,7 +14,12 @@ const protect = async (req, res, next) => {
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    const user = await User.findById(decoded.id).select("-password");
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!decoded.id || !uuidRegex.test(decoded.id)) {
+      return res.status(401).json({ message: "Not authorized. Invalid token." });
+    }
+
+    const user = await userRepository.findById(decoded.id, ['id', 'name', 'email', 'phone', 'roles', 'profile_photo']);
     if (!user) {
       return res.status(401).json({ message: "Not authorized. User not found." });
     }
@@ -28,17 +33,15 @@ const protect = async (req, res, next) => {
     if (error.name === "JsonWebTokenError") {
       return res.status(401).json({ message: "Invalid token." });
     }
+    try {
+      require("../utils/logger").logError("protect_auth_middleware", error);
+    } catch (e) {}
     res.status(500).json({ message: "Server error during authentication." });
   }
 };
 
 /**
  * authorizeRoles(...roles) — Role-Based Access Control middleware factory.
- *
- * Usage: authorizeRoles("admin") or authorizeRoles("admin", "seller")
- *
- * User.roles is now a string[] e.g. ["user", "admin"].
- * A user passes if their roles array contains ANY of the specified roles.
  */
 const authorizeRoles = (...allowedRoles) => {
   return (req, res, next) => {
@@ -61,9 +64,6 @@ const authorizeRoles = (...allowedRoles) => {
 
 /**
  * optionalAuth — Soft-protect middleware.
- * If a valid JWT cookie is present, attach the user to req.user.
- * If no token or invalid token, silently continue as a guest.
- * Never returns 401 — guests are always allowed through.
  */
 const optionalAuth = async (req, res, next) => {
   try {
@@ -71,8 +71,12 @@ const optionalAuth = async (req, res, next) => {
     if (!token) return next();
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findById(decoded.id).select("-password");
-    if (user) req.user = user;
+
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (decoded.id && uuidRegex.test(decoded.id)) {
+      const user = await userRepository.findById(decoded.id, ['id', 'name', 'email', 'phone', 'roles', 'profile_photo']);
+      if (user) req.user = user;
+    }
   } catch (_) {
     // Invalid or expired token — treat as guest, do not block
   }

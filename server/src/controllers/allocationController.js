@@ -1,6 +1,6 @@
-const Property      = require("../models/Property");
-const ApartmentUnit = require("../models/ApartmentUnit");
-const Membership    = require("../models/Membership");
+const propertyRepository = require("../repositories/PropertyRepository");
+const apartmentUnitRepository = require("../repositories/ApartmentUnitRepository");
+const membershipRepository = require("../repositories/MembershipRepository");
 
 // ─────────────────────────────────────────────────────────────────────────────
 // @desc    All buildings with per-status unit counts (available/booked/sold)
@@ -9,27 +9,30 @@ const Membership    = require("../models/Membership");
 // ─────────────────────────────────────────────────────────────────────────────
 const getBuildings = async (req, res) => {
   try {
-    const properties = await Property.find({})
-      .sort({ displayOrder: 1, name: 1 })
-      .select("name address mainImage totalUnits");
+    const properties = await propertyRepository.db('properties')
+      .orderBy('display_order', 'asc')
+      .orderBy('name', 'asc')
+      .select('id as _id', 'name', 'address', 'main_image as mainImage', 'total_units as totalUnits');
 
-    const counts = await ApartmentUnit.aggregate([
-      { $group: { _id: { propertyId: "$propertyId", status: "$status" }, c: { $sum: 1 } } },
-    ]);
+    const counts = await apartmentUnitRepository.db('apartment_units')
+      .select('property_id', 'status')
+      .count('id as c')
+      .groupBy('property_id', 'status');
 
     const countMap = {};
     for (const row of counts) {
-      const key = row._id.propertyId?.toString();
+      const key = row.property_id?.toString();
       if (!key) continue;
       (countMap[key] ||= { available: 0, booked: 0, sold: 0, total: 0 });
-      if (row._id.status === "Unsold") countMap[key].available += row.c;
-      else if (row._id.status === "Booked") countMap[key].booked += row.c;
-      else if (row._id.status === "Sold") countMap[key].sold += row.c;
-      countMap[key].total += row.c;
+      const c = parseInt(row.c, 10);
+      if (row.status === "Unsold") countMap[key].available += c;
+      else if (row.status === "Booked") countMap[key].booked += c;
+      else if (row.status === "Sold") countMap[key].sold += c;
+      countMap[key].total += c;
     }
 
     const result = properties.map((p) => ({
-      ...p.toObject(),
+      ...p,
       counts: countMap[p._id.toString()] || { available: 0, booked: 0, sold: 0, total: 0 },
     }));
 
@@ -47,12 +50,38 @@ const getBuildings = async (req, res) => {
 // ─────────────────────────────────────────────────────────────────────────────
 const getBuildingUnits = async (req, res) => {
   try {
-    const units = await ApartmentUnit.find({ propertyId: req.params.id })
-      .populate("allocatedTo", "name email phone")
-      .sort({ floor: 1, columnLine: 1 })
-      .select("unitName floor columnLine status allocatedTo handoverMonth handoverYear");
+    const units = await apartmentUnitRepository.db('apartment_units')
+      .where({ property_id: req.params.id })
+      .leftJoin('users', 'apartment_units.allocated_to', 'users.id')
+      .orderBy('floor', 'asc')
+      .orderBy('column_line', 'asc')
+      .select(
+        'apartment_units.id as _id',
+        'apartment_units.unit_name as unitName',
+        'apartment_units.floor',
+        'apartment_units.column_line as columnLine',
+        'apartment_units.status',
+        'apartment_units.handover_month as handoverMonth',
+        'apartment_units.handover_year as handoverYear',
+        'users.id as userId',
+        'users.name as userName',
+        'users.email as userEmail',
+        'users.phone as userPhone'
+      );
 
-    res.status(200).json(units);
+    const formattedUnits = units.map(u => {
+        const unit = { ...u, allocatedTo: null };
+        if (u.userId) {
+            unit.allocatedTo = { _id: u.userId, name: u.userName, email: u.userEmail, phone: u.userPhone };
+        }
+        delete unit.userId;
+        delete unit.userName;
+        delete unit.userEmail;
+        delete unit.userPhone;
+        return unit;
+    });
+
+    res.status(200).json(formattedUnits);
   } catch (error) {
     console.error("getBuildingUnits error:", error);
     res.status(500).json({ message: "Server error fetching units." });
@@ -66,24 +95,53 @@ const getBuildingUnits = async (req, res) => {
 // ─────────────────────────────────────────────────────────────────────────────
 const getInvestors = async (req, res) => {
   try {
-    const memberships = await Membership.find({ status: "investor" })
-      .populate("userId", "name email phone profilePhoto")
-      .sort({ updatedAt: -1 });
+    const memberships = await membershipRepository.db('memberships')
+      .where({ 'memberships.status': 'investor' })
+      .leftJoin('users', 'memberships.user_id', 'users.id')
+      .leftJoin('properties', 'memberships.property_id', 'properties.id')
+      .orderBy('memberships.updated_at', 'desc')
+      .select(
+          'memberships.id as _id',
+          'memberships.shares',
+          'memberships.total_approved_paid as totalApprovedPaid',
+          'users.id as userId',
+          'users.name as userName',
+          'users.email as userEmail',
+          'users.phone as userPhone',
+          'users.profile_photo as userProfilePhoto',
+          'properties.id as propertyId',
+          'properties.name as propertyName'
+      );
 
-    const userIds = memberships.map((m) => m.userId?._id).filter(Boolean);
-    const allocated = await ApartmentUnit.find({ allocatedTo: { $in: userIds } })
-      .populate("propertyId", "name");
+    const userIds = memberships.map(m => m.userId).filter(Boolean);
+    
+    let allocated = [];
+    if (userIds.length > 0) {
+        allocated = await apartmentUnitRepository.db('apartment_units')
+            .whereIn('allocated_to', userIds)
+            .leftJoin('properties', 'apartment_units.property_id', 'properties.id')
+            .select(
+                'apartment_units.id as _id',
+                'apartment_units.allocated_to',
+                'apartment_units.unit_name as unitName',
+                'apartment_units.floor',
+                'apartment_units.handover_month as handoverMonth',
+                'apartment_units.handover_year as handoverYear',
+                'properties.id as propertyId',
+                'properties.name as propertyName'
+            );
+    }
 
     const allocMap = {};
     for (const u of allocated) {
-      if (u.allocatedTo && u.propertyId) {
-        const key = `${u.allocatedTo.toString()}_${u.propertyId._id.toString()}`;
+      if (u.allocated_to && u.propertyId) {
+        const key = `${u.allocated_to.toString()}_${u.propertyId.toString()}`;
         allocMap[key] = {
           unitId: u._id,
           unitName: u.unitName,
           floor: u.floor,
-          building: u.propertyId.name || "—",
-          buildingId: u.propertyId._id,
+          building: u.propertyName || "—",
+          buildingId: u.propertyId,
           handoverMonth: u.handoverMonth,
           handoverYear: u.handoverYear,
         };
@@ -91,15 +149,15 @@ const getInvestors = async (req, res) => {
     }
 
     const result = memberships.map((m) => {
-      const uId = m.userId?._id?.toString() || m.userId?.toString() || "";
-      const pId = m.propertyId?._id?.toString() || m.propertyId?.toString() || "";
+      const uId = m.userId?.toString() || "";
+      const pId = m.propertyId?.toString() || "";
       const key = uId && pId ? `${uId}_${pId}` : "";
       return {
         _id: m._id,
-        userId: m.userId,
+        userId: { _id: m.userId, name: m.userName, email: m.userEmail, phone: m.userPhone, profilePhoto: m.userProfilePhoto },
         shares: m.shares,
         totalApprovedPaid: m.totalApprovedPaid,
-        propertyId: m.propertyId,
+        propertyId: { _id: m.propertyId, name: m.propertyName },
         allocatedUnit: key ? allocMap[key] || null : null,
       };
     });
@@ -115,17 +173,19 @@ const getInvestors = async (req, res) => {
 // @desc    Allocate an available unit to an investor (with handover month/year)
 // @route   POST /api/management/allocate
 // @access  Private (Management, Admin)
-//          body: { unitId, investorId, handoverMonth, handoverYear }
+//          body: { unitId, membershipId, handoverMonth, handoverYear }
 // ─────────────────────────────────────────────────────────────────────────────
 const allocateUnit = async (req, res) => {
   try {
-    const { unitId, investorId, handoverMonth, handoverYear } = req.body;
-    if (!unitId || !investorId) {
-      return res.status(400).json({ message: "unitId and investorId are required." });
+    const { unitId, investorId, membershipId, handoverMonth, handoverYear } = req.body;
+    
+    if (!membershipId) {
+       return res.status(400).json({ message: "membershipId is required for allocation." });
     }
 
-    const month = Number(handoverMonth);
-    const year = Number(handoverYear);
+    const month = parseInt(handoverMonth, 10);
+    const year = parseInt(handoverYear, 10);
+
     if (!Number.isInteger(month) || month < 1 || month > 12) {
       return res.status(400).json({ message: "Select a valid handover month." });
     }
@@ -133,37 +193,40 @@ const allocateUnit = async (req, res) => {
       return res.status(400).json({ message: "Select a valid handover year." });
     }
 
-    const unit = await ApartmentUnit.findById(unitId);
+    const unit = await apartmentUnitRepository.findById(unitId);
     if (!unit) return res.status(404).json({ message: "Unit not found." });
-    if (unit.status !== "Unsold" || unit.allocatedTo) {
+    if (unit.status !== "Unsold" || unit.allocated_to) {
       return res.status(400).json({ message: "This unit is not available for allocation." });
     }
 
-    // The target must be an active investor for this specific property.
-    const membership = await Membership.findOne({ userId: investorId, propertyId: unit.propertyId, status: "investor" });
-    if (!membership) {
-      return res.status(400).json({ message: "Selected user is not an active investor for this property." });
+    const membership = await membershipRepository.findById(membershipId);
+    if (!membership || membership.status !== "investor") {
+      return res.status(400).json({ message: "Selected membership is not an active investor." });
     }
 
-    // One unit per investor per property — free any unit currently allocated to this investor in the SAME property.
-    await ApartmentUnit.updateMany(
-      { allocatedTo: investorId, propertyId: unit.propertyId },
-      {
-        $set: { status: "Unsold" },
-        $unset: { allocatedTo: "", allocatedBy: "", allocatedAt: "", handoverMonth: "", handoverYear: "" },
-      }
-    );
+    if (membership.unit_id) {
+       await apartmentUnitRepository.update(membership.unit_id, {
+        status: "Unsold",
+        allocated_to: null,
+        allocated_by: null,
+        allocated_at: null,
+        handover_month: null,
+        handover_year: null
+      });
+    }
 
-    unit.status = "Booked";
-    unit.allocatedTo = investorId;
-    unit.allocatedBy = req.user._id;
-    unit.allocatedAt = new Date();
-    unit.handoverMonth = month;
-    unit.handoverYear = year;
-    await unit.save();
+    const updatedUnit = await apartmentUnitRepository.update(unitId, {
+        status: "Booked",
+        allocated_to: investorId,
+        allocated_by: req.user.id,
+        allocated_at: apartmentUnitRepository.db.fn.now(),
+        handover_month: month,
+        handover_year: year
+    });
 
-    await unit.populate("allocatedTo", "name email phone");
-    res.status(200).json({ message: "Unit allocated to investor.", unit });
+    await membershipRepository.update(membershipId, { unit_id: unitId });
+
+    res.status(200).json({ message: "Unit allocated to investor.", unit: updatedUnit });
   } catch (error) {
     console.error("allocateUnit error:", error);
     res.status(500).json({ message: "Server error allocating unit." });
@@ -179,21 +242,24 @@ const allocateUnit = async (req, res) => {
 const deallocateUnit = async (req, res) => {
   try {
     const { unitId } = req.body;
-    const unit = await ApartmentUnit.findById(unitId);
+    const unit = await apartmentUnitRepository.findById(unitId);
     if (!unit) return res.status(404).json({ message: "Unit not found." });
-    if (!unit.allocatedTo) {
+    if (!unit.allocated_to) {
       return res.status(400).json({ message: "This unit is not allocated." });
     }
 
-    unit.status = "Unsold";
-    unit.allocatedTo = null;
-    unit.allocatedBy = null;
-    unit.allocatedAt = null;
-    unit.handoverMonth = null;
-    unit.handoverYear = null;
-    await unit.save();
+    const updatedUnit = await apartmentUnitRepository.update(unitId, {
+      status: "Unsold",
+      allocated_to: null,
+      allocated_by: null,
+      allocated_at: null,
+      handover_month: null,
+      handover_year: null
+    });
 
-    res.status(200).json({ message: "Allocation removed.", unit });
+    await membershipRepository.db('memberships').where({ unit_id: unitId }).update({ unit_id: null });
+
+    res.status(200).json({ message: "Unit deallocated successfully.", unit: updatedUnit });
   } catch (error) {
     console.error("deallocateUnit error:", error);
     res.status(500).json({ message: "Server error removing allocation." });

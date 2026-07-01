@@ -127,6 +127,7 @@ const Analysis = () => {
         {
           unitId: selectedUnitId,
           investorId: selectedItem.userId._id,
+          membershipId: selectedItem._id,
           handoverMonth,
           handoverYear,
         },

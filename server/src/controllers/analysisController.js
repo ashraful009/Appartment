@@ -1,55 +1,74 @@
-const Membership = require("../models/Membership");
-const InvestmentLedger = require("../models/InvestmentLedger");
-const ApartmentUnit = require("../models/ApartmentUnit");
-const Property = require("../models/Property");
+const membershipRepository = require("../repositories/MembershipRepository");
+const investmentLedgerRepository = require("../repositories/InvestmentLedgerRepository");
+const apartmentUnitRepository = require("../repositories/ApartmentUnitRepository");
+const propertyRepository = require("../repositories/PropertyRepository");
+const userRepository = require("../repositories/UserRepository");
 
-// @desc    Get memberships for analysis with ledger and unit details
-// @route   GET /api/management/analysis/memberships?processFilter=
-// @access  Private (Management, Admin)
 const getAnalysisMemberships = async (req, res) => {
   try {
     const { processFilter } = req.query;
 
-    const memberships = await Membership.find({
-      status: { $in: ["member", "investor"] },
-    })
-      .populate("userId", "name email phone profilePhoto")
-      .populate("propertyId", "name mainImage address");
+    const membershipsRaw = await membershipRepository.db('memberships')
+      .whereIn('memberships.status', ['member', 'investor'])
+      .leftJoin('users', 'memberships.user_id', 'users.id')
+      .leftJoin('properties', 'memberships.property_id', 'properties.id')
+      .select(
+        'memberships.*',
+        'users.id as userId', 'users.name as userName', 'users.email as userEmail', 'users.phone as userPhone', 'users.profile_photo as userProfilePhoto',
+        'properties.id as propertyId', 'properties.name as propertyName', 'properties.main_image as propertyMainImage', 'properties.address as propertyAddress'
+      );
 
-    const mIds = memberships.map((m) => m._id);
+    const mIds = membershipsRaw.map(m => m.id);
 
-    const ledger = await InvestmentLedger.find({ membershipId: { $in: mIds } })
-      .populate("audit.accountant.by", "name")
-      .populate("audit.dataEntry.by", "name")
-      .populate("audit.management.by", "name")
-      .sort({ dueDate: 1, createdAt: 1 });
+    const ledgerRaw = mIds.length > 0 ? await investmentLedgerRepository.db('investment_ledgers')
+      .whereIn('membership_id', mIds)
+      .orderBy('due_date', 'asc')
+      .orderBy('created_at', 'asc')
+      .select('*') : [];
 
-    const userIds = memberships.map((m) => m.userId?._id).filter(Boolean);
-    const units = await ApartmentUnit.find({ allocatedTo: { $in: userIds } })
-      .populate("propertyId", "name");
+    // Map audit fields properly later on
+
+    const userIds = membershipsRaw.map((m) => m.userId).filter(Boolean);
+    const unitsRaw = userIds.length > 0 ? await apartmentUnitRepository.db('apartment_units')
+      .whereIn('allocated_to', userIds)
+      .leftJoin('properties', 'apartment_units.property_id', 'properties.id')
+      .select('apartment_units.*', 'properties.id as propertyId', 'properties.name as propertyName') : [];
 
     const unitMap = {};
-    for (const u of units) {
-      if (u.allocatedTo && u.propertyId) {
-        const key = `${u.allocatedTo.toString()}_${u.propertyId._id.toString()}`;
+    for (const u of unitsRaw) {
+      if (u.allocated_to && u.propertyId) {
+        const key = `${u.allocated_to}_${u.propertyId}`;
         unitMap[key] = {
-          unitId: u._id,
-          unitName: u.unitName,
+          unitId: u.id,
+          unitName: u.unit_name,
           floor: u.floor,
-          columnLine: u.columnLine,
-          building: u.propertyId.name || "—",
-          buildingId: u.propertyId._id,
-          handoverMonth: u.handoverMonth,
-          handoverYear: u.handoverYear,
+          columnLine: u.column_line,
+          building: u.propertyName || "—",
+          buildingId: u.propertyId,
+          handoverMonth: u.handover_month,
+          handoverYear: u.handover_year,
           status: u.status,
         };
       }
     }
 
     const ledgerByMembership = {};
-    for (const e of ledger) {
-      const key = e.membershipId.toString();
-      (ledgerByMembership[key] ||= []).push(e);
+    for (const e of ledgerRaw) {
+      const key = e.membership_id;
+      // Convert snake_case to camelCase for ledger entries to maintain frontend compatibility
+      const entry = {
+          ...e,
+          _id: e.id,
+          membershipId: e.membership_id,
+          dueDate: e.due_date,
+          amountDue: e.amount_due,
+          submittedAt: e.submitted_at,
+          paymentMethod: e.payment_method,
+          paymentDetails: e.payment_details,
+          invoiceUrl: e.invoice_url,
+          batchId: e.batch_id
+      };
+      (ledgerByMembership[key] ||= []).push(entry);
     }
 
     const startOfPrevMonth = new Date();
@@ -62,10 +81,10 @@ const getAnalysisMemberships = async (req, res) => {
     endOfCurrentMonth.setDate(0);
     endOfCurrentMonth.setHours(23, 59, 59, 999);
 
-    let result = memberships.map((m) => {
-      const entries = ledgerByMembership[m._id.toString()] || [];
-      const uId = m.userId?._id?.toString() || m.userId?.toString() || "";
-      const pId = m.propertyId?._id?.toString() || m.propertyId?.toString() || "";
+    let result = membershipsRaw.map((m) => {
+      const entries = ledgerByMembership[m.id] || [];
+      const uId = m.userId || "";
+      const pId = m.propertyId || "";
       const key = uId && pId ? `${uId}_${pId}` : "";
 
       const processRangeEntries = entries.filter((e) => {
@@ -76,12 +95,12 @@ const getAnalysisMemberships = async (req, res) => {
       });
 
       return {
-        _id: m._id,
-        userId: m.userId,
-        propertyId: m.propertyId,
+        _id: m.id,
+        userId: { _id: m.userId, name: m.userName, email: m.userEmail, phone: m.userPhone, profilePhoto: m.userProfilePhoto },
+        propertyId: { _id: m.propertyId, name: m.propertyName, mainImage: m.propertyMainImage, address: m.propertyAddress },
         status: m.status,
         shares: m.shares,
-        totalApprovedPaid: m.totalApprovedPaid,
+        totalApprovedPaid: parseFloat(m.total_approved_paid) || 0,
         allocatedUnit: key ? unitMap[key] || null : null,
         ledger: entries,
         hasUnpaidInProcessRange: processRangeEntries.length > 0,
@@ -100,9 +119,6 @@ const getAnalysisMemberships = async (req, res) => {
   }
 };
 
-// @desc    Extend payment due date
-// @route   PUT /api/management/analysis/ledger/:id/extend
-// @access  Private (Management, Admin)
 const extendDueDate = async (req, res) => {
   try {
     const { newDueDate } = req.body;
@@ -110,84 +126,83 @@ const extendDueDate = async (req, res) => {
       return res.status(400).json({ message: "newDueDate is required." });
     }
 
-    const entry = await InvestmentLedger.findById(req.params.id);
+    const entry = await investmentLedgerRepository.findById(req.params.id);
     if (!entry) {
       return res.status(404).json({ message: "Payment entry not found." });
     }
 
-    entry.dueDate = new Date(newDueDate);
-    await entry.save();
+    const updatedEntry = await investmentLedgerRepository.update(entry.id, { due_date: new Date(newDueDate) });
 
-    res.status(200).json({ message: "Due date extended successfully.", entry });
+    res.status(200).json({ message: "Due date extended successfully.", entry: { ...updatedEntry, _id: updatedEntry.id, dueDate: updatedEntry.due_date } });
   } catch (error) {
     console.error("extendDueDate error:", error);
     res.status(500).json({ message: "Server error extending due date." });
   }
 };
 
-// @desc    Reset a payment entry back to Unpaid status
-// @route   PUT /api/management/analysis/ledger/:id/reset
-// @access  Private (Management, Admin)
 const resetLedgerEntry = async (req, res) => {
   try {
-    const entry = await InvestmentLedger.findById(req.params.id);
+    const entry = await investmentLedgerRepository.findById(req.params.id);
     if (!entry) {
       return res.status(404).json({ message: "Payment entry not found." });
     }
 
-    entry.status = "Unpaid";
-    entry.paymentMethod = null;
-    entry.paymentDetails = {};
-    entry.invoiceUrl = "";
-    entry.description = "";
-    entry.batchId = null;
-    entry.submittedAt = null;
-    entry.audit = { accountant: {}, dataEntry: {}, management: {} };
-    await entry.save();
+    const updates = {
+      status: "Unpaid",
+      payment_method: null,
+      payment_details: {},
+      invoice_url: "",
+      description: "",
+      batch_id: null,
+      submitted_at: null,
+      audit: { accountant: {}, dataEntry: {}, management: {} }
+    };
+    
+    const updatedEntry = await investmentLedgerRepository.update(entry.id, updates);
 
     if (entry.type === "downpayment") {
-      const membership = await Membership.findById(entry.membershipId);
+      const membership = await membershipRepository.findById(entry.membership_id);
       if (membership) {
-        membership.status = "member";
-        membership.installmentsGenerated = false;
-        membership.downPaymentCompletedAt = null;
-        await membership.save();
-
-        // Delete all installments for this membership
-        await InvestmentLedger.deleteMany({
-          membershipId: membership._id,
-          type: "installment"
+        await membershipRepository.update(membership.id, {
+            status: "member",
+            installments_generated: false,
+            down_payment_completed_at: null
         });
 
-        // Revert user role if no other membership is investor
-        const User = require("../models/User");
-        const user = await User.findById(membership.userId);
+        await investmentLedgerRepository.db('investment_ledgers').where({
+          membership_id: membership.id,
+          type: "installment"
+        }).del();
+
+        const user = await userRepository.findById(membership.user_id, ['roles']);
         if (user) {
           const { removeRole, addRole } = require("../services/membershipService");
-          const otherInvestorCount = await Membership.countDocuments({
-            userId: membership.userId,
-            _id: { $ne: membership._id },
-            status: "investor",
-          });
+          
+          const otherInvestorCountRec = await membershipRepository.db('memberships').where({
+            user_id: membership.user_id,
+            status: "investor"
+          }).whereNot('id', membership.id).count('id as count').first();
+          
+          const otherInvestorCount = parseInt(otherInvestorCountRec.count, 10);
+          
           if (otherInvestorCount === 0) {
-            removeRole(user, "Investor");
-            addRole(user, "member");
-            await user.save();
+            // we simulate removeRole and addRole since those modify mongoose instances
+            let roles = user.roles || [];
+            roles = roles.filter(r => r !== "Investor");
+            if (!roles.includes("member")) roles.push("member");
+            await userRepository.update(user.id, { roles });
           }
         }
       }
     }
 
-    res.status(200).json({ message: "Payment entry reset back to Unpaid.", entry });
+    res.status(200).json({ message: "Payment entry reset back to Unpaid.", entry: { ...updatedEntry, _id: updatedEntry.id } });
   } catch (error) {
     console.error("resetLedgerEntry error:", error);
     res.status(500).json({ message: "Server error resetting payment entry." });
   }
 };
 
-// @desc    Update handover time for allocated unit
-// @route   PUT /api/management/analysis/unit/:unitId/handover
-// @access  Private (Management, Admin)
 const updateHandoverTime = async (req, res) => {
   try {
     const { handoverMonth, handoverYear } = req.body;
@@ -201,32 +216,30 @@ const updateHandoverTime = async (req, res) => {
       return res.status(400).json({ message: "Select a valid handover year (2000-2100)." });
     }
 
-    const unit = await ApartmentUnit.findById(req.params.unitId);
+    const unit = await apartmentUnitRepository.findById(req.params.unitId);
     if (!unit) {
       return res.status(404).json({ message: "Unit not found." });
     }
 
-    unit.handoverMonth = month;
-    unit.handoverYear = year;
-    await unit.save();
+    const updatedUnit = await apartmentUnitRepository.update(unit.id, {
+        handover_month: month,
+        handover_year: year
+    });
 
-    res.status(200).json({ message: "Handover time updated successfully.", unit });
+    res.status(200).json({ message: "Handover time updated successfully.", unit: { ...updatedUnit, _id: updatedUnit.id, handoverMonth: updatedUnit.handover_month, handoverYear: updatedUnit.handover_year } });
   } catch (error) {
     console.error("updateHandoverTime error:", error);
     res.status(500).json({ message: "Server error updating handover time." });
   }
 };
 
-// @desc    Get properties list (Ongoing & Upcoming) for allocation filter
-// @route   GET /api/management/analysis/properties
-// @access  Private (Management, Admin)
 const getPropertiesForAnalysis = async (req, res) => {
   try {
-    const properties = await Property.find({
-      status: { $in: ["Ongoing", "Upcoming"] },
-    })
-      .select("name address mainImage status")
-      .sort({ displayOrder: 1, name: 1 });
+    const properties = await propertyRepository.db('properties')
+      .whereIn('status', ["Ongoing", "Upcoming"])
+      .select('id as _id', 'name', 'address', 'main_image as mainImage', 'status')
+      .orderBy('display_order', 'asc')
+      .orderBy('name', 'asc');
 
     res.status(200).json({ properties });
   } catch (error) {

@@ -10,6 +10,7 @@ import HeroSection          from "../../components/home/HeroSection";
 import PropertyFilterSidebar from "../../components/home/PropertyFilterSidebar";
 import PropertyCard         from "../../components/common/PropertyCard";
 import { PropertyGridSkeleton } from "../../components/common/SkeletonLoader";
+import OfferBanner          from "../../components/home/OfferBanner";
 
 /* ─ Color tokens ─────────────────────────────────────────────────────────── */
 const C = {
@@ -410,8 +411,11 @@ const Home = () => {
         />
       </section>
 
+      {/* ══ 3.5. OFFER BANNER ════════════════════════════════════════════════ */}
+      <OfferBanner />
+
       {/* ══ 4. PROPERTIES SECTION ════════════════════════════════════════════ */}
-      <section className="py-16 sm:py-24" style={{ background: C.ivory }}>
+      <section className="pb-16 sm:pb-24 pt-6 sm:pt-10" style={{ background: C.ivory }}>
         <div className="section-wrap">
 
           {/* Section Header */}
@@ -445,7 +449,7 @@ const Home = () => {
                 <>
                   <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                     {properties.map((property, i) => (
-                      <PropertyCard key={property._id} property={property} index={i} />
+                      <PropertyCard key={property.id || property._id} property={property} index={i} />
                     ))}
                   </div>
 

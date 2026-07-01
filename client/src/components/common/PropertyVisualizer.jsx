@@ -60,7 +60,8 @@ const PropertyVisualizer = ({ totalUnits, totalFloors, units, viewerRole = 'publ
   const unitMap = {};
   if (localUnits && Array.isArray(localUnits)) {
     localUnits.forEach(u => {
-      unitMap[u.unitName] = u;
+      const name = u.unitName || u.unit_name;
+      if (name) unitMap[name] = u;
     });
   }
 
@@ -76,10 +77,10 @@ const PropertyVisualizer = ({ totalUnits, totalFloors, units, viewerRole = 'publ
         navigate('/membership/pay', {
           state: {
             kind: 'booking',
-            propertyId: cellUnit.propertyId || cellUnit.property?._id,
-            unitId: cellUnit._id,
-            total: 20000,
-            amount: 20000,
+            propertyId: cellUnit.propertyId || cellUnit.property_id || cellUnit.property?._id,
+            unitId: cellUnit._id || cellUnit.id,
+            total: 500000,
+            amount: 500000,
             returnTo: location.pathname
           }
         });
@@ -114,14 +115,15 @@ const PropertyVisualizer = ({ totalUnits, totalFloors, units, viewerRole = 'publ
         actionRoleContext: activeContext,
       };
 
-      const { data } = await axios.put(`/api/units/${selectedUnit._id}/action`, payload, {
+      const unitId = selectedUnit._id || selectedUnit.id;
+      const { data } = await axios.put(`/api/units/${unitId}/action`, payload, {
         withCredentials: true
       });
 
       toast.success(data.message || "Unit updated.");
       
       // Update local state
-      setLocalUnits(prev => prev.map(u => u._id === selectedUnit._id ? data.unit : u));
+      setLocalUnits(prev => prev.map(u => (u._id || u.id) === unitId ? data.unit : u));
       
       closeModal();
     } catch (err) {

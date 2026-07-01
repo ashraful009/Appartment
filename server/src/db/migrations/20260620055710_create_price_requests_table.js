@@ -1,0 +1,50 @@
+/**
+ * @param { import("knex").Knex } knex
+ * @returns { Promise<void> }
+ */
+exports.up = function(knex) {
+  return knex.schema.createTable('price_requests', (table) => {
+    table.uuid('id').primary().defaultTo(knex.raw('gen_random_uuid()'));
+    
+    table.uuid('property_id').references('id').inTable('properties').onDelete('CASCADE').notNullable();
+    table.uuid('user_id').references('id').inTable('users').onDelete('CASCADE').notNullable();
+    
+    table.enu('status', ['pending', 'assigned']).defaultTo('pending');
+    
+    table.uuid('assigned_to').references('id').inTable('users').onDelete('SET NULL');
+    table.timestamp('assigned_at').nullable();
+    
+    table.enu('conversion_status', ['none', 'pending_approval', 'approved', 'rejected']).defaultTo('none');
+    table.enu('seller_conversion_status', ['none', 'pending_approval', 'approved', 'rejected']).defaultTo('none');
+    
+    table.enu('pipeline_stage', ['New', 'Contacted', 'Site Visited', 'Negotiation', 'Closed Won', 'Closed Lost']).defaultTo('New');
+    table.enu('priority', ['Hot', 'Warm', 'Cold']).defaultTo('Warm');
+    
+    table.jsonb('client_preferences').defaultTo('{}');
+    table.timestamp('last_interaction_date').defaultTo(knex.fn.now());
+    
+    table.enu('lead_source', ['Website', 'Facebook', 'Agent Referral', 'Organic Search', 'Other']).defaultTo('Website');
+    
+    table.timestamps(true, true);
+    
+    // Unique index for one per user per property
+    table.unique(['property_id', 'user_id']);
+  }).then(() => {
+    // We add the foreign key to payment_plans here since price_requests is created after
+    return knex.schema.alterTable('payment_plans', (table) => {
+        table.foreign('request_id').references('id').inTable('price_requests').onDelete('SET NULL');
+    });
+  });
+};
+
+/**
+ * @param { import("knex").Knex } knex
+ * @returns { Promise<void> }
+ */
+exports.down = function(knex) {
+  return knex.schema.alterTable('payment_plans', (table) => {
+      table.dropForeign('request_id');
+  }).then(() => {
+      return knex.schema.dropTable('price_requests');
+  });
+};

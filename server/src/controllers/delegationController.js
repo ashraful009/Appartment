@@ -1,13 +1,8 @@
-const PriceRequest  = require("../models/PriceRequest");
-const Interaction   = require("../models/Interaction");
-const Notification  = require("../models/Notification");
-const User          = require("../models/User");
+const priceRequestRepository = require("../repositories/PriceRequestRepository");
+const interactionRepository = require("../repositories/InteractionRepository");
+const notificationRepository = require("../repositories/NotificationRepository");
+const userRepository = require("../repositories/UserRepository");
 
-// ─────────────────────────────────────────────────────────────
-// @desc   Delegate a lead from a parent seller to a sub-seller
-// @route  PUT /api/requests/:id/delegate
-// @access Private (seller)
-// ─────────────────────────────────────────────────────────────
 const delegateLead = async (req, res) => {
   try {
     const { targetSellerId } = req.body;
@@ -15,22 +10,20 @@ const delegateLead = async (req, res) => {
       return res.status(400).json({ message: "targetSellerId is required." });
     }
 
-    // 1. Confirm the current user owns this lead
-    const lead = await PriceRequest.findOne({
-      _id:        req.params.id,
-      assignedTo: req.user._id,
-    }).populate("user", "name");
+    const lead = await priceRequestRepository.db('price_requests')
+        .where({ 'price_requests.id': req.params.id, 'price_requests.assigned_to': req.user.id })
+        .leftJoin('users', 'price_requests.user_id', 'users.id')
+        .select('price_requests.*', 'users.name as userName')
+        .first();
 
     if (!lead) {
       return res.status(404).json({ message: "Lead not found or not assigned to you." });
     }
 
-    // 2. Confirm the target seller is a direct sub-seller of this user
-    const subSeller = await User.findOne({
-      _id:        targetSellerId,
-      referredBy: req.user._id,
-      roles:      "seller",
-    }).select("name _id");
+    const subSeller = await userRepository.db('users').where({
+      id: targetSellerId,
+      referred_by: req.user.id,
+    }).whereRaw("'seller' = ANY(roles)").select('name', 'id').first();
 
     if (!subSeller) {
       return res.status(403).json({
@@ -38,31 +31,29 @@ const delegateLead = async (req, res) => {
       });
     }
 
-    // 3. Reassign the lead
-    lead.assignedTo = subSeller._id;
-    lead.assignedAt = new Date();
-    await lead.save();
-
-    // 4. Auto-log an interaction for the record
-    await Interaction.create({
-      leadId:          lead._id,
-      sellerId:        req.user._id,
-      interactionType: "Note",
-      notes:           `Lead delegated to sub-seller: ${subSeller.name}.`,
-      adminNote:       `Delegated by parent seller on ${new Date().toLocaleDateString("en-GB")}.`,
+    const updatedLead = await priceRequestRepository.update(lead.id, {
+        assigned_to: subSeller.id,
+        assigned_at: new Date()
     });
 
-    // 5. Notify the sub-seller
-    await Notification.create({
-      recipientId: subSeller._id,
-      senderId:    req.user._id,
-      message:     `A lead has been delegated to you by your mentor.`,
-      type:        "LeadDelegated",
+    await interactionRepository.create({
+      lead_id: lead.id,
+      seller_id: req.user.id,
+      interaction_type: "Note",
+      notes: `Lead delegated to sub-seller: ${subSeller.name}.`,
+      admin_note: `Delegated by parent seller on ${new Date().toLocaleDateString("en-GB")}.`,
+    });
+
+    await notificationRepository.create({
+      recipient_id: subSeller.id,
+      sender_id: req.user.id,
+      message: `A lead has been delegated to you by your mentor.`,
+      type: "LeadDelegated",
     });
 
     res.status(200).json({
       message: `Lead successfully delegated to ${subSeller.name}.`,
-      lead,
+      lead: { ...updatedLead, _id: updatedLead.id },
     });
   } catch (error) {
     console.error("delegateLead error:", error);
@@ -70,77 +61,38 @@ const delegateLead = async (req, res) => {
   }
 };
 
-// ─────────────────────────────────────────────────────────────
-// @desc   Get team overview + earnings for a parent seller
-// @route  GET /api/seller/team-overview
-// @access Private (seller)
-// ─────────────────────────────────────────────────────────────
 const COMMISSION_PER_CONVERSION = 5000;
 
 const getTeamOverview = async (req, res) => {
   try {
-    const mongoose = require("mongoose");
-    const parentId = new mongoose.Types.ObjectId(req.user._id);
+    const teamRaw = await userRepository.db('users')
+      .where({ referred_by: req.user.id })
+      .whereRaw("'seller' = ANY(roles)")
+      .select('id as _id', 'name', 'phone');
 
-    const team = await User.aggregate([
-      // 1. Match sub-sellers referred by this seller
-      {
-        $match: {
-          referredBy: parentId,
-          roles:      "seller",
-        },
-      },
+    const team = await Promise.all(teamRaw.map(async (u) => {
+        const leadsRaw = await priceRequestRepository.db('price_requests')
+            .where({ assigned_to: u._id })
+            .leftJoin('users', 'price_requests.user_id', 'users.id')
+            .select('price_requests.*', 'users.name as userName', 'users.email as userEmail', 'users.phone as userPhone');
+            
+        const leads = leadsRaw.map(l => ({
+            ...l,
+            _id: l.id,
+            conversionStatus: l.conversion_status,
+            user: { _id: l.user_id, name: l.userName, email: l.userEmail, phone: l.userPhone }
+        }));
+            
+        const convertedLeads = leads.filter(l => l.conversion_status === 'approved').length;
+            
+        return {
+            ...u,
+            totalLeads: leads.length,
+            convertedLeads,
+            leads
+        };
+    }));
 
-      // 2. Join with pricerequests assigned to each sub-seller
-      {
-        $lookup: {
-          from:         "pricerequests",
-          localField:   "_id",
-          foreignField: "assignedTo",
-          as:           "leads",
-        },
-      },
-
-      // 3. Populate each lead's user info
-      {
-        $lookup: {
-          from:         "users",
-          localField:   "leads.user",
-          foreignField: "_id",
-          as:           "leadUsers",
-        },
-      },
-
-      // 4. Compute stats
-      {
-        $addFields: {
-          totalLeads: { $size: "$leads" },
-          convertedLeads: {
-            $size: {
-              $filter: {
-                input: "$leads",
-                as:    "l",
-                cond:  { $eq: ["$$l.conversionStatus", "approved"] },
-              },
-            },
-          },
-        },
-      },
-
-      // 5. Project
-      {
-        $project: {
-          _id:            1,
-          name:           1,
-          phone:          1,
-          totalLeads:     1,
-          convertedLeads: 1,
-          leads:          1,   // full lead list for read-only expansion
-        },
-      },
-    ]);
-
-    // Total approved conversions across all sub-sellers
     const totalConversions  = team.reduce((sum, s) => sum + s.convertedLeads, 0);
     const totalTeamEarnings = totalConversions * COMMISSION_PER_CONVERSION;
 
@@ -151,11 +103,6 @@ const getTeamOverview = async (req, res) => {
   }
 };
 
-// ─────────────────────────────────────────────────────────────
-// @desc   Broadcast a message to all sub-sellers
-// @route  POST /api/seller/broadcast
-// @access Private (seller)
-// ─────────────────────────────────────────────────────────────
 const broadcastToTeam = async (req, res) => {
   try {
     const { message } = req.body;
@@ -163,29 +110,26 @@ const broadcastToTeam = async (req, res) => {
       return res.status(400).json({ message: "Broadcast message is required." });
     }
 
-    // Find all sub-sellers referred by this user
-    const subSellers = await User.find({
-      referredBy: req.user._id,
-      roles:      "seller",
-    }).select("_id");
+    const subSellers = await userRepository.db('users').where({
+      referred_by: req.user.id,
+    }).whereRaw("'seller' = ANY(roles)").select('id');
 
     if (!subSellers.length) {
       return res.status(200).json({ message: "No sub-sellers to broadcast to.", sent: 0 });
     }
 
-    // Bulk-create one notification per sub-seller
     const notifications = subSellers.map((s) => ({
-      recipientId: s._id,
-      senderId:    req.user._id,
-      message:     message.trim(),
-      type:        "Broadcast",
+      recipient_id: s.id,
+      sender_id: req.user.id,
+      message: message.trim(),
+      type: "Broadcast",
     }));
 
-    await Notification.insertMany(notifications);
+    await notificationRepository.db('notifications').insert(notifications);
 
     res.status(201).json({
       message: `Broadcast sent to ${subSellers.length} sub-seller(s).`,
-      sent:    subSellers.length,
+      sent: subSellers.length,
     });
   } catch (error) {
     console.error("broadcastToTeam error:", error);

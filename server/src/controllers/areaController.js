@@ -1,4 +1,4 @@
-const Area = require("../models/Area");
+const areaRepository = require("../repositories/AreaRepository");
 
 // ─────────────────────────────────────────────
 // @desc   Create a new area
@@ -13,25 +13,28 @@ const createArea = async (req, res) => {
       return res.status(400).json({ message: "Country, city, and area names are required." });
     }
 
-    // Check for duplicate (case-insensitive)
-    const existing = await Area.findOne({
-      country: { $regex: new RegExp(`^${country.trim()}$`, "i") },
-      city: { $regex: new RegExp(`^${city.trim()}$`, "i") },
-      name: { $regex: new RegExp(`^${name.trim()}$`, "i") },
-    });
+    // Check for duplicate (case-insensitive) using Knex ILIKE (Postgres specific)
+    const existing = await areaRepository.db('areas')
+      .where('country', 'ILIKE', country.trim())
+      .andWhere('city', 'ILIKE', city.trim())
+      .andWhere('name', 'ILIKE', name.trim())
+      .first();
+
     if (existing) {
       return res.status(409).json({ message: "An area with this exact country, city, and name already exists." });
     }
 
-    const area = await Area.create({
+    const area = await areaRepository.create({
       country: country.trim(),
       city: city.trim(),
       name: name.trim()
     });
+
     res.status(201).json({ message: "Area created successfully.", area });
   } catch (error) {
     console.error("createArea error:", error);
-    if (error.code === 11000) {
+    // Knex unique constraint error code in postgres is 23505
+    if (error.code === '23505') {
       return res.status(409).json({ message: "An area with this exact country, city, and name already exists." });
     }
     res.status(500).json({ message: "Failed to create area." });
@@ -45,7 +48,11 @@ const createArea = async (req, res) => {
 // ─────────────────────────────────────────────
 const getAreas = async (req, res) => {
   try {
-    const areas = await Area.find({}).sort({ country: 1, city: 1, name: 1 });
+    const areas = await areaRepository.db('areas').orderBy([
+      { column: 'country', order: 'asc' },
+      { column: 'city', order: 'asc' },
+      { column: 'name', order: 'asc' }
+    ]);
     res.status(200).json({ success: true, areas });
   } catch (error) {
     console.error("getAreas error:", error);
@@ -60,12 +67,12 @@ const getAreas = async (req, res) => {
 // ─────────────────────────────────────────────
 const deleteArea = async (req, res) => {
   try {
-    const area = await Area.findById(req.params.id);
+    const area = await areaRepository.findById(req.params.id);
     if (!area) {
       return res.status(404).json({ message: "Area not found." });
     }
 
-    await Area.findByIdAndDelete(req.params.id);
+    await areaRepository.delete(req.params.id);
     res.status(200).json({ message: "Area deleted successfully." });
   } catch (error) {
     console.error("deleteArea error:", error);

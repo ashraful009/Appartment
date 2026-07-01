@@ -4,7 +4,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { Sparkles, ArrowRight, Building2, X } from "lucide-react";
 import { fmtTk } from "./fmt";
 
-const BOOKING_MONEY = 20000;
+const BOOKING_MONEY = 500000;
 
 /**
  * Shown to a logged-in user who wants to invest in a new property.

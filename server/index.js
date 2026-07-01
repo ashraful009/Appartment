@@ -1,8 +1,8 @@
 require("dotenv").config();
 const express = require("express");
-const mongoose = require("mongoose");
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
+const sequelize = require("./src/config/postgres");
 
 const authRoutes = require("./src/routes/authRoutes");
 const adminRoutes = require("./src/routes/adminRoutes");
@@ -35,13 +35,15 @@ const PORT = process.env.PORT || 5000;
 // Express correctly sees HTTPS connections and SameSite=None;Secure cookies work.
 app.set("trust proxy", 1);
 
-// ─── Connect to MongoDB ────────────────────────────────────────────────────
+// ─── Connect to PostgreSQL ────────────────────────────────────────────────
 const connectDB = async () => {
   try {
-    await mongoose.connect(process.env.MONGO_URI);
-    console.log(` MongoDB connected `);
+    await sequelize.authenticate();
+    // Sync will create tables for any defined Sequelize models.
+    await sequelize.sync();
+    console.log(" PostgreSQL connected ");
   } catch (error) {
-    console.error(" MongoDB connection failed:", error.message);
+    console.error(" PostgreSQL connection failed:", error.message);
     process.exit(1);
   }
 };
@@ -117,6 +119,9 @@ app.use((req, res) => {
 // Global error handler
 app.use((err, req, res, next) => {
   console.error("Unhandled error:", err.stack);
+  try {
+    require("./src/utils/logger").logError("GLOBAL_ERROR_HANDLER", err);
+  } catch (e) {}
   res.status(500).json({ message: "Internal server error." });
 });
 

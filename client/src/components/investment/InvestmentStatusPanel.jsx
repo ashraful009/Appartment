@@ -53,17 +53,11 @@ const InvestmentStatusPanel = ({ membership, summary }) => {
       </div>
 
       {/* Stat grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <StatCard
           icon={ShieldCheck}
           label="Role"
           value={ROLE_LABEL[membership.status] || membership.status}
-        />
-        <StatCard
-          icon={PieChart}
-          label="Shares"
-          value={membership.shares}
-          sub="1 share / ৳1,00,000"
         />
         <StatCard
           icon={Wallet}
