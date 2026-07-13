@@ -4,7 +4,7 @@
  */
 exports.up = function(knex) {
   return knex.schema.createTable('areas', (table) => {
-    table.uuid('id').primary().defaultTo(knex.raw('gen_random_uuid()'));
+    table.string('id', 36).primary();
     table.string('country').notNullable();
     table.string('city').notNullable();
     table.string('name').notNullable();

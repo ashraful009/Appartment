@@ -4,10 +4,10 @@
  */
 exports.up = function(knex) {
   return knex.schema.createTable('interactions', (table) => {
-    table.uuid('id').primary().defaultTo(knex.raw('gen_random_uuid()'));
+    table.string('id', 36).primary();
     
-    table.uuid('lead_id').references('id').inTable('price_requests').onDelete('CASCADE').notNullable();
-    table.uuid('seller_id').references('id').inTable('users').onDelete('CASCADE').notNullable();
+    table.string('lead_id', 36).references('id').inTable('price_requests').onDelete('CASCADE').notNullable();
+    table.string('seller_id', 36).references('id').inTable('users').onDelete('CASCADE').notNullable();
     
     table.enu('interaction_type', ['Call', 'WhatsApp', 'Meeting', 'Document Sent', 'Note']).notNullable();
     table.text('notes').notNullable();

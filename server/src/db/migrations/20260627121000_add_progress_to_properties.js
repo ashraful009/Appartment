@@ -5,8 +5,8 @@
 exports.up = function(knex) {
   return knex.schema.alterTable('properties', (table) => {
     table.string('progress_video_url').defaultTo('');
-    table.jsonb('progress_images').defaultTo('[]');
-    table.jsonb('progress_image_public_ids').defaultTo('[]');
+    table.json('progress_images');
+    table.json('progress_image_public_ids');
   });
 };
 

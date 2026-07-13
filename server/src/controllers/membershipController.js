@@ -1,4 +1,5 @@
 const crypto = require("crypto");
+const { isDuplicateKeyError } = require("../utils/dbUtils");
 const membershipRepository = require("../repositories/MembershipRepository");
 const investmentLedgerRepository = require("../repositories/InvestmentLedgerRepository");
 const apartmentUnitRepository = require("../repositories/ApartmentUnitRepository");
@@ -242,7 +243,7 @@ const submitBooking = async (req, res) => {
       due_date: new Date(),
       status: "Pending",
       payment_method: payment.method,
-      payment_details: payment.details, // jsonb handles object
+      payment_details: payment.details, // json handles object
       invoice_url: invoiceUrl,
       description: req.body.description || "",
       submitted_at: new Date(),
@@ -254,7 +255,7 @@ const submitBooking = async (req, res) => {
     });
   } catch (error) {
     console.error("Error submitting booking:", error);
-    if (error.code === '23505') {
+    if (isDuplicateKeyError(error)) {
       return res.status(400).json({
         message: "You already have an investment journey for this property.",
       });

@@ -1,6 +1,7 @@
 const priceRequestRepository = require("../repositories/PriceRequestRepository");
 const userRepository = require("../repositories/UserRepository");
 const crypto = require("crypto");
+const { isDuplicateKeyError, whereJsonArrayContains } = require("../utils/dbUtils");
 
 const createRequest = async (req, res) => {
   try {
@@ -17,9 +18,9 @@ const createRequest = async (req, res) => {
 
       const requestingUser = await userRepository.findById(req.user.id, ["referred_by"]);
       if (requestingUser?.referred_by) {
-        const seller = await userRepository.db('users').where({
+        const seller = await whereJsonArrayContains(userRepository.db('users').where({
           id: requestingUser.referred_by,
-        }).whereRaw("'seller' = ANY(roles)").first();
+        }), 'roles', 'seller').first();
         if (seller) autoAssignedTo = seller.id;
       }
     } else {
@@ -76,7 +77,7 @@ const createRequest = async (req, res) => {
     res.status(201).json({ message, request: { ...request, _id: request.id } });
   } catch (error) {
     console.error("createRequest error:", error);
-    if (error.code === '23505') {
+    if (isDuplicateKeyError(error)) {
       return res
         .status(409)
         .json({ message: "You have already requested pricing for this property." });

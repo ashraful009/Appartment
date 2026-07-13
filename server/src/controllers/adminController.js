@@ -1,14 +1,15 @@
 const userRepository = require("../repositories/UserRepository");
 const priceRequestRepository = require("../repositories/PriceRequestRepository");
 const { generateUniqueReferralCode } = require("../utils/referralCodeUtil");
+const { pick, whereJsonArrayContains } = require("../utils/dbUtils");
 
 const VALID_ROLES = ["user", "customer", "seller", "admin", "Director", "GM", "AGM", "Accountant", "DataEntry", "Management", "member", "Investor"];
 
 const getStats = async (req, res) => {
   try {
     const totalUsersRec = await userRepository.db('users').count('id as count').first();
-    const totalCustomersRec = await userRepository.db('users').whereRaw("'customer' = ANY(roles)").count('id as count').first();
-    const totalSellersRec = await userRepository.db('users').whereRaw("'seller' = ANY(roles)").count('id as count').first();
+    const totalCustomersRec = await whereJsonArrayContains(userRepository.db('users'), 'roles', 'customer').count('id as count').first();
+    const totalSellersRec = await whereJsonArrayContains(userRepository.db('users'), 'roles', 'seller').count('id as count').first();
     const totalSold = 0;
 
     res.status(200).json({ 
@@ -133,8 +134,7 @@ const getAdminPendingRequests = async (req, res) => {
 
 const getSellersList = async (req, res) => {
   try {
-    const sellersRaw = await userRepository.db('users')
-      .whereRaw("'seller' = ANY(roles)")
+    const sellersRaw = await whereJsonArrayContains(userRepository.db('users'), 'roles', 'seller')
       .leftJoin('price_requests', function() {
           this.on('users.id', '=', 'price_requests.assigned_to')
               .andOnNotIn('price_requests.conversion_status', ['approved', 'rejected'])
@@ -142,14 +142,14 @@ const getSellersList = async (req, res) => {
       .groupBy('users.id')
       .select(
           'users.id as _id', 'users.name', 'users.email', 'users.phone',
-          userRepository.db.raw('COUNT(price_requests.id) as "currentLeadCount"')
+          userRepository.db.raw('COUNT(price_requests.id) as currentLeadCount')
       )
       .orderBy('currentLeadCount', 'asc')
       .orderBy('users.name', 'asc');
 
     const sellers = sellersRaw.map(s => ({
         ...s,
-        currentLeadCount: parseInt(s.currentleadcount, 10) || 0
+        currentLeadCount: parseInt(pick(s, 'currentLeadCount', 'currentleadcount') || 0, 10)
     }));
 
     res.status(200).json({ sellers });
@@ -167,7 +167,7 @@ const assignRequest = async (req, res) => {
       return res.status(400).json({ message: "sellerId is required." });
     }
 
-    const seller = await userRepository.db('users').where({ id: sellerId }).whereRaw("'seller' = ANY(roles)").select('id as _id', 'name').first();
+    const seller = await whereJsonArrayContains(userRepository.db('users').where({ id: sellerId }), 'roles', 'seller').select('id as _id', 'name').first();
     if (!seller) {
       return res.status(404).json({ message: "Seller not found." });
     }
@@ -218,15 +218,20 @@ const getSellersPerformance = async (req, res) => {
       .select(
           'assigned_to',
           'seller.id as sellerId', 'seller.name as sellerName', 'seller.email as sellerEmail', 'seller.phone as sellerPhone',
-          priceRequestRepository.db.raw(`SUM(CASE WHEN price_requests.conversion_status = 'approved' THEN 1 ELSE 0 END) as "approvedCount"`),
-          priceRequestRepository.db.raw(`SUM(CASE WHEN price_requests.conversion_status = 'pending_approval' OR price_requests.seller_conversion_status = 'pending_approval' THEN 1 ELSE 0 END) as "pendingCount"`),
-          priceRequestRepository.db.raw(`array_agg(price_requests.id) FILTER (WHERE price_requests.conversion_status = 'pending_approval' OR price_requests.seller_conversion_status = 'pending_approval') as "pendingRequestIds"`)
+          priceRequestRepository.db.raw(`SUM(CASE WHEN price_requests.conversion_status = 'approved' THEN 1 ELSE 0 END) as approvedCount`),
+          priceRequestRepository.db.raw(`SUM(CASE WHEN price_requests.conversion_status = 'pending_approval' OR price_requests.seller_conversion_status = 'pending_approval' THEN 1 ELSE 0 END) as pendingCount`),
+          priceRequestRepository.db.raw(`GROUP_CONCAT(CASE WHEN price_requests.conversion_status = 'pending_approval' OR price_requests.seller_conversion_status = 'pending_approval' THEN price_requests.id END) as pendingRequestIds`)
       )
       .orderBy('pendingCount', 'desc')
       .orderBy('approvedCount', 'desc');
 
     const results = await Promise.all(resultsRaw.map(async (row) => {
-        const pendingIds = row.pendingrequestids || [];
+        const pendingIdsRaw = pick(row, 'pendingRequestIds', 'pendingrequestids');
+        const pendingIds = Array.isArray(pendingIdsRaw)
+          ? pendingIdsRaw
+          : typeof pendingIdsRaw === 'string'
+            ? pendingIdsRaw.split(',').filter(Boolean)
+            : [];
         let pendingRequests = [];
         
         if (pendingIds.length > 0) {
@@ -247,9 +252,14 @@ const getSellersPerformance = async (req, res) => {
         }
 
         return {
-            seller: { _id: row.sellerid, name: row.sellername, email: row.selleremail, phone: row.sellerphone },
-            approvedCount: parseInt(row.approvedcount, 10),
-            pendingCount: parseInt(row.pendingcount, 10),
+            seller: {
+              _id: pick(row, 'sellerId', 'sellerid'),
+              name: pick(row, 'sellerName', 'sellername'),
+              email: pick(row, 'sellerEmail', 'selleremail'),
+              phone: pick(row, 'sellerPhone', 'sellerphone')
+            },
+            approvedCount: parseInt(pick(row, 'approvedCount', 'approvedcount') || 0, 10),
+            pendingCount: parseInt(pick(row, 'pendingCount', 'pendingcount') || 0, 10),
             pendingRequests
         };
     }));
@@ -349,8 +359,8 @@ const getSellerAnalytics = async (req, res) => {
         );
         
     const lastMonthRaw = lastMonthRawQ.map(r => {
-        const assigned = parseInt(r.totalassigned, 10);
-        const approved = parseInt(r.totalapproved, 10);
+        const assigned = parseInt(pick(r, 'totalAssigned', 'totalassigned') || 0, 10);
+        const approved = parseInt(pick(r, 'totalApproved', 'totalapproved') || 0, 10);
         const ratio = assigned > 0 ? (approved / assigned) : 0;
         return {
             name: r.name, phone: r.phone, avatar: r.avatar,
@@ -362,9 +372,9 @@ const getSellerAnalytics = async (req, res) => {
         .where({ conversion_status: "approved" })
         .where('updated_at', '>=', yearStart)
         .where('updated_at', '<', yearEnd)
-        .select(priceRequestRepository.db.raw(`EXTRACT(MONTH FROM updated_at) as month`))
+        .select(priceRequestRepository.db.raw(`MONTH(updated_at) as month`))
         .count('id as conversions')
-        .groupByRaw(`EXTRACT(MONTH FROM updated_at)`)
+        .groupByRaw(`MONTH(updated_at)`)
         .orderBy('month', 'asc');
         
     const yearlyRaw = yearlyRawQ.map(r => ({
@@ -372,8 +382,7 @@ const getSellerAnalytics = async (req, res) => {
         conversions: parseInt(r.conversions, 10)
     }));
 
-    const allSellersRawQ = await userRepository.db('users')
-        .whereRaw("'seller' = ANY(roles)")
+    const allSellersRawQ = await whereJsonArrayContains(userRepository.db('users'), 'roles', 'seller')
         .leftJoin('price_requests', 'users.id', 'price_requests.assigned_to')
         .groupBy('users.id', 'users.name', 'users.phone', 'users.profile_photo')
         .select(
@@ -383,8 +392,8 @@ const getSellerAnalytics = async (req, res) => {
         );
         
     const allSellersRaw = allSellersRawQ.map(r => {
-        const assigned = parseInt(r.totalassigned, 10);
-        const approved = parseInt(r.totalapproved, 10);
+        const assigned = parseInt(pick(r, 'totalAssigned', 'totalassigned') || 0, 10);
+        const approved = parseInt(pick(r, 'totalApproved', 'totalapproved') || 0, 10);
         const ratio = assigned > 0 ? (approved / assigned) : 0;
         return {
             _id: r._id, name: r.name, phone: r.phone, avatar: r.avatar,

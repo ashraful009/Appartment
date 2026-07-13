@@ -2,6 +2,7 @@ const priceRequestRepository = require("../repositories/PriceRequestRepository")
 const interactionRepository = require("../repositories/InteractionRepository");
 const notificationRepository = require("../repositories/NotificationRepository");
 const userRepository = require("../repositories/UserRepository");
+const { whereJsonArrayContains, withGeneratedIds } = require("../utils/dbUtils");
 
 const delegateLead = async (req, res) => {
   try {
@@ -20,10 +21,10 @@ const delegateLead = async (req, res) => {
       return res.status(404).json({ message: "Lead not found or not assigned to you." });
     }
 
-    const subSeller = await userRepository.db('users').where({
+    const subSeller = await whereJsonArrayContains(userRepository.db('users').where({
       id: targetSellerId,
       referred_by: req.user.id,
-    }).whereRaw("'seller' = ANY(roles)").select('name', 'id').first();
+    }), 'roles', 'seller').select('name', 'id').first();
 
     if (!subSeller) {
       return res.status(403).json({
@@ -65,9 +66,9 @@ const COMMISSION_PER_CONVERSION = 5000;
 
 const getTeamOverview = async (req, res) => {
   try {
-    const teamRaw = await userRepository.db('users')
+    const teamRaw = await whereJsonArrayContains(userRepository.db('users')
       .where({ referred_by: req.user.id })
-      .whereRaw("'seller' = ANY(roles)")
+      , 'roles', 'seller')
       .select('id as _id', 'name', 'phone');
 
     const team = await Promise.all(teamRaw.map(async (u) => {
@@ -110,9 +111,9 @@ const broadcastToTeam = async (req, res) => {
       return res.status(400).json({ message: "Broadcast message is required." });
     }
 
-    const subSellers = await userRepository.db('users').where({
+    const subSellers = await whereJsonArrayContains(userRepository.db('users').where({
       referred_by: req.user.id,
-    }).whereRaw("'seller' = ANY(roles)").select('id');
+    }), 'roles', 'seller').select('id');
 
     if (!subSellers.length) {
       return res.status(200).json({ message: "No sub-sellers to broadcast to.", sent: 0 });
@@ -125,7 +126,7 @@ const broadcastToTeam = async (req, res) => {
       type: "Broadcast",
     }));
 
-    await notificationRepository.db('notifications').insert(notifications);
+    await notificationRepository.db('notifications').insert(withGeneratedIds(notifications));
 
     res.status(201).json({
       message: `Broadcast sent to ${subSellers.length} sub-seller(s).`,

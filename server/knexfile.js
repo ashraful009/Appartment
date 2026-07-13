@@ -1,42 +1,38 @@
-require('dotenv').config();
+require('dotenv').config({ path: require('path').join(__dirname, '.env') });
+const { normalizeDbResponse } = require('./src/utils/dbUtils');
+
+const mysqlConnection = {
+  host: process.env.MYSQL_HOST || process.env.DB_HOST || 'localhost',
+  port: process.env.MYSQL_PORT ? parseInt(process.env.MYSQL_PORT, 10) : 3306,
+  database: process.env.MYSQL_DATABASE || process.env.DB_DATABASE || 'appartment_db',
+  user: process.env.MYSQL_USER || process.env.DB_USER || 'root',
+  password: process.env.MYSQL_PASSWORD || process.env.DB_PASSWORD || '',
+};
+
+const baseConfig = {
+  client: 'mysql2',
+  pool: {
+    min: 2,
+    max: 10
+  },
+  migrations: {
+    tableName: 'knex_migrations',
+    directory: './src/db/migrations'
+  },
+  postProcessResponse: normalizeDbResponse
+};
 
 module.exports = {
   development: {
-    client: 'pg',
-    connection: {
-      host: process.env.PG_HOST || 'localhost',
-      port: process.env.PG_PORT ? parseInt(process.env.PG_PORT, 10) : 5432,
-      database: process.env.PG_DATABASE || process.env.POSTGRES_DB || 'appartment_db',
-      user: process.env.PG_USER || process.env.POSTGRES_USER || 'postgres',
-      password: process.env.PG_PASSWORD || process.env.POSTGRES_PASSWORD || 'postgres',
-    },
-    pool: {
-      min: 2,
-      max: 10
-    },
-    migrations: {
-      tableName: 'knex_migrations',
-      directory: './src/db/migrations'
-    }
+    ...baseConfig,
+    connection: mysqlConnection
   },
 
   production: {
-    client: 'pg',
+    ...baseConfig,
     connection: {
-      host: process.env.PG_HOST,
-      port: process.env.PG_PORT ? parseInt(process.env.PG_PORT, 10) : 5432,
-      database: process.env.PG_DATABASE || process.env.POSTGRES_DB,
-      user: process.env.PG_USER || process.env.POSTGRES_USER,
-      password: process.env.PG_PASSWORD || process.env.POSTGRES_PASSWORD,
-      ssl: { rejectUnauthorized: false }
-    },
-    pool: {
-      min: 2,
-      max: 10
-    },
-    migrations: {
-      tableName: 'knex_migrations',
-      directory: './src/db/migrations'
+      ...mysqlConnection,
+      ssl: process.env.MYSQL_SSL === 'true' ? { rejectUnauthorized: false } : undefined
     }
   }
 };

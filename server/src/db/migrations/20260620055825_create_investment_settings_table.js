@@ -4,9 +4,9 @@
  */
 exports.up = function(knex) {
   return knex.schema.createTable('investment_settings', (table) => {
-    table.uuid('id').primary().defaultTo(knex.raw('gen_random_uuid()'));
+    table.string('id', 36).primary();
     table.string('key').unique().notNullable();
-    table.jsonb('value').notNullable();
+    table.json('value').notNullable();
     table.timestamps(true, true);
   });
 };

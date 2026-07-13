@@ -4,9 +4,9 @@
  */
 exports.up = function(knex) {
   return knex.schema.createTable('documents', (table) => {
-    table.uuid('id').primary().defaultTo(knex.raw('gen_random_uuid()'));
+    table.string('id', 36).primary();
     
-    table.uuid('user_id').references('id').inTable('users').onDelete('CASCADE').notNullable();
+    table.string('user_id', 36).references('id').inTable('users').onDelete('CASCADE').notNullable();
     
     table.enu('title', ['NID', 'Passport', 'TIN Certificate', 'Booking Receipt', 'Other']).notNullable();
     

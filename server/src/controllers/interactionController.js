@@ -2,6 +2,7 @@ const priceRequestRepository = require("../repositories/PriceRequestRepository")
 const interactionRepository = require("../repositories/InteractionRepository");
 const notificationRepository = require("../repositories/NotificationRepository");
 const userRepository = require("../repositories/UserRepository");
+const { whereJsonArrayContains, withGeneratedIds } = require("../utils/dbUtils");
 
 const addInteraction = async (req, res) => {
   try {
@@ -42,7 +43,7 @@ const addInteraction = async (req, res) => {
 
     if (/@admin/i.test(notes)) {
       const seller = req.user;
-      const admins = await userRepository.db('users').whereRaw("'admin' = ANY(roles)").select('id');
+      const admins = await whereJsonArrayContains(userRepository.db('users'), 'roles', 'admin').select('id');
       const leadName = lead.userName || "Unknown Lead";
 
       if (admins.length) {
@@ -52,7 +53,7 @@ const addInteraction = async (req, res) => {
           message: `Seller ${seller.name} mentioned you in a lead: ${leadName}.`,
           type: "MentorRequest",
         }));
-        await notificationRepository.db('notifications').insert(adminNotifications);
+        await notificationRepository.db('notifications').insert(withGeneratedIds(adminNotifications));
       }
     }
 

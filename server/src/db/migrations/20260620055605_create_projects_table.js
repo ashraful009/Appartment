@@ -4,7 +4,7 @@
  */
 exports.up = function(knex) {
   return knex.schema.createTable('projects', (table) => {
-    table.uuid('id').primary().defaultTo(knex.raw('gen_random_uuid()'));
+    table.string('id', 36).primary();
     table.string('name').notNullable();
     table.text('description').defaultTo('');
     table.enu('status', ['running', 'completed']).defaultTo('running');

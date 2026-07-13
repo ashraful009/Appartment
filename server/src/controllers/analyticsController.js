@@ -1,5 +1,6 @@
 const priceRequestRepository = require("../repositories/PriceRequestRepository");
 const userRepository = require("../repositories/UserRepository");
+const { whereJsonArrayContains } = require("../utils/dbUtils");
 
 const STAGE_ORDER = [
   "New",
@@ -92,9 +93,9 @@ const getGenealogyTree = async (_req, res) => {
 
 const getTeamLeaderboard = async (_req, res) => {
   try {
-    const subSellers = await userRepository.db('users')
+    const subSellers = await whereJsonArrayContains(userRepository.db('users')
       .whereNotNull('referred_by')
-      .whereRaw("'seller' = ANY(roles)")
+      , 'roles', 'seller')
       .select('referred_by', 'id');
 
     const teamMap = {};
@@ -109,9 +110,9 @@ const getTeamLeaderboard = async (_req, res) => {
     }
 
     const parentIds = Object.keys(teamMap);
-    const parents = await userRepository.db('users')
+    const parents = await whereJsonArrayContains(userRepository.db('users')
       .whereIn('id', parentIds)
-      .whereRaw("'seller' = ANY(roles)")
+      , 'roles', 'seller')
       .select('id', 'name', 'phone');
 
     const leaderboard = await Promise.all(

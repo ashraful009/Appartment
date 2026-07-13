@@ -4,11 +4,11 @@
  */
 exports.up = function(knex) {
   return knex.schema.createTable('memberships', (table) => {
-    table.uuid('id').primary().defaultTo(knex.raw('gen_random_uuid()'));
+    table.string('id', 36).primary();
     
-    table.uuid('user_id').references('id').inTable('users').onDelete('CASCADE').notNullable();
-    table.uuid('property_id').references('id').inTable('properties').onDelete('SET NULL').nullable();
-    table.uuid('unit_id').references('id').inTable('apartment_units').onDelete('SET NULL').nullable();
+    table.string('user_id', 36).references('id').inTable('users').onDelete('CASCADE').notNullable();
+    table.string('property_id', 36).references('id').inTable('properties').onDelete('SET NULL').nullable();
+    table.string('unit_id', 36).references('id').inTable('apartment_units').onDelete('SET NULL').nullable();
     
     table.enu('status', ['pending_booking', 'member', 'investor', 'lapsed']).defaultTo('pending_booking');
     

@@ -1,11 +1,12 @@
 const { MongoClient } = require("mongodb");
 const knex = require("knex");
 const knexConfig = require("../../knexfile");
+const crypto = require("crypto");
 
 // Knex Instance
 const db = knex(knexConfig.development);
 
-// In-memory ID mappings (MongoDB ObjectId string -> PostgreSQL integer ID)
+// In-memory ID mappings (MongoDB ObjectId string -> MySQL UUID string ID)
 const idMap = {
   users: {},
   properties: {}
@@ -19,7 +20,9 @@ async function migrateData() {
   console.log("Migrating Users...");
   const users = await mongoDb.collection("users").find().toArray();
   for (const user of users) {
-    const [inserted] = await db("users").insert({
+    const id = crypto.randomUUID();
+    await db("users").insert({
+      id,
       name: user.name,
       email: user.email,
       phone: user.phone,
@@ -31,9 +34,9 @@ async function migrateData() {
       referral_code: user.referralCode || "",
       created_at: user.createdAt || new Date(),
       updated_at: user.updatedAt || new Date()
-    }).returning("id");
+    });
     
-    idMap.users[user._id.toString()] = inserted.id;
+    idMap.users[user._id.toString()] = id;
   }
 
   console.log("Updating User References (referred_by)...");
@@ -48,7 +51,9 @@ async function migrateData() {
   console.log("Migrating Properties...");
   const properties = await mongoDb.collection("properties").find().toArray();
   for (const prop of properties) {
-    const [inserted] = await db("properties").insert({
+    const id = crypto.randomUUID();
+    await db("properties").insert({
+      id,
       name: prop.name,
       title: prop.title,
       description: prop.description,
@@ -69,9 +74,9 @@ async function migrateData() {
       display_order: prop.displayOrder || 0,
       created_at: prop.createdAt || new Date(),
       updated_at: prop.updatedAt || new Date()
-    }).returning("id");
+    });
     
-    idMap.properties[prop._id.toString()] = inserted.id;
+    idMap.properties[prop._id.toString()] = id;
   }
 
   // Follow the same pattern for other collections...

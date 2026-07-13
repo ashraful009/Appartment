@@ -1,4 +1,5 @@
 const BaseRepository = require('./BaseRepository');
+const { whereJsonArrayContains } = require('../utils/dbUtils');
 
 class UserRepository extends BaseRepository {
   constructor() {
@@ -18,8 +19,7 @@ class UserRepository extends BaseRepository {
   }
 
   async findByRole(role) {
-    // Handling array of roles stored as PostgreSQL text[]
-    return this.db(this.tableName).whereRaw('? = ANY(roles)', [role]);
+    return whereJsonArrayContains(this.db(this.tableName), 'roles', role);
   }
 }
 

@@ -81,8 +81,8 @@ const setMonthlyTarget = async (req, res) => {
     const targetDateStr = `${year}-${String(monthIndex + 1).padStart(2, '0')}-01`;
 
     const existingTarget = await targetRepository.db('targets')
-        .whereRaw('EXTRACT(MONTH FROM target_date) = ?', [monthIndex + 1])
-        .andWhereRaw('EXTRACT(YEAR FROM target_date) = ?', [Number(year)])
+        .whereRaw('MONTH(target_date) = ?', [monthIndex + 1])
+        .andWhereRaw('YEAR(target_date) = ?', [Number(year)])
         .first();
 
     let target;
@@ -111,8 +111,8 @@ const getCurrentTarget = async (req, res) => {
     const year  = now.getFullYear();
 
     const target = await targetRepository.db('targets')
-        .whereRaw('EXTRACT(MONTH FROM target_date) = ?', [now.getMonth() + 1])
-        .andWhereRaw('EXTRACT(YEAR FROM target_date) = ?', [year])
+        .whereRaw('MONTH(target_date) = ?', [now.getMonth() + 1])
+        .andWhereRaw('YEAR(target_date) = ?', [year])
         .first();
 
     if (!target) {

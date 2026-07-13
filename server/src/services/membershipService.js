@@ -3,6 +3,7 @@ const investmentLedgerRepository = require("../repositories/InvestmentLedgerRepo
 const investmentSettingRepository = require("../repositories/InvestmentSettingRepository");
 const userRepository = require("../repositories/UserRepository");
 const apartmentUnitRepository = require("../repositories/ApartmentUnitRepository");
+const { withGeneratedIds } = require("../utils/dbUtils");
 const {
   TOTAL_TARGET,
   INSTALLMENT_AMOUNT,
@@ -137,7 +138,10 @@ const generateInstallments = async (membership, completedAt) => {
     }
   }
 
-  const created = await investmentLedgerRepository.db('investment_ledgers').insert(docs).returning('*');
+  const docsWithIds = withGeneratedIds(docs);
+  await investmentLedgerRepository.db('investment_ledgers').insert(docsWithIds);
+  const created = await investmentLedgerRepository.db('investment_ledgers')
+    .whereIn('id', docsWithIds.map((doc) => doc.id));
   await membershipRepository.update(membership.id, { installments_generated: true });
   return created;
 };

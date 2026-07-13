@@ -1,4 +1,8 @@
 const db = require('../config/db');
+const {
+  stringifyJsonFields,
+  withGeneratedIds,
+} = require('../utils/dbUtils');
 
 class BaseRepository {
   constructor(tableName) {
@@ -19,13 +23,15 @@ class BaseRepository {
   }
 
   async create(data, returning = '*') {
-    const [result] = await this.db(this.tableName).insert(data).returning(returning);
-    return result;
+    const row = withGeneratedIds(stringifyJsonFields(data));
+    await this.db(this.tableName).insert(row);
+    return this.findById(row.id, returning);
   }
 
   async update(id, data, returning = '*') {
-    const [result] = await this.db(this.tableName).where({ id }).update(data).returning(returning);
-    return result;
+    const affected = await this.db(this.tableName).where({ id }).update(stringifyJsonFields(data));
+    if (!affected) return null;
+    return this.findById(id, returning);
   }
 
   async delete(id) {

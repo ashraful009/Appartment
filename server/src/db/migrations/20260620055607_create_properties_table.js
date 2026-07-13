@@ -4,15 +4,15 @@
  */
 exports.up = function(knex) {
   return knex.schema.createTable('properties', (table) => {
-    table.uuid('id').primary().defaultTo(knex.raw('gen_random_uuid()'));
+    table.string('id', 36).primary();
     table.string('name').notNullable();
     table.text('address').notNullable();
     
     table.string('main_image').nullable();
     table.string('main_image_public_id').nullable();
     
-    table.jsonb('extra_images').defaultTo('[]');
-    table.jsonb('extra_image_public_ids').defaultTo('[]');
+    table.json('extra_images');
+    table.json('extra_image_public_ids');
     
     table.integer('total_units').defaultTo(0);
     table.integer('floors').defaultTo(0);
@@ -21,13 +21,13 @@ exports.up = function(knex) {
     table.string('parking_area').defaultTo('');
     
     table.text('description').notNullable();
-    table.jsonb('map_location').defaultTo('{"lat": null, "lng": null}');
+    table.json('map_location');
     
     table.integer('display_order').defaultTo(999);
-    table.jsonb('apartment_sizes').defaultTo('[]');
+    table.json('apartment_sizes');
     
     // Foreign key to areas table
-    table.uuid('area_id').references('id').inTable('areas').onDelete('SET NULL');
+    table.string('area_id', 36).references('id').inTable('areas').onDelete('SET NULL');
     
     table.enu('status', ['Ongoing', 'Completed', 'Upcoming']).defaultTo('Ongoing');
     table.decimal('total_price', 15, 2).defaultTo(0);

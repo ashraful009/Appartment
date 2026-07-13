@@ -4,8 +4,8 @@
  */
 exports.up = function(knex) {
   return knex.schema.createTable('user_wishlists', (table) => {
-    table.uuid('user_id').references('id').inTable('users').onDelete('CASCADE');
-    table.uuid('property_id').references('id').inTable('properties').onDelete('CASCADE');
+    table.string('user_id', 36).references('id').inTable('users').onDelete('CASCADE');
+    table.string('property_id', 36).references('id').inTable('properties').onDelete('CASCADE');
     
     table.primary(['user_id', 'property_id']);
     table.timestamps(true, true);

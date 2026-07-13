@@ -4,6 +4,7 @@ const investmentSettingRepository = require("../repositories/InvestmentSettingRe
 const userRepository = require("../repositories/UserRepository");
 const propertyRepository = require("../repositories/PropertyRepository");
 const { BOOKING_MONEY } = require("../config/investmentConstants");
+const { isDuplicateKeyError } = require("../utils/dbUtils");
 const {
   finalizeEntry,
   applyDueDayToAllInstallments,
@@ -179,7 +180,7 @@ const createBookingForUser = async (req, res) => {
     res.status(201).json({ message: "Membership created.", membership: formattedFresh });
   } catch (error) {
     console.error("Error creating membership:", error);
-    if (error.code === '23505') {
+    if (isDuplicateKeyError(error)) {
       return res.status(400).json({
         message: "This user already has a membership for this property.",
       });

@@ -1,5 +1,6 @@
 const userRepository = require("../repositories/UserRepository");
 const priceRequestRepository = require("../repositories/PriceRequestRepository");
+const { pick } = require("../utils/dbUtils");
 
 // @desc    Get user profile data (role-specific)
 // @route   GET /api/users/profile
@@ -65,8 +66,8 @@ const getProfile = async (req, res) => {
         .first();
 
       profileData.stats = {
-        totalAssignedLeads: parseInt(stats?.totalassignedleads || 0, 10),
-        totalConvertedCustomers: parseInt(stats?.totalconvertedcustomers || 0, 10),
+        totalAssignedLeads: parseInt(pick(stats, 'totalAssignedLeads', 'totalassignedleads') || 0, 10),
+        totalConvertedCustomers: parseInt(pick(stats, 'totalConvertedCustomers', 'totalconvertedcustomers') || 0, 10),
       };
     }
 
@@ -102,7 +103,7 @@ const updateProfile = async (req, res) => {
       if (req.body[key] !== undefined) {
         const value = req.body[key];
         
-        // Handling nested objects like address for JSONB in postgres
+        // Handling nested objects like address for JSON in MySQL
         if (value !== null && typeof value === "object" && !Array.isArray(value)) {
             // Since we are using JSONB we can merge the existing with new 
             // Actually, for simplicity we will just update the entire JSONB object if passed

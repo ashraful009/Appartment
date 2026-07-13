@@ -4,12 +4,15 @@
  */
 exports.up = function(knex) {
   return knex.schema.createTable('notifications', (table) => {
-    table.uuid('id').primary().defaultTo(knex.raw('gen_random_uuid()'));
-    table.uuid('user_id').references('id').inTable('users').onDelete('CASCADE');
-    table.string('title').notNullable();
+    table.string('id', 36).primary();
+    table.string('recipient_id', 36).references('id').inTable('users').onDelete('CASCADE').notNullable();
+    table.string('sender_id', 36).references('id').inTable('users').onDelete('SET NULL').nullable();
     table.text('message').notNullable();
-    table.boolean('is_read').defaultTo(false);
+    table.string('type').defaultTo('General');
+    table.boolean('read').defaultTo(false);
     table.timestamps(true, true);
+
+    table.index(['recipient_id', 'read', 'created_at']);
   });
 };
 

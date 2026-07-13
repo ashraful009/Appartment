@@ -1,4 +1,5 @@
 const areaRepository = require("../repositories/AreaRepository");
+const { isDuplicateKeyError } = require("../utils/dbUtils");
 
 // ─────────────────────────────────────────────
 // @desc   Create a new area
@@ -13,11 +14,11 @@ const createArea = async (req, res) => {
       return res.status(400).json({ message: "Country, city, and area names are required." });
     }
 
-    // Check for duplicate (case-insensitive) using Knex ILIKE (Postgres specific)
+    // Check for duplicate (case-insensitive)
     const existing = await areaRepository.db('areas')
-      .where('country', 'ILIKE', country.trim())
-      .andWhere('city', 'ILIKE', city.trim())
-      .andWhere('name', 'ILIKE', name.trim())
+      .whereRaw('LOWER(??) = LOWER(?)', ['country', country.trim()])
+      .andWhereRaw('LOWER(??) = LOWER(?)', ['city', city.trim()])
+      .andWhereRaw('LOWER(??) = LOWER(?)', ['name', name.trim()])
       .first();
 
     if (existing) {
@@ -33,8 +34,7 @@ const createArea = async (req, res) => {
     res.status(201).json({ message: "Area created successfully.", area });
   } catch (error) {
     console.error("createArea error:", error);
-    // Knex unique constraint error code in postgres is 23505
-    if (error.code === '23505') {
+    if (isDuplicateKeyError(error)) {
       return res.status(409).json({ message: "An area with this exact country, city, and name already exists." });
     }
     res.status(500).json({ message: "Failed to create area." });

@@ -3,6 +3,7 @@ const apartmentUnitRepository = require("../repositories/ApartmentUnitRepository
 const userRepository = require("../repositories/UserRepository");
 const areaRepository = require("../repositories/AreaRepository");
 const cloudinary = require("../config/cloudinary");
+const { withGeneratedIds } = require("../utils/dbUtils");
 
 const formatProperty = (p) => {
   if (!p) return p;
@@ -156,7 +157,7 @@ const createProperty = async (req, res) => {
       }
 
       if (unitsArray.length > 0) {
-        await apartmentUnitRepository.db('apartment_units').insert(unitsArray);
+        await apartmentUnitRepository.db('apartment_units').insert(withGeneratedIds(unitsArray));
       }
     }
 

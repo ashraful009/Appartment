@@ -2,6 +2,7 @@ const priceRequestRepository = require("../repositories/PriceRequestRepository")
 const userRepository = require("../repositories/UserRepository");
 const apartmentUnitRepository = require("../repositories/ApartmentUnitRepository");
 const interactionRepository = require("../repositories/InteractionRepository");
+const { pick, whereJsonArrayContains } = require("../utils/dbUtils");
 
 const requestSellerConversion = async (req, res) => {
   try {
@@ -36,9 +37,9 @@ const requestSellerConversion = async (req, res) => {
 
 const getMyTeam = async (req, res) => {
   try {
-    const teamRaw = await userRepository.db('users')
+    const teamRaw = await whereJsonArrayContains(userRepository.db('users')
       .where({ referred_by: req.user.id })
-      .whereRaw("'seller' = ANY(roles)")
+      , 'roles', 'seller')
       .leftJoin('price_requests', 'users.id', 'price_requests.assigned_to')
       .groupBy('users.id')
       .select(
@@ -51,8 +52,8 @@ const getMyTeam = async (req, res) => {
         _id: u.id,
         name: u.name,
         phone: u.phone,
-        totalAssigned: parseInt(u.totalassigned, 10) || 0,
-        totalConverted: parseInt(u.totalconverted, 10) || 0
+        totalAssigned: parseInt(pick(u, 'totalAssigned', 'totalassigned') || 0, 10),
+        totalConverted: parseInt(pick(u, 'totalConverted', 'totalconverted') || 0, 10)
     }));
 
     res.status(200).json({ team });

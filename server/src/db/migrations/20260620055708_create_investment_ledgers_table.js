@@ -4,14 +4,14 @@
  */
 exports.up = function(knex) {
   return knex.schema.createTable('investment_ledgers', (table) => {
-    table.uuid('id').primary().defaultTo(knex.raw('gen_random_uuid()'));
+    table.string('id', 36).primary();
     
     // membership_id is required but the table isn't created yet, we can't add FK. 
-    // We will add it as UUID and we can add constraint later or keep it as UUID.
-    table.uuid('membership_id').notNullable(); 
+    // We will add it as a string id and can add a constraint later.
+    table.string('membership_id', 36).notNullable(); 
     
-    table.uuid('user_id').references('id').inTable('users').onDelete('CASCADE').notNullable();
-    table.uuid('property_id').references('id').inTable('properties').onDelete('SET NULL').nullable();
+    table.string('user_id', 36).references('id').inTable('users').onDelete('CASCADE').notNullable();
+    table.string('property_id', 36).references('id').inTable('properties').onDelete('SET NULL').nullable();
     
     table.enu('type', ['booking', 'downpayment', 'installment']).notNullable();
     table.integer('installment_number').nullable();
@@ -22,14 +22,14 @@ exports.up = function(knex) {
     table.enu('status', ['Unpaid', 'Pending', 'AccountantConfirmed', 'DataEntryConfirmed', 'Paid']).defaultTo('Unpaid');
     
     table.enu('payment_method', ['MFS', 'Bank', 'Cash']).nullable();
-    table.jsonb('payment_details').defaultTo('{}');
+    table.json('payment_details');
     
     table.string('invoice_url').defaultTo('');
     table.text('description').defaultTo('');
     table.string('batch_id').nullable();
     
     table.timestamp('submitted_at').nullable();
-    table.jsonb('audit').defaultTo('{"accountant": {}, "dataEntry": {}, "management": {}}');
+    table.json('audit');
     
     table.timestamps(true, true);
     

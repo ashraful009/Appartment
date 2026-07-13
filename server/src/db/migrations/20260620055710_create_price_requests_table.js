@@ -4,14 +4,14 @@
  */
 exports.up = function(knex) {
   return knex.schema.createTable('price_requests', (table) => {
-    table.uuid('id').primary().defaultTo(knex.raw('gen_random_uuid()'));
+    table.string('id', 36).primary();
     
-    table.uuid('property_id').references('id').inTable('properties').onDelete('CASCADE').notNullable();
-    table.uuid('user_id').references('id').inTable('users').onDelete('CASCADE').notNullable();
+    table.string('property_id', 36).references('id').inTable('properties').onDelete('CASCADE').notNullable();
+    table.string('user_id', 36).references('id').inTable('users').onDelete('CASCADE').notNullable();
     
     table.enu('status', ['pending', 'assigned']).defaultTo('pending');
     
-    table.uuid('assigned_to').references('id').inTable('users').onDelete('SET NULL');
+    table.string('assigned_to', 36).references('id').inTable('users').onDelete('SET NULL');
     table.timestamp('assigned_at').nullable();
     
     table.enu('conversion_status', ['none', 'pending_approval', 'approved', 'rejected']).defaultTo('none');
@@ -20,7 +20,7 @@ exports.up = function(knex) {
     table.enu('pipeline_stage', ['New', 'Contacted', 'Site Visited', 'Negotiation', 'Closed Won', 'Closed Lost']).defaultTo('New');
     table.enu('priority', ['Hot', 'Warm', 'Cold']).defaultTo('Warm');
     
-    table.jsonb('client_preferences').defaultTo('{}');
+    table.json('client_preferences');
     table.timestamp('last_interaction_date').defaultTo(knex.fn.now());
     
     table.enu('lead_source', ['Website', 'Facebook', 'Agent Referral', 'Organic Search', 'Other']).defaultTo('Website');

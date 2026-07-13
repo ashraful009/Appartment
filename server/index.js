@@ -1,8 +1,8 @@
-require("dotenv").config();
+require("dotenv").config({ path: require('path').join(__dirname, '.env') });
 const express = require("express");
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
-const sequelize = require("./src/config/postgres");
+const db = require("./src/config/db");
 
 const authRoutes = require("./src/routes/authRoutes");
 const adminRoutes = require("./src/routes/adminRoutes");
@@ -35,15 +35,18 @@ const PORT = process.env.PORT || 5000;
 // Express correctly sees HTTPS connections and SameSite=None;Secure cookies work.
 app.set("trust proxy", 1);
 
-// ─── Connect to PostgreSQL ────────────────────────────────────────────────
+// ─── Connect to MySQL ─────────────────────────────────────────────────────
 const connectDB = async () => {
   try {
-    await sequelize.authenticate();
-    // Sync will create tables for any defined Sequelize models.
-    await sequelize.sync();
-    console.log(" PostgreSQL connected ");
+    await db.raw("SELECT 1");
+    console.log(" MySQL connected ");
+    
+    // Auto-run migrations for cPanel deployment without Terminal
+    console.log(" Running database migrations...");
+    await db.migrate.latest();
+    console.log(" Migrations completed successfully!");
   } catch (error) {
-    console.error(" PostgreSQL connection failed:", error.message);
+    console.error(" MySQL connection or migration failed:", error.message);
     process.exit(1);
   }
 };
