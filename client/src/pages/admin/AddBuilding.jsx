@@ -223,7 +223,7 @@ const AddBuilding = () => {
 
       {toast && <Toast {...toast} onClose={() => setToast(null)} />}
 
-      {/* Header */}
+      
       <div>
         <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
           <Building2 className="text-indigo-600" />
@@ -234,7 +234,7 @@ const AddBuilding = () => {
         </p>
       </div>
 
-      {/* Derived Locations */}
+      
       {(() => {
         const uniqueCountries = [...new Set(areas.map((a) => a.country))].filter(Boolean).sort();
         const uniqueCities = selectedCountry 
@@ -247,7 +247,7 @@ const AddBuilding = () => {
         return (
           <form onSubmit={handleSubmit} className="space-y-8">
 
-        {/* Image Section — 2-col: polished uploads left, full-bleed live preview right */}
+        
         <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
 
           <h2 className="text-xs font-bold uppercase tracking-widest text-indigo-600 mb-7">
@@ -256,14 +256,14 @@ const AddBuilding = () => {
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
 
-            {/* ── Left: image uploaders ── */}
+            
             <div className="space-y-7">
 
-              {/* Main Image */}
+              
               <div>
                 <p className="text-[10px] font-bold uppercase tracking-widest text-indigo-500 mb-3">Main Image</p>
 
-                {/* Dropzone */}
+                
                 <label
                   htmlFor="mainImage"
                   className="group relative flex flex-col items-center justify-center w-full h-44 rounded-2xl border-2 border-dashed border-indigo-200 bg-gray-50 cursor-pointer hover:border-indigo-400 hover:bg-indigo-50/40 transition-all overflow-hidden"
@@ -280,7 +280,7 @@ const AddBuilding = () => {
                 </label>
                 <input ref={mainInputRef} id="mainImage" type="file" accept="image/*" onChange={handleMainImage} className="hidden" />
 
-                {/* Remove button — only when image uploaded */}
+                
                 {mainPreview && (
                   <button
                     type="button"
@@ -292,7 +292,7 @@ const AddBuilding = () => {
                 )}
               </div>
 
-              {/* Extra Gallery Images */}
+              
               <div>
                 <p className="text-[10px] font-bold uppercase tracking-widest text-indigo-500 mb-3">
                   Gallery Images <span className="text-gray-400 normal-case font-normal">(max 10)</span>
@@ -327,18 +327,18 @@ const AddBuilding = () => {
 
             </div>
 
-            {/* ── Right: full-bleed live card preview ── */}
+            
             <div className="flex flex-col gap-3">
               <p className="text-[10px] font-bold uppercase tracking-widest text-indigo-600">
                 Live Card Preview
               </p>
 
-              {/* Full-bleed card — no scale trick, direct proportional card */}
+              
               <div
                 className="relative w-full rounded-2xl overflow-hidden shadow-lg bg-gray-900"
                 style={{ aspectRatio: "3/4" }}
               >
-                {/* Background image fills the entire card */}
+                
                 {mainPreview ? (
                   <img
                     src={mainPreview}
@@ -351,10 +351,10 @@ const AddBuilding = () => {
                   </div>
                 )}
 
-                {/* Bottom gradient for text readability */}
+                
                 <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-black/85 via-black/45 to-transparent pointer-events-none" />
 
-                {/* Pill tags */}
+                
                 <div className="absolute bottom-[88px] left-5 right-5 flex flex-wrap gap-1.5 pointer-events-none">
                   {Number(form.floors) > 0 && (
                     <span className="bg-white/20 backdrop-blur-sm text-white text-[10px] font-bold px-2.5 py-1 rounded-full border border-white/20">
@@ -368,17 +368,17 @@ const AddBuilding = () => {
                   )}
                   {form.handoverTime && (
                     <span className="bg-yellow-400/85 text-yellow-900 text-[10px] font-bold px-2.5 py-1 rounded-full">
-                      📅 {form.handoverTime}
+                       {form.handoverTime}
                     </span>
                   )}
                 </div>
 
-                {/* Building name */}
+                
                 <h3 className="absolute bottom-[58px] left-5 right-5 text-white font-extrabold text-lg leading-snug drop-shadow-lg line-clamp-2 pointer-events-none">
                   {form.name || <span className="text-white/40 italic font-medium text-base">Building Name</span>}
                 </h3>
 
-                {/* Address row */}
+                
                 <div className="absolute bottom-5 left-5 right-5 flex items-center gap-1.5 pointer-events-none">
                   <MapPin size={13} className="text-yellow-300 flex-shrink-0" />
                   <p className="text-white/75 text-xs font-medium line-clamp-1">
@@ -386,7 +386,7 @@ const AddBuilding = () => {
                   </p>
                 </div>
 
-                {/* Ghost hint when totally empty */}
+                
                 {!mainPreview && !form.name && (
                   <div className="absolute top-5 inset-x-5 text-center pointer-events-none">
                     <p className="text-white/30 text-xs">Fill in details to see preview</p>
@@ -398,14 +398,14 @@ const AddBuilding = () => {
           </div>
         </div>
 
-        {/* Building Details */}
+        
         <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
 
           <h2 className="text-xs font-bold uppercase tracking-widest text-indigo-600 mb-7">
             Building Details
           </h2>
 
-          {/* Row 1 — Property Name (full width) */}
+          
           <div>
             <label className="text-sm font-semibold text-gray-600 mb-1.5 block">
               Property Name <span className="text-red-400">*</span>
@@ -420,10 +420,10 @@ const AddBuilding = () => {
             />
           </div>
 
-          {/* Row 2 — Stats Grid (3 cols) */}
+          
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
 
-            {/* Total Units */}
+            
             <div>
               <label className="text-sm font-semibold text-gray-600 mb-1.5 block">Total Units</label>
               <input
@@ -440,7 +440,7 @@ const AddBuilding = () => {
               </p>
             </div>
 
-            {/* Floors */}
+            
             <div>
               <label className="text-sm font-semibold text-gray-600 mb-1.5 block">Number of Floors</label>
               <input
@@ -454,7 +454,7 @@ const AddBuilding = () => {
               />
             </div>
 
-            {/* Handover Time */}
+            
             <div>
               <label className="text-sm font-semibold text-gray-600 mb-1.5 block">Handover Time</label>
               <input
@@ -466,7 +466,7 @@ const AddBuilding = () => {
               />
             </div>
 
-            {/* Land Size */}
+            
             <div>
               <label className="text-sm font-semibold text-gray-600 mb-1.5 block">Land Size</label>
               <input
@@ -478,7 +478,7 @@ const AddBuilding = () => {
               />
             </div>
 
-            {/* Parking Area */}
+            
             <div>
               <label className="text-sm font-semibold text-gray-600 mb-1.5 block">Parking Area</label>
               <input
@@ -490,7 +490,7 @@ const AddBuilding = () => {
               />
             </div>
 
-            {/* Display Order */}
+            
             <div>
               <label className="text-sm font-semibold text-gray-600 mb-1.5 block">Display Order</label>
               <select
@@ -511,10 +511,10 @@ const AddBuilding = () => {
 
           </div>
 
-          {/* Row 2b — Categorization Grid (Area, Status, Installment Type) */}
+          
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
 
-            {/* Country */}
+            
             <div>
               <label className="text-sm font-semibold text-gray-600 mb-1.5 block">Country</label>
               <select
@@ -529,7 +529,7 @@ const AddBuilding = () => {
               </select>
             </div>
 
-            {/* City */}
+            
             <div>
               <label className="text-sm font-semibold text-gray-600 mb-1.5 block">City</label>
               <select
@@ -545,7 +545,7 @@ const AddBuilding = () => {
               </select>
             </div>
 
-            {/* Area */}
+            
             <div>
               <label className="text-sm font-semibold text-gray-600 mb-1.5 block">Area</label>
               <select
@@ -563,7 +563,7 @@ const AddBuilding = () => {
               <p className="text-[11px] text-gray-400 mt-1.5">Manage areas from Admin → Manage Areas.</p>
             </div>
 
-            {/* Status */}
+            
             <div>
               <label className="text-sm font-semibold text-gray-600 mb-1.5 block">Status</label>
               <select
@@ -582,7 +582,7 @@ const AddBuilding = () => {
 
           </div>
 
-          {/* Row 2c — Total Price & Total Sqft */}
+          
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
             <div>
               <label className="text-sm font-semibold text-gray-600 mb-1.5 block">Total Price (BDT)</label>
@@ -610,7 +610,7 @@ const AddBuilding = () => {
             </div>
           </div>
 
-          {/* Row 3 — Location (address + map button) */}
+          
           <div className="mt-6">
             <label className="text-sm font-semibold text-gray-600 mb-1.5 block">
               Full Address <span className="text-red-400">*</span>
@@ -634,12 +634,12 @@ const AddBuilding = () => {
                 }`}
               >
                 <MapPin size={15} />
-                {mapLocation.lat !== DEFAULT_MAP_LOCATION.lat ? "Location Set ✓" : "Add Location"}
+                {mapLocation.lat !== DEFAULT_MAP_LOCATION.lat ? "Location Set " : "Add Location"}
               </button>
             </div>
           </div>
 
-          {/* Row 4 — Description (full width, at bottom) */}
+          
           <div className="mt-6">
             <label className="text-sm font-semibold text-gray-600 mb-1.5 block">
               Building Description <span className="text-red-400">*</span>
@@ -657,7 +657,7 @@ const AddBuilding = () => {
 
         </div>
 
-        {/* Apartment Sizes */}
+        
         <div className="bg-white border rounded-2xl p-6 shadow-sm">
 
           <div className="flex justify-between items-center mb-4">
@@ -716,7 +716,7 @@ const AddBuilding = () => {
           </div>
         </div>
 
-        {/* Construction Progress */}
+        
         <div className="bg-white border rounded-2xl p-6 shadow-sm">
           <h2 className="text-sm font-semibold uppercase text-gray-700 mb-4">
             Construction Progress
@@ -764,7 +764,7 @@ const AddBuilding = () => {
           </div>
         </div>
 
-        {/* Unit Visualizer Preview */}
+        
         <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
           <h2 className="text-xs font-bold uppercase tracking-widest text-indigo-600 mb-2">
             Unit Visualizer Preview
@@ -775,7 +775,7 @@ const AddBuilding = () => {
           <PropertyVisualizer totalUnits={form.totalUnits} totalFloors={form.floors} />
         </div>
 
-        {/* Submit */}
+        
         <button
           type="submit"
           disabled={loading}
@@ -797,7 +797,7 @@ const AddBuilding = () => {
         );
       })()}
 
-      {/* Google Maps Picker Modal */}
+      
       <MapPickerModal
         isOpen={showMapModal}
         onClose={() => setShowMapModal(false)}

@@ -3,12 +3,7 @@ import { Save, Loader2, Mail, Lock } from "lucide-react";
 
 const CONTACT_TIMES = ["Morning", "Afternoon", "Evening", "Anytime"];
 
-/**
- * CustomerProfileForm — editable profile form for customer fields.
- * Props:
- *   userData  {object}   — the user document from GET /api/users/profile
- *   onUpdate  {function} — async (formData) => void, called on save
- */
+
 const CustomerProfileForm = ({ userData, onUpdate }) => {
   const [form, setForm] = useState({
     name:                 "",
@@ -20,7 +15,7 @@ const CustomerProfileForm = ({ userData, onUpdate }) => {
   });
   const [submitting, setSubmitting] = useState(false);
 
-  // Hydrate form when userData arrives / changes
+  
   useEffect(() => {
     if (!userData) return;
     setForm({
@@ -57,7 +52,7 @@ const CustomerProfileForm = ({ userData, onUpdate }) => {
     }
   };
 
-  // ── Field helpers ──────────────────────────────────────────────────────────
+  
   const inputClass =
     "w-full px-3.5 py-2.5 rounded-xl border border-gray-200 bg-white text-sm text-gray-800 " +
     "placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-400 focus:border-transparent " +
@@ -71,13 +66,13 @@ const CustomerProfileForm = ({ userData, onUpdate }) => {
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
 
-      {/* ── Section: Account Info ─────────────────────────────────────── */}
+      
       <div>
         <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-4 border-b border-gray-100 pb-2">
           Account Info
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {/* Full Name */}
+          
           <div>
             <label className={labelClass}>Full Name</label>
             <input
@@ -91,7 +86,7 @@ const CustomerProfileForm = ({ userData, onUpdate }) => {
             />
           </div>
 
-          {/* Phone */}
+          
           <div>
             <label className={labelClass}>Phone Number</label>
             <input
@@ -104,7 +99,7 @@ const CustomerProfileForm = ({ userData, onUpdate }) => {
             />
           </div>
 
-          {/* Email — read-only */}
+          
           <div className="sm:col-span-2">
             <label className={labelClass}>
               <span className="inline-flex items-center gap-1.5">
@@ -126,13 +121,13 @@ const CustomerProfileForm = ({ userData, onUpdate }) => {
         </div>
       </div>
 
-      {/* ── Section: Personal Details ─────────────────────────────────── */}
+      
       <div>
         <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-4 border-b border-gray-100 pb-2">
           Personal Details
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {/* Occupation */}
+          
           <div>
             <label className={labelClass}>Occupation</label>
             <input
@@ -145,7 +140,7 @@ const CustomerProfileForm = ({ userData, onUpdate }) => {
             />
           </div>
 
-          {/* Preferred Contact Time */}
+          
           <div>
             <label className={labelClass}>Preferred Contact Time</label>
             <select
@@ -162,7 +157,7 @@ const CustomerProfileForm = ({ userData, onUpdate }) => {
         </div>
       </div>
 
-      {/* ── Section: Addresses ────────────────────────────────────────── */}
+      
       <div>
         <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-4 border-b border-gray-100 pb-2">
           Addresses
@@ -193,7 +188,7 @@ const CustomerProfileForm = ({ userData, onUpdate }) => {
         </div>
       </div>
 
-      {/* ── Submit ────────────────────────────────────────────────────── */}
+      
       <div className="flex justify-end pt-2">
         <button
           type="submit"

@@ -27,7 +27,7 @@ const FILTERS = [
   { key: "Paid", label: "Completed" },
 ];
 
-// A single audit stage cell: staff name + timestamp, or a pending marker.
+
 const StageCell = ({ stage }) => {
   if (!stage?.by) {
     return (

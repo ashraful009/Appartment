@@ -19,7 +19,7 @@ const PropertyCard = ({ property, index = 0 }) => {
       onClick={() => navigate(`/property/${property.id || property._id}`)}
       className="group relative w-full flex flex-col rounded-3xl overflow-hidden cursor-pointer shadow-lg hover:shadow-2xl transition-shadow duration-500"
     >
-      {/* ── Full-bleed image — height scales with screen size ────────── */}
+      
       <div className="relative h-[180px] sm:h-[280px] md:h-[360px] lg:h-[460px] w-full overflow-hidden">
         {property.mainImage ? (
           <img
@@ -35,13 +35,13 @@ const PropertyCard = ({ property, index = 0 }) => {
           </div>
         )}
 
-        {/* ── Persistent bottom gradient for text readability ── */}
+        
         <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-black/85 via-black/40 to-transparent pointer-events-none" />
 
-        {/* ── 2-col info strip — pinned to bottom, thin as possible ─── */}
+        
         <div className="absolute inset-x-0 bottom-0 p-2 sm:p-3 lg:p-4 flex items-end justify-between gap-2">
 
-          {/* LEFT — name · location · apt types */}
+          
           <div className="flex flex-col gap-0.5 sm:gap-1 min-w-0">
             <h3 className="text-xs sm:text-base lg:text-xl font-extrabold text-white leading-tight drop-shadow-md line-clamp-1">
               {property.name}
@@ -52,7 +52,7 @@ const PropertyCard = ({ property, index = 0 }) => {
               <p className="text-[9px] sm:text-xs line-clamp-1">{property.address}</p>
             </div>
 
-            {/* Apt size chips — up to 2, hidden on very small */}
+            
             {property.apartmentSizes?.length > 0 && (
               <div className="hidden sm:flex flex-wrap gap-1 mt-0.5">
                 {property.apartmentSizes.slice(0, 2).map((s, i) => (
@@ -72,7 +72,7 @@ const PropertyCard = ({ property, index = 0 }) => {
             )}
           </div>
 
-          {/* RIGHT — stats badges (floors · units · handover) */}
+          
           <div className="flex flex-col items-end gap-1 flex-shrink-0">
             {property.floors > 0 && (
               <span className="bg-white/20 backdrop-blur-sm text-white text-[9px] sm:text-[10px] font-semibold px-1.5 sm:px-2.5 py-0.5 rounded-full border border-white/20 whitespace-nowrap">
@@ -86,7 +86,7 @@ const PropertyCard = ({ property, index = 0 }) => {
             )}
             {property.handoverTime && (
               <span className="bg-yellow-400/90 text-yellow-900 text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2.5 py-0.5 rounded-full whitespace-nowrap">
-                📅 {property.handoverTime}
+                 {property.handoverTime}
               </span>
             )}
           </div>

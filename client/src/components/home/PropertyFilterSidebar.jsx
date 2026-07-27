@@ -5,7 +5,7 @@ import { SlidersHorizontal, Search } from "lucide-react";
 import Slider from "rc-slider";
 import "rc-slider/assets/index.css";
 
-/* ─ Color tokens (matches Home.jsx) ──────────────────────────────────────── */
+
 const C = {
   navy:      "#0A1628",
   gold:      "#C9942A",
@@ -17,17 +17,17 @@ const C = {
 const selectCls =
   "w-full bg-white border border-[#E8DFC8] rounded-xl px-3.5 py-2 text-sm text-[#0A1628] focus:outline-none focus:ring-2 focus:ring-[#C9942A]/40 focus:border-[#C9942A] transition-all appearance-none cursor-pointer";
 
-/* ─ Price constants ──────────────────────────────────────────────────────── */
-const PRICE_MIN = 2000000;   // 20 Lakh
-const PRICE_MAX = 20000000;  // 2 Crore
-const PRICE_STEP = 500000;   // 5 Lakh step
 
-/* ─ Sqft constants ───────────────────────────────────────────────────────── */
+const PRICE_MIN = 2000000;   
+const PRICE_MAX = 20000000;  
+const PRICE_STEP = 500000;   
+
+
 const SQFT_MIN = 500;
 const SQFT_MAX = 2000;
 const SQFT_STEP = 50;
 
-/* ─ Format price to human-readable BDT ───────────────────────────────────── */
+
 const formatPrice = (val) => {
   if (val >= 10000000) {
     const crore = val / 10000000;
@@ -40,7 +40,7 @@ const formatPrice = (val) => {
   return val.toLocaleString("en-IN");
 };
 
-/* ─ Shared slider styles (gold theme) ────────────────────────────────────── */
+
 const sliderTrackStyle = {
   background: "linear-gradient(90deg, #C9942A, #E8B84B)",
   height: 6,
@@ -64,7 +64,7 @@ const sliderHandleStyle = {
   cursor: "grab",
 };
 
-/* ─ Label styles ─────────────────────────────────────────────────────────── */
+
 const labelStyle = {
   fontFamily: "'Jost', sans-serif",
   fontSize: "0.7rem",
@@ -135,7 +135,7 @@ const PropertyFilterSidebar = () => {
     e.preventDefault();
     const params = new URLSearchParams();
 
-    // Only set price params if user moved from defaults
+    
     if (filters.priceRange[0] !== PRICE_MIN) params.set("minPrice", filters.priceRange[0]);
     if (filters.priceRange[1] !== PRICE_MAX) params.set("maxPrice", filters.priceRange[1]);
     if (filters.sqftRange[0] !== SQFT_MIN)   params.set("minSqft", filters.sqftRange[0]);
@@ -157,7 +157,7 @@ const PropertyFilterSidebar = () => {
         boxShadow: "0 4px 24px rgba(10,22,40,0.06)",
       }}
     >
-      {/* Header */}
+      
       <div className="flex items-center gap-2.5 mb-6">
         <div
           className="w-9 h-9 rounded-xl flex items-center justify-center"
@@ -198,13 +198,13 @@ const PropertyFilterSidebar = () => {
         return (
           <form onSubmit={handleSubmit} className="space-y-5">
 
-        {/* ── Price Range Slider ─────────────────────────────────────────── */}
+        
         <div>
           <label className="block mb-2" style={labelStyle}>
             Price Range (BDT)
           </label>
 
-          {/* Dynamic value display */}
+          
           <div
             className="flex items-center justify-between mb-3 px-1"
             style={{ fontFamily: "'Jost', sans-serif", fontSize: "0.78rem" }}
@@ -243,7 +243,7 @@ const PropertyFilterSidebar = () => {
             </span>
           </div>
 
-          {/* Dual-thumb slider */}
+          
           <div className="px-1.5">
             <Slider
               range
@@ -261,7 +261,7 @@ const PropertyFilterSidebar = () => {
             />
           </div>
 
-          {/* Min / Max labels */}
+          
           <div
             className="flex justify-between mt-1.5 px-1"
             style={{
@@ -276,13 +276,13 @@ const PropertyFilterSidebar = () => {
           </div>
         </div>
 
-        {/* ── Square Feet Range Slider ───────────────────────────────────── */}
+        
         <div>
           <label className="block mb-2" style={labelStyle}>
             Square Feet
           </label>
 
-          {/* Dynamic value display */}
+          
           <div
             className="flex items-center justify-between mb-3 px-1"
             style={{ fontFamily: "'Jost', sans-serif", fontSize: "0.78rem" }}
@@ -321,7 +321,7 @@ const PropertyFilterSidebar = () => {
             </span>
           </div>
 
-          {/* Dual-thumb slider */}
+          
           <div className="px-1.5">
             <Slider
               range
@@ -339,7 +339,7 @@ const PropertyFilterSidebar = () => {
             />
           </div>
 
-          {/* Min / Max labels */}
+          
           <div
             className="flex justify-between mt-1.5 px-1"
             style={{
@@ -355,7 +355,7 @@ const PropertyFilterSidebar = () => {
         </div>
 
 
-        {/* Country Dropdown */}
+        
         <div>
           <label className="block mb-2" style={labelStyle}>
             Country
@@ -373,7 +373,7 @@ const PropertyFilterSidebar = () => {
           </select>
         </div>
 
-        {/* City Dropdown */}
+        
         <div>
           <label className="block mb-2" style={labelStyle}>
             City
@@ -392,7 +392,7 @@ const PropertyFilterSidebar = () => {
           </select>
         </div>
 
-        {/* Area Dropdown */}
+        
         <div>
           <label className="block mb-2" style={labelStyle}>
             Area
@@ -413,7 +413,7 @@ const PropertyFilterSidebar = () => {
           </select>
         </div>
 
-        {/* Submit */}
+        
         <button
           type="submit"
           className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 hover:shadow-lg hover:shadow-[#C9942A]/20 active:scale-[0.98]"

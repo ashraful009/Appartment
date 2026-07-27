@@ -42,7 +42,7 @@ const TimelineModal = ({ leadId, leadName, onClose }) => {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[85vh] flex flex-col">
-        {/* Header */}
+        
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
           <div>
             <p className="text-xs font-bold uppercase tracking-widest text-gray-400">Read-Only Timeline</p>
@@ -56,7 +56,7 @@ const TimelineModal = ({ leadId, leadName, onClose }) => {
           </button>
         </div>
 
-        {/* Body */}
+        
         <div className="flex-1 overflow-y-auto px-6 py-4">
           {loading ? (
             <div className="space-y-4">
@@ -126,7 +126,7 @@ const TimelineModal = ({ leadId, leadName, onClose }) => {
           )}
         </div>
 
-        {/* Footer */}
+        
         <div className="px-6 py-3 border-t border-gray-100 bg-gray-50 rounded-b-2xl">
           <p className="text-xs text-gray-400 text-center flex items-center justify-center gap-1.5">
             <Eye size={12} /> Read-only mentor view — no changes can be made here.

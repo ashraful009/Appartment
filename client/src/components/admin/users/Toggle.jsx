@@ -1,9 +1,6 @@
 import React from "react";
 
-/**
- * Toggle — a single animated role toggle switch.
- * Props: isOn, isLoading, isDisabled, trackOn, trackOff, label, onClick
- */
+
 const Toggle = ({ isOn, isLoading, isDisabled, trackOn, trackOff, label, onClick }) => {
   const active = isOn;
   const locked = isDisabled || isLoading;

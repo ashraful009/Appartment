@@ -19,10 +19,10 @@ const MySales = () => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("All");
 
-  // Modal states
+  
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedUnit, setSelectedUnit] = useState(null);
-  const [conversionType, setConversionType] = useState('Booked'); // 'Booked' or 'Sold'
+  const [conversionType, setConversionType] = useState('Booked'); 
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -46,7 +46,7 @@ const MySales = () => {
     }
   };
 
-  // Filter Logic
+  
   const filteredUnits = units.filter((u) => {
     if (activeTab === "All") return true;
     if (activeTab === "My Bookings (Self)") return u.status === "Booked" && u.ownerType === "self";
@@ -55,10 +55,10 @@ const MySales = () => {
     return true;
   });
 
-  // Open Modal Logic
+  
   const handleOpenModal = (unit, action) => {
     setSelectedUnit(unit);
-    // Pre-fill existing customer data if converting for an existing customer
+    
     if (unit.ownerType === 'customer') {
       setCustomerName(unit.customerName || '');
       setCustomerPhone(unit.customerPhone || '');
@@ -68,10 +68,10 @@ const MySales = () => {
     }
 
     if (action === 'Transfer') {
-      // Transfer to Customer: They can keep it 'Booked' or mark as 'Sold'
+      
       setConversionType('Booked'); 
     } else if (action === 'Convert') {
-      // Convert to Sale: Force 'Sold' stat
+      
       setConversionType('Sold');
     }
 
@@ -127,7 +127,7 @@ const MySales = () => {
 
   return (
     <div className="p-8 max-w-7xl mx-auto space-y-8">
-      {/* Page Header */}
+      
       <div>
         <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
           <FileText className="w-8 h-8 text-indigo-600" />
@@ -138,7 +138,7 @@ const MySales = () => {
         </p>
       </div>
 
-      {/* Tabs */}
+      
       <div className="flex flex-wrap gap-2 border-b border-gray-200 pb-4">
         {["All", "My Bookings (Self)", "Customer Bookings", "Sold Units"].map((tab) => (
           <button
@@ -155,7 +155,7 @@ const MySales = () => {
         ))}
       </div>
 
-      {/* Grid */}
+      
       {filteredUnits.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-24 text-gray-500 border border-dashed border-gray-300 rounded-2xl bg-gray-50/50">
           <FolderOpen className="w-14 h-14 mb-4 text-gray-300" />
@@ -167,7 +167,7 @@ const MySales = () => {
           {filteredUnits.map((unit) => (
             <div key={unit._id} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 flex flex-col transition hover:shadow-md">
               
-              {/* Top Row */}
+              
               <div className="flex justify-between items-start mb-4">
                 <div>
                   <h3 className="text-xl font-bold text-gray-900">Unit {" "}{unit.unitName}</h3>
@@ -187,7 +187,7 @@ const MySales = () => {
                 )}
               </div>
 
-              {/* Sub-Badge Owner */}
+              
               <div className="mb-6 flex">
                 <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold ${
                   unit.ownerType === 'self' 
@@ -199,9 +199,9 @@ const MySales = () => {
                 </span>
               </div>
 
-              <div className="flex-1"></div> {/* Spacer */}
+              <div className="flex-1"></div> 
 
-              {/* Action Buttons */}
+              
               {unit.status === "Booked" && unit.ownerType === "self" && (
                 <button
                   onClick={() => handleOpenModal(unit, 'Transfer')}
@@ -228,7 +228,7 @@ const MySales = () => {
         </div>
       )}
 
-      {/* Conversion Modal */}
+      
       {isModalOpen && selectedUnit && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
           <div className="bg-white rounded-3xl p-8 shadow-2xl max-w-md w-full relative">

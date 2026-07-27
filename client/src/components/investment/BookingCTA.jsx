@@ -6,11 +6,7 @@ import { fmtTk } from "./fmt";
 
 const BOOKING_MONEY = 500000;
 
-/**
- * Shown to a logged-in user who wants to invest in a new property.
- * Fetches available properties (Ongoing / Upcoming) and lets the user
- * select one before sending them to the shared payment page.
- */
+
 const BookingCTA = ({ onSubmitted, onCancel }) => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -26,7 +22,7 @@ const BookingCTA = ({ onSubmitted, onCancel }) => {
           "/api/properties/public?noPaginate=true&status=Ongoing",
           { withCredentials: true }
         );
-        // Also fetch Upcoming
+        
         const { data: upcoming } = await axios.get(
           "/api/properties/public?noPaginate=true&status=Upcoming",
           { withCredentials: true }
@@ -84,7 +80,7 @@ const BookingCTA = ({ onSubmitted, onCancel }) => {
         )}
       </div>
 
-      {/* Property Selection */}
+      
       <div className="mb-5">
         <label className="block text-xs font-bold text-gray-700 mb-2">
           Select Property <span className="text-red-500">*</span>

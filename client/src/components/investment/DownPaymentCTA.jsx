@@ -6,10 +6,7 @@ import { fmtTk } from "./fmt";
 
 const DOWNPAYMENT_TARGET = 500000;
 
-/**
- * Shown to an active member. Lets them choose a down payment (>= 5 lakh), then
- * sends them to the shared payment page with the cash to collect.
- */
+
 const DownPaymentCTA = ({ membership, pending }) => {
   const navigate = useNavigate();
   const location = useLocation();

@@ -5,7 +5,7 @@ import toast from "react-hot-toast";
 import CustomerProfileForm from "../../components/customer/profile/CustomerProfileForm";
 import AssignedAgentCard from "../../components/customer/profile/AssignedAgentCard";
 
-// ── Skeleton loaders ─────────────────────────────────────────────────────────
+
 const FormSkeleton = () => (
   <div className="animate-pulse space-y-6">
     <div className="h-3 w-28 bg-gray-200 rounded mb-4" />
@@ -39,13 +39,13 @@ const AgentSkeleton = () => (
   </div>
 );
 
-// ── Main Page ─────────────────────────────────────────────────────────────────
+
 const CustomerProfilePage = () => {
   const [user,          setUser]          = useState(null);
   const [assignedAgent, setAssignedAgent] = useState(null);
   const [loading,       setLoading]       = useState(true);
 
-  // ── Fetch profile on mount ──────────────────────────────────────────────
+  
   useEffect(() => {
     const fetchProfile = async () => {
       try {
@@ -66,7 +66,7 @@ const CustomerProfilePage = () => {
     fetchProfile();
   }, []);
 
-  // ── Save changes ────────────────────────────────────────────────────────
+  
   const handleUpdate = async (formData) => {
     try {
       const { data } = await axios.put("/api/users/profile", formData, {
@@ -81,11 +81,11 @@ const CustomerProfilePage = () => {
     }
   };
 
-  // ── Render ──────────────────────────────────────────────────────────────
+  
   return (
     <div className="p-6 md:p-8 max-w-5xl mx-auto">
 
-      {/* ── Page Header ────────────────────────────────────────────────── */}
+      
       <div className="mb-10">
         <p className="text-xs font-bold uppercase tracking-widest text-brand-500 mb-1">
           Customer Panel
@@ -96,10 +96,10 @@ const CustomerProfilePage = () => {
         </p>
       </div>
 
-      {/* ── Two-column layout ──────────────────────────────────────────── */}
+      
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
-        {/* ── Left: profile form (2/3 width) ─────────────────────────── */}
+        
         <div className="lg:col-span-2 bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
           <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-6 border-b border-gray-100 pb-3">
             My Profile Settings
@@ -111,7 +111,7 @@ const CustomerProfilePage = () => {
           )}
         </div>
 
-        {/* ── Right: assigned agent (1/3 width) ──────────────────────── */}
+        
         <div>
           <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-4">
             My Property Expert

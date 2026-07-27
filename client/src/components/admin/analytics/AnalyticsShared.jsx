@@ -1,8 +1,6 @@
 import React from "react";
 
-/**
- * ChartSkeleton — animated loading placeholder for chart cards.
- */
+
 export const ChartSkeleton = () => (
   <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 animate-pulse">
     <div className="h-5 bg-gray-200 rounded w-48 mb-6" />
@@ -18,9 +16,7 @@ export const ChartSkeleton = () => (
   </div>
 );
 
-/**
- * FunnelTip — custom recharts tooltip for funnel charts.
- */
+
 export const FunnelTip = ({ active, payload }) => {
   if (!active || !payload?.length) return null;
   const d = payload[0].payload;
@@ -32,9 +28,7 @@ export const FunnelTip = ({ active, payload }) => {
   );
 };
 
-/**
- * PieTip — custom recharts tooltip for pie charts.
- */
+
 export const PieTip = ({ active, payload }) => {
   if (!active || !payload?.length) return null;
   const d = payload[0].payload;
@@ -48,10 +42,7 @@ export const PieTip = ({ active, payload }) => {
   );
 };
 
-/**
- * TreeNode — recursive genealogy node for the admin org-chart.
- * Props: node (with children[]), depth (starts at 0)
- */
+
 import { useState } from "react";
 import { ChevronDown, ChevronRight as ChevronRightIcon } from "lucide-react";
 

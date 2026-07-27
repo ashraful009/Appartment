@@ -1,7 +1,4 @@
-/**
- * @param { import("knex").Knex } knex
- * @returns { Promise<void> }
- */
+
 exports.up = function(knex) {
   return knex.schema.createTable('user_wishlists', (table) => {
     table.string('user_id', 36).references('id').inTable('users').onDelete('CASCADE');
@@ -12,10 +9,7 @@ exports.up = function(knex) {
   });
 };
 
-/**
- * @param { import("knex").Knex } knex
- * @returns { Promise<void> }
- */
+
 exports.down = function(knex) {
   return knex.schema.dropTable('user_wishlists');
 };

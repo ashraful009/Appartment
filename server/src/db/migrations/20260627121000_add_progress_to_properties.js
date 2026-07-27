@@ -1,7 +1,4 @@
-/**
- * @param { import("knex").Knex } knex
- * @returns { Promise<void> }
- */
+
 exports.up = function(knex) {
   return knex.schema.alterTable('properties', (table) => {
     table.string('progress_video_url').defaultTo('');
@@ -10,10 +7,7 @@ exports.up = function(knex) {
   });
 };
 
-/**
- * @param { import("knex").Knex } knex
- * @returns { Promise<void> }
- */
+
 exports.down = function(knex) {
   return knex.schema.alterTable('properties', (table) => {
     table.dropColumn('progress_video_url');

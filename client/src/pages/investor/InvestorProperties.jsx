@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import { Building2, CalendarClock } from "lucide-react";
 
-// "Mon YYYY" from an ISO date.
+
 const fmtMonthYear = (d) =>
   d
     ? new Date(d).toLocaleDateString("en-GB", { month: "short", year: "numeric" })
@@ -59,7 +59,7 @@ const InvestorProperties = () => {
   const list = useMemo(() => {
     const filtered = projects.filter((p) => p.status === tab);
     if (tab === "running") {
-      // Soonest expected-complete first; undated ones go last.
+      
       return [...filtered].sort((a, b) => {
         const da = a.expectedCompleteDate ? new Date(a.expectedCompleteDate).getTime() : Infinity;
         const db = b.expectedCompleteDate ? new Date(b.expectedCompleteDate).getTime() : Infinity;
@@ -76,7 +76,7 @@ const InvestorProperties = () => {
         <p className="text-gray-500 text-sm mt-1">Browse running & completed projects.</p>
       </div>
 
-      {/* Tabs */}
+      
       <div className="flex gap-2 mb-6">
         {["running", "completed"].map((t) => (
           <button

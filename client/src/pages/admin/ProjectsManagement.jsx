@@ -5,7 +5,7 @@ import { Plus, Trash2, Pencil, X, Building2 } from "lucide-react";
 
 const emptyForm = { name: "", description: "", status: "running", expectedCompleteDate: "", file: null };
 
-// ISO date → "YYYY-MM" for the month input.
+
 const toMonthValue = (d) => {
   if (!d) return "";
   const date = new Date(d);

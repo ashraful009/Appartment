@@ -3,10 +3,7 @@ import axios from "axios";
 import toast from "react-hot-toast";
 import { Loader2, ChevronRight, Phone } from "lucide-react";
 
-/**
- * LeadRow — single pending lead row with seller assignment dropdown + button.
- * Props: req, sellers (array), onAssigned(requestId) callback
- */
+
 const LeadRow = ({ req, sellers, onAssigned }) => {
   const [selectedSeller, setSelectedSeller] = useState("");
   const [assigning, setAssigning]           = useState(false);
@@ -27,7 +24,7 @@ const LeadRow = ({ req, sellers, onAssigned }) => {
 
   return (
     <tr className="hover:bg-gray-50/70 transition-colors border-b border-gray-100 last:border-0">
-      {/* Property */}
+      
       <td className="px-5 py-4">
         <div className="flex items-center gap-3">
           {property?.mainImage ? (
@@ -45,7 +42,7 @@ const LeadRow = ({ req, sellers, onAssigned }) => {
         </div>
       </td>
 
-      {/* User */}
+      
       <td className="px-5 py-4">
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-700 font-bold text-xs flex items-center justify-center flex-shrink-0">
@@ -62,12 +59,12 @@ const LeadRow = ({ req, sellers, onAssigned }) => {
         </div>
       </td>
 
-      {/* Requested on */}
+      
       <td className="px-5 py-4 text-xs text-gray-400 whitespace-nowrap">
         {new Date(req.createdAt).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}
       </td>
 
-      {/* Assign To */}
+      
       <td className="px-5 py-4">
         <div className="flex items-center gap-2">
           <select

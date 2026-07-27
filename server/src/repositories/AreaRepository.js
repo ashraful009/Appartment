@@ -5,7 +5,7 @@ class AreaRepository extends BaseRepository {
     super('areas');
   }
 
-  // Example method specific to areas
+  
   async findByCity(city) {
     return this.findAll({ city });
   }

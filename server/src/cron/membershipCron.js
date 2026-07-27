@@ -1,13 +1,4 @@
-/**
- * membershipCron.js
- * ─────────────────────────────────────────────────────────────────────────────
- * Daily lapse pass for the membership journey:
- *   Members who did NOT get their down payment approved within the 6-month
- *   window lose the "member" role and their membership is marked "lapsed".
- *
- * Schedule: 1:00 AM every day → '0 1 * * *'
- * ─────────────────────────────────────────────────────────────────────────────
- */
+
 
 const cron = require("node-cron");
 const { lapseExpiredMembers } = require("../services/membershipService");

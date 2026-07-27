@@ -3,10 +3,10 @@ const knex = require("knex");
 const knexConfig = require("../../knexfile");
 const crypto = require("crypto");
 
-// Knex Instance
+
 const db = knex(knexConfig.development);
 
-// In-memory ID mappings (MongoDB ObjectId string -> MySQL UUID string ID)
+
 const idMap = {
   users: {},
   properties: {}
@@ -79,7 +79,7 @@ async function migrateData() {
     idMap.properties[prop._id.toString()] = id;
   }
 
-  // Follow the same pattern for other collections...
+  
   
   console.log("Data migration completed successfully.");
   await client.close();

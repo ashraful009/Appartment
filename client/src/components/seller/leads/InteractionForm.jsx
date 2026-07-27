@@ -51,7 +51,7 @@ const InteractionForm = ({ leadId, leadUser, onSuccess }) => {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
-      {/* Interaction Type */}
+      
       <div>
         <label className="block text-xs font-semibold text-gray-500 mb-1">Interaction Type</label>
         <select
@@ -66,7 +66,7 @@ const InteractionForm = ({ leadId, leadUser, onSuccess }) => {
         </select>
       </div>
 
-      {/* Notes */}
+      
       <div>
         <label className="block text-xs font-semibold text-gray-500 mb-1">
           Notes <span className="text-red-400">*</span>
@@ -81,7 +81,7 @@ const InteractionForm = ({ leadId, leadUser, onSuccess }) => {
         />
       </div>
 
-      {/* Schedule Follow-up */}
+      
       <div>
         <label className="flex items-center gap-2 cursor-pointer">
           <input
@@ -137,7 +137,7 @@ const InteractionForm = ({ leadId, leadUser, onSuccess }) => {
         )}
       </div>
 
-      {/* Submit */}
+      
       <button
         type="submit"
         disabled={submitting}
@@ -147,7 +147,7 @@ const InteractionForm = ({ leadId, leadUser, onSuccess }) => {
         {submitting ? "Logging..." : "Log Interaction"}
       </button>
 
-      {/* WhatsApp Quick Action */}
+      
       {phone && (
         <button
           type="button"

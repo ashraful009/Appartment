@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 const path = require("path");
-// Load environment variables from server/.env
+
 require("dotenv").config({ path: path.join(__dirname, "../../.env") });
 
 const mongoURI = process.env.MONGO_URI;
@@ -17,7 +17,7 @@ const runMigration = async () => {
 
     const db = mongoose.connection.db;
 
-    // 1. Drop the single-property unique index on userId (if it exists) in the memberships collection
+    
     console.log("Dropping unique index 'userId_1' on memberships collection (if it exists)...");
     try {
       await db.collection("memberships").dropIndex("userId_1");
@@ -30,7 +30,7 @@ const runMigration = async () => {
       }
     }
 
-    // 2. Set propertyId: null to any existing memberships that don't have a propertyId
+    
     console.log("Updating memberships: setting default propertyId to null...");
     const memUpdate = await db.collection("memberships").updateMany(
       { propertyId: { $exists: false } },
@@ -38,7 +38,7 @@ const runMigration = async () => {
     );
     console.log(`Updated ${memUpdate.modifiedCount} memberships.`);
 
-    // 3. Set propertyId: null to any existing investmentledger entries that don't have a propertyId
+    
     console.log("Updating investmentledgers: setting default propertyId to null...");
     const ledgerUpdate = await db.collection("investmentledgers").updateMany(
       { propertyId: { $exists: false } },
@@ -46,7 +46,7 @@ const runMigration = async () => {
     );
     console.log(`Updated ${ledgerUpdate.modifiedCount} ledger entries.`);
 
-    // 4. Create new compound unique index on { userId: 1, propertyId: 1 } in memberships
+    
     console.log("Creating compound unique index { userId: 1, propertyId: 1 } on memberships...");
     await db.collection("memberships").createIndex(
       { userId: 1, propertyId: 1 },

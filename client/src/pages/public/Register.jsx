@@ -14,7 +14,7 @@ import {
   CheckCircle,
 } from "lucide-react";
 
-// ── Reusable field wrapper ────────────────────────────────────────────────────
+
 const Field = ({ label, required, error, children }) => (
   <div>
     <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5">
@@ -31,7 +31,7 @@ const Field = ({ label, required, error, children }) => (
   </div>
 );
 
-// ── Icon-left text input ──────────────────────────────────────────────────────
+
 const IconInput = ({ icon: Icon, error, ...props }) => (
   <div className="relative">
     <Icon size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
@@ -42,7 +42,7 @@ const IconInput = ({ icon: Icon, error, ...props }) => (
   </div>
 );
 
-// ── Main Component ────────────────────────────────────────────────────────────
+
 const Register = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
@@ -62,7 +62,7 @@ const Register = () => {
   const [serverError, setServerError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // ── Field change handler ────────────────────────────────────────────────────
+  
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm((p) => ({ ...p, [name]: value }));
@@ -70,7 +70,7 @@ const Register = () => {
     if (serverError) setServerError("");
   };
 
-  // ── Validation ──────────────────────────────────────────────────────────────
+  
   const validate = () => {
     const e = {};
 
@@ -105,14 +105,14 @@ const Register = () => {
     return Object.keys(e).length === 0;
   };
 
-  // ── Submit ──────────────────────────────────────────────────────────────────
+  
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validate()) return;
     setLoading(true);
 
     try {
-      // Send JSON — no avatar/file upload in the new flow
+      
       await axios.post("/api/auth/register", {
         name: form.name.trim(),
         phone: form.phone.trim(),
@@ -121,7 +121,7 @@ const Register = () => {
         referralCode: form.referralCode.trim() || undefined,
       });
 
-      // Auto-login after registration
+      
       await login({ email: form.email.trim(), password: form.password });
       navigate("/");
     } catch (err) {
@@ -138,16 +138,16 @@ const Register = () => {
       <div className="w-full max-w-md">
         <div className="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
 
-          {/* ── Header ── */}
+          
           <div className="bg-gradient-to-br from-brand-700 to-brand-900 px-8 py-8 text-center">
-            <div className="text-4xl mb-2">🏠</div>
+            <div className="text-4xl mb-2"></div>
             <h1 className="text-2xl font-extrabold text-white">Create Account</h1>
             <p className="text-brand-200 text-sm mt-1">Join our real estate platform</p>
           </div>
 
           <div className="px-8 py-8">
 
-            {/* ── Server error banner ── */}
+            
             {serverError && (
               <div className="mb-5 flex items-start gap-3 bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm">
                 <AlertCircle size={17} className="mt-0.5 flex-shrink-0" />
@@ -157,7 +157,7 @@ const Register = () => {
 
             <form onSubmit={handleSubmit} noValidate className="space-y-4">
 
-              {/* ── Full Name ── */}
+              
               <Field label="Full Name" required error={errors.name}>
                 <IconInput
                   icon={User}
@@ -168,7 +168,7 @@ const Register = () => {
                 />
               </Field>
 
-              {/* ── Phone Number ── */}
+              
               <Field label="Phone Number" required error={errors.phone}>
                 <IconInput
                   icon={Phone}
@@ -179,7 +179,7 @@ const Register = () => {
                 />
               </Field>
 
-              {/* ── Email ── */}
+              
               <Field label="Email Address" required error={errors.email}>
                 <IconInput
                   icon={Mail}
@@ -190,7 +190,7 @@ const Register = () => {
                 />
               </Field>
 
-              {/* ── Password ── */}
+              
               <Field label="Password" required error={errors.password}>
                 <div className="relative">
                   <Lock size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
@@ -212,7 +212,7 @@ const Register = () => {
                 </div>
               </Field>
 
-              {/* ── Confirm Password ── */}
+              
               <Field label="Confirm Password" required error={errors.confirmPassword}>
                 <div className="relative">
                   <Lock size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
@@ -232,7 +232,7 @@ const Register = () => {
                     {showConfirm ? <EyeOff size={15} /> : <Eye size={15} />}
                   </button>
                 </div>
-                {/* Inline match indicator */}
+                
                 {form.confirmPassword && !errors.confirmPassword && form.password === form.confirmPassword && (
                   <p className="mt-1.5 text-xs text-emerald-600 flex items-center gap-1">
                     <CheckCircle size={11} /> Passwords match
@@ -240,7 +240,7 @@ const Register = () => {
                 )}
               </Field>
 
-              {/* ── Referral Code (optional) ── */}
+              
               <Field label="Referral Code" error={errors.referralCode}>
                 <div className="relative">
                   <Gift size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
@@ -253,7 +253,7 @@ const Register = () => {
                 </div>
               </Field>
 
-              {/* ── Submit ── */}
+              
               <button
                 type="submit"
                 disabled={loading}

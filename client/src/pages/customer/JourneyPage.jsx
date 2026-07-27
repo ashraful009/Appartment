@@ -6,7 +6,7 @@ import { ClipboardList, CreditCard, Inbox } from "lucide-react";
 import InquiryCard from "../../components/customer/journey/InquiryCard";
 import PaymentPlanCard from "../../components/customer/journey/PaymentPlanCard";
 
-// ── Skeletons ─────────────────────────────────────────────────────────────────
+
 const InquiryCardSkeleton = () => (
   <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 animate-pulse">
     <div className="flex gap-4">
@@ -37,7 +37,7 @@ const PaymentCardSkeleton = () => (
   </div>
 );
 
-// ── Empty state ───────────────────────────────────────────────────────────────
+
 const EmptyState = ({ icon: Icon, message }) => (
   <div className="flex flex-col items-center justify-center py-14 text-center text-gray-400">
     <div className="w-14 h-14 rounded-2xl bg-gray-100 flex items-center justify-center mb-4">
@@ -47,7 +47,7 @@ const EmptyState = ({ icon: Icon, message }) => (
   </div>
 );
 
-// ── Section heading ───────────────────────────────────────────────────────────
+
 const SectionHeading = ({ icon: Icon, title, count }) => (
   <div className="flex items-center gap-3 mb-5">
     <div className="w-9 h-9 rounded-xl bg-brand-50 flex items-center justify-center flex-shrink-0">
@@ -62,7 +62,7 @@ const SectionHeading = ({ icon: Icon, title, count }) => (
   </div>
 );
 
-// ── Main Page ─────────────────────────────────────────────────────────────────
+
 const JourneyPage = () => {
   const [loading,   setLoading]   = useState(true);
   const [error,     setError]     = useState("");
@@ -94,7 +94,7 @@ const JourneyPage = () => {
   return (
     <div className="p-6 md:p-8 max-w-5xl mx-auto">
 
-      {/* ── Page Header ──────────────────────────────────────────────── */}
+      
       <div className="mb-10">
         <p className="text-xs font-bold uppercase tracking-widest text-brand-500 mb-1">
           Customer Panel
@@ -105,16 +105,14 @@ const JourneyPage = () => {
         </p>
       </div>
 
-      {/* ── Error Banner ─────────────────────────────────────────────── */}
+      
       {error && (
         <div className="mb-6 bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm">
           {error}
         </div>
       )}
 
-      {/* ══════════════════════════════════════════════════════════════
-          SECTION 1 — My Inquiries (Pipeline)
-      ══════════════════════════════════════════════════════════════ */}
+      
       <section className="mb-12">
         <SectionHeading
           icon={ClipboardList}
@@ -143,9 +141,7 @@ const JourneyPage = () => {
         </div>
       </section>
 
-      {/* ══════════════════════════════════════════════════════════════
-          SECTION 2 — My Payment Plans
-      ══════════════════════════════════════════════════════════════ */}
+      
       <section>
         <SectionHeading
           icon={CreditCard}

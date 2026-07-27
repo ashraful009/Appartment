@@ -5,7 +5,7 @@ import { User2, TrendingUp, Clock, InboxIcon, Loader2 } from "lucide-react";
 import SellerRow from "../../components/admin/sellers/SellerRow";
 import SellerProfileModal from "../../components/admin/sellers/SellerProfileModal";
 
-// ── Main Page ─────────────────────────────────────────────────────────────────
+
 const SellersPerformance = () => {
   const [sellers, setSellers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -13,7 +13,7 @@ const SellersPerformance = () => {
   const [selectedSeller, setSelectedSeller] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // ── Modal helpers ──────────────────────────────────────────────────────────
+  
   const openProfile = (sellerData) => {
     setSelectedSeller(sellerData);
     setIsModalOpen(true);
@@ -23,7 +23,7 @@ const SellersPerformance = () => {
     setSelectedSeller(null);
   };
 
-  // ── Data fetching ──────────────────────────────────────────────────────────
+  
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
@@ -40,8 +40,8 @@ const SellersPerformance = () => {
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
-  // ── Optimistic update after approve / reject ───────────────────────────────
-  // type: 'customer' | 'seller';  actionResult: 'approved' | 'rejected'
+  
+  
   const handleAction = useCallback((sellerId, requestId, type, actionResult) => {
     setSellers((prev) =>
       prev.map((s) => {
@@ -75,14 +75,14 @@ const SellersPerformance = () => {
     );
   }, []);
 
-  // ── Derived totals ─────────────────────────────────────────────────────────
+  
   const totalPending = sellers.reduce((acc, s) => acc + (s.pendingCount ?? 0), 0);
   const totalApproved = sellers.reduce((acc, s) => acc + (s.approvedCount ?? 0), 0);
 
-  // ── Render ─────────────────────────────────────────────────────────────────
+  
   return (
     <div className="p-8">
-      {/* Page Header */}
+      
       <div className="mb-8">
         <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-1">Admin Panel</p>
         <h1 className="text-3xl font-extrabold text-gray-900">Sellers Performance</h1>
@@ -91,7 +91,7 @@ const SellersPerformance = () => {
         </p>
       </div>
 
-      {/* Summary Strip */}
+      
       {!loading && !error && sellers.length > 0 && (
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-8">
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex items-center gap-3">
@@ -126,14 +126,14 @@ const SellersPerformance = () => {
         </div>
       )}
 
-      {/* Error */}
+      
       {error && (
         <div className="mb-6 bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm">
           {error}
         </div>
       )}
 
-      {/* Loading skeleton */}
+      
       {loading && (
         <div className="space-y-4">
           {[...Array(4)].map((_, i) => (
@@ -152,7 +152,7 @@ const SellersPerformance = () => {
         </div>
       )}
 
-      {/* Empty state */}
+      
       {!loading && !error && sellers.length === 0 && (
         <div className="flex flex-col items-center justify-center py-24 text-center">
           <InboxIcon size={56} className="text-gray-200 mb-4" />
@@ -163,7 +163,7 @@ const SellersPerformance = () => {
         </div>
       )}
 
-      {/* Seller list */}
+      
       {!loading && sellers.length > 0 && (
         <div className="space-y-4">
           {sellers.map((s, idx) => (
@@ -177,7 +177,7 @@ const SellersPerformance = () => {
         </div>
       )}
 
-      {/* Profile Modal */}
+      
       {isModalOpen && selectedSeller && (
         <SellerProfileModal
           sellerId={selectedSeller.seller?._id}

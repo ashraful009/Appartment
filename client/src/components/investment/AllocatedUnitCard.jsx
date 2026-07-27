@@ -7,10 +7,7 @@ const MONTHS = [
 ];
 const fmtHandover = (m, y) => (m && y ? `${MONTHS[m - 1]} ${y}` : "To be announced");
 
-/**
- * Shows the building/unit Management has allocated to this investor, with the
- * handover month/year. Rendered on the investor's panel.
- */
+
 const AllocatedUnitCard = ({ unit }) => {
   if (!unit) return null;
   const property = unit.propertyId || {};

@@ -2,14 +2,14 @@ import React from "react";
 import { Phone, Mail, User } from "lucide-react";
 import InquiryStepper from "./InquiryStepper";
 
-// Priority badge colours
+
 const PRIORITY_STYLE = {
   Hot:  "bg-red-100 text-red-700 border-red-200",
   Warm: "bg-amber-100 text-amber-700 border-amber-200",
   Cold: "bg-sky-100 text-sky-700 border-sky-200",
 };
 
-// Status badge colours
+
 const STATUS_STYLE = {
   pending:  "bg-yellow-100 text-yellow-700",
   assigned: "bg-emerald-100 text-emerald-700",
@@ -17,10 +17,7 @@ const STATUS_STYLE = {
 
 const FALLBACK_IMG = "https://placehold.co/120x90/e2e8f0/94a3b8?text=No+Image";
 
-/**
- * InquiryCard — displays a single property inquiry with pipeline stepper.
- * Props: inquiry {object}  — populated PriceRequest document
- */
+
 const InquiryCard = ({ inquiry }) => {
   const property = inquiry?.property;
   const agent    = inquiry?.assignedTo;
@@ -29,7 +26,7 @@ const InquiryCard = ({ inquiry }) => {
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow p-5">
       <div className="flex flex-col sm:flex-row gap-4">
 
-        {/* ── Property Image ───────────────────────────────────────── */}
+        
         <div className="flex-shrink-0">
           <img
             src={property?.mainImage || FALLBACK_IMG}
@@ -39,7 +36,7 @@ const InquiryCard = ({ inquiry }) => {
           />
         </div>
 
-        {/* ── Body ─────────────────────────────────────────────────── */}
+        
         <div className="flex-1 min-w-0">
           <div className="flex flex-wrap items-start justify-between gap-2 mb-1">
             <div>
@@ -49,7 +46,7 @@ const InquiryCard = ({ inquiry }) => {
               <p className="text-xs text-gray-400 mt-0.5">{property?.address ?? ""}</p>
             </div>
 
-            {/* Badges */}
+            
             <div className="flex items-center gap-1.5 flex-shrink-0">
               <span className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full border ${PRIORITY_STYLE[inquiry.priority] ?? ""}`}>
                 {inquiry.priority}
@@ -60,7 +57,7 @@ const InquiryCard = ({ inquiry }) => {
             </div>
           </div>
 
-          {/* ── Assigned Agent box ─────────────────────────────────── */}
+          
           {agent ? (
             <div className="mt-2 flex items-center gap-3 bg-gray-50 border border-gray-100 rounded-xl px-3 py-2">
               {agent.profilePhoto ? (
@@ -92,7 +89,7 @@ const InquiryCard = ({ inquiry }) => {
             </div>
           )}
 
-          {/* ── Pipeline Stepper ───────────────────────────────────── */}
+          
           <InquiryStepper currentStage={inquiry.pipelineStage} />
         </div>
       </div>

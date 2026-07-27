@@ -4,7 +4,8 @@ import { useAuth } from "../../context/AuthContext";
 import axios from "axios";
 import {
   LayoutDashboard, UserCheck, LogOut, ChevronRight, Users2,
-  Bell, X, Megaphone, AlertCircle, CheckCheck, Loader2, Copy, User, Building2, Monitor
+  Bell, X, Megaphone, AlertCircle, CheckCheck, Loader2, Copy, User, Building2, Monitor,
+  Menu
 } from "lucide-react";
 
 
@@ -17,7 +18,7 @@ const navItems = [
   { to: "/seller-panel/profile", label: "My Profile", icon: User },
 ];
 
-// ── Notification type → styles -------------------------------------------------
+
 const TYPE_META = {
   Broadcast: { bg: "bg-blue-50", border: "border-blue-200", text: "text-blue-700", icon: <Megaphone size={13} className="text-blue-500 flex-shrink-0" /> },
   MentorRequest: { bg: "bg-amber-50", border: "border-amber-200", text: "text-amber-700", icon: <AlertCircle size={13} className="text-amber-500 flex-shrink-0" /> },
@@ -25,7 +26,7 @@ const TYPE_META = {
   General: { bg: "bg-gray-50", border: "border-gray-200", text: "text-gray-600", icon: <Bell size={13} className="text-gray-400 flex-shrink-0" /> },
 };
 
-// ── Notification Bell ----------------------------------------------------------
+
 const NotificationBell = () => {
   const [open, setOpen] = useState(false);
   const [notes, setNotes] = useState([]);
@@ -38,18 +39,18 @@ const NotificationBell = () => {
     try {
       const { data } = await axios.get("/api/seller/notifications", { withCredentials: true });
       setNotes(data.notifications);
-    } catch { /* silently fail */ }
+    } catch {  }
     finally { setLoading(false); }
   }, []);
 
-  // Poll every 60 s
+  
   useEffect(() => {
     fetchNotes();
     const timer = setInterval(fetchNotes, 60_000);
     return () => clearInterval(timer);
   }, [fetchNotes]);
 
-  // Close on outside click
+  
   useEffect(() => {
     const handler = (e) => {
       if (panelRef.current && !panelRef.current.contains(e.target)) setOpen(false);
@@ -63,7 +64,7 @@ const NotificationBell = () => {
     try {
       await axios.put("/api/seller/notifications/mark-read", {}, { withCredentials: true });
       setNotes([]);
-    } catch { /* silently fail */ }
+    } catch {  }
     finally { setMarking(false); }
   };
 
@@ -71,7 +72,7 @@ const NotificationBell = () => {
 
   return (
     <div className="relative" ref={panelRef}>
-      {/* Bell button */}
+      
       <button
         onClick={() => { setOpen(o => !o); if (!open) fetchNotes(); }}
         className="relative w-8 h-8 rounded-full flex items-center justify-center text-gray-400 hover:text-white hover:bg-gray-700 transition-colors"
@@ -85,10 +86,10 @@ const NotificationBell = () => {
         )}
       </button>
 
-      {/* Dropdown panel */}
+      
       {open && (
-        <div className="absolute top-10 right-0 w-80 bg-white rounded-2xl shadow-2xl border border-gray-100 z-50 overflow-hidden">
-          {/* Header */}
+        <div className="absolute top-10 right-0 w-80 max-w-[calc(100vw-2rem)] bg-white rounded-2xl shadow-2xl border border-gray-100 z-50 overflow-hidden">
+          
           <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 bg-gray-50">
             <p className="text-xs font-bold uppercase tracking-widest text-gray-500">
               Notifications {unreadCount > 0 && <span className="text-red-500">({unreadCount})</span>}
@@ -110,7 +111,7 @@ const NotificationBell = () => {
             </div>
           </div>
 
-          {/* List */}
+          
           <div className="max-h-80 overflow-y-auto divide-y divide-gray-50">
             {loading ? (
               <div className="flex items-center justify-center py-8">
@@ -160,11 +161,12 @@ const NotificationBell = () => {
   );
 };
 
-// ── Main Layout ----------------------------------------------------------------
+
 const SellerLayout = () => {
   const { user, isAuthenticated, loading, logout } = useAuth();
   const navigate = useNavigate();
   const [copiedCode, setCopiedCode] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const handleCopyCode = async () => {
     const code = user?.referralCode;
@@ -172,7 +174,7 @@ const SellerLayout = () => {
     try {
       await navigator.clipboard.writeText(code);
     } catch {
-      // Fallback for older browsers
+      
       const el = document.createElement("textarea");
       el.value = code;
       document.body.appendChild(el);
@@ -192,7 +194,8 @@ const SellerLayout = () => {
     );
   }
 
-  if (!isAuthenticated || (!user?.roles?.includes("seller") && !user?.roles?.includes("admin"))) {
+  const hasAccess = Array.isArray(user?.roles) && user.roles.some(r => r.toLowerCase() === "seller" || r.toLowerCase() === "admin");
+  if (!isAuthenticated || !hasAccess) {
     return <Navigate to="/" replace />;
   }
 
@@ -202,16 +205,42 @@ const SellerLayout = () => {
   };
 
   return (
-    <div className="flex min-h-[calc(100vh-80px)]">
-      {/* Sidebar */}
-      <aside className="w-64 bg-gray-900 text-white flex flex-col flex-shrink-0">
-        {/* Seller info + notification bell */}
-        <div className="px-6 py-5 border-b border-gray-700 flex items-center justify-between">
+    <div className="flex min-h-[calc(100vh-80px)] relative">
+      
+      <div className="md:hidden absolute top-0 left-0 right-0 h-14 bg-gray-900 flex items-center justify-between px-4 z-20 shadow-md">
+        <p className="text-sm font-semibold text-white uppercase tracking-widest">Seller Panel</p>
+        <div className="flex items-center gap-3">
+          <NotificationBell />
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="text-gray-300 hover:text-white focus:outline-none"
+          >
+            {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
+        </div>
+      </div>
+
+      
+      {mobileMenuOpen && (
+        <div 
+          className="md:hidden fixed inset-0 bg-black/50 z-30"
+          onClick={() => setMobileMenuOpen(false)}
+        />
+      )}
+
+      
+      <aside className={`
+        fixed md:sticky top-0 md:top-[80px] h-[100vh] md:h-[calc(100vh-80px)] w-64 bg-gray-900 text-white flex flex-col flex-shrink-0 z-40
+        transition-transform duration-300 ease-in-out
+        ${mobileMenuOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
+      `}>
+        
+        <div className="px-6 py-5 border-b border-gray-700 flex items-center justify-between hidden md:flex">
           <div className="min-w-0 flex-1 mr-2">
             <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest">Seller Panel</p>
             <p className="text-sm font-semibold text-white mt-0.5 truncate">{user?.name}</p>
 
-            {/* ── Referral Code Badge ── */}
+            
             {user?.referralCode && (
               <div className="flex items-center gap-1 mt-1.5">
                 <span className="bg-gray-800 text-amber-300 text-xs font-mono px-2 py-0.5 rounded tracking-widest border border-gray-700">
@@ -232,10 +261,40 @@ const SellerLayout = () => {
           <NotificationBell />
         </div>
 
-        <nav className="flex-1 py-4 space-y-1 px-3">
+        
+        <div className="px-6 py-5 border-b border-gray-700 flex flex-col md:hidden relative">
+          <button onClick={() => setMobileMenuOpen(false)} className="absolute top-4 right-4 text-gray-400">
+            <X size={20} />
+          </button>
+          <div className="min-w-0 flex-1">
+            <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest">Seller Panel</p>
+            <p className="text-sm font-semibold text-white mt-0.5 truncate">{user?.name}</p>
+
+            
+            {user?.referralCode && (
+              <div className="flex items-center gap-1 mt-1.5">
+                <span className="bg-gray-800 text-amber-300 text-xs font-mono px-2 py-0.5 rounded tracking-widest border border-gray-700">
+                  {user.referralCode}
+                </span>
+                <button
+                  onClick={handleCopyCode}
+                  title="Copy referral code"
+                  className="w-5 h-5 flex items-center justify-center rounded text-gray-400 hover:text-amber-300 hover:bg-gray-700 transition-colors"
+                >
+                  {copiedCode
+                    ? <CheckCheck size={11} className="text-emerald-400" />
+                    : <Copy size={11} />}
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <nav className="flex-1 py-4 space-y-1 px-3 overflow-y-auto">
           {navItems.map(({ to, label, icon: Icon, end }) => (
             <NavLink
               key={to} to={to} end={end}
+              onClick={() => setMobileMenuOpen(false)}
               className={({ isActive }) =>
                 `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group ${
                   isActive
@@ -266,8 +325,8 @@ const SellerLayout = () => {
         </div>
       </aside>
 
-      {/* Main Content */}
-      <main className="flex-1 bg-gray-50 overflow-auto">
+      
+      <main className="flex-1 bg-gray-50 overflow-auto pt-14 md:pt-0 w-full min-w-0">
         <Outlet />
       </main>
     </div>

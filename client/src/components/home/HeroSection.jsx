@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { HeroSkeleton } from "../common/SkeletonLoader";
 
-/* ─── Fallback Hero (no banner) ─────────────────────────────────────────── */
+
 const FallbackHero = () => {
   const [mount, setMount] = useState(false);
   useEffect(() => { const t = setTimeout(() => setMount(true), 80); return () => clearTimeout(t); }, []);
@@ -15,7 +15,7 @@ const FallbackHero = () => {
         background: "linear-gradient(135deg, #040810 0%, #0A1628 28%, #122040 58%, #8B600A 85%, #C9942A 100%)",
       }}
     >
-      {/* Decorative orbs */}
+      
       <div
         className="absolute pointer-events-none"
         style={{
@@ -44,7 +44,7 @@ const FallbackHero = () => {
         }}
       />
 
-      {/* Grid pattern */}
+      
       <div
         className="absolute inset-0 pointer-events-none opacity-10"
         style={{
@@ -56,7 +56,7 @@ const FallbackHero = () => {
         }}
       />
 
-      {/* Content */}
+      
       <div
         className="relative z-10 text-center px-6"
         style={{ maxWidth: "750px" }}
@@ -136,7 +136,7 @@ const FallbackHero = () => {
         </div>
       </div>
 
-      {/* Bottom fade */}
+      
       <div
         className="absolute bottom-0 left-0 right-0 pointer-events-none"
         style={{
@@ -148,7 +148,7 @@ const FallbackHero = () => {
   );
 };
 
-/* ─── Main HeroSection ───────────────────────────────────────────────────── */
+
 const HeroSection = () => {
   const [banner, setBanner]   = useState(null);
   const [loading, setLoading] = useState(true);
@@ -177,7 +177,7 @@ const HeroSection = () => {
 
   return (
     <div className="w-full relative overflow-hidden bg-black flex items-center justify-center">
-      {/* Media */}
+      
       {isVideo ? (
         <>
           <video className="hidden md:block w-full h-auto object-contain" src={banner.desktopMediaUrl} autoPlay loop muted playsInline />
@@ -196,7 +196,7 @@ const HeroSection = () => {
         </picture>
       )}
 
-      {/* Optional title overlay */}
+      
       {banner.title && (
         <div className="absolute inset-0 flex items-end justify-start pointer-events-none">
           <div className="px-6 pb-8 sm:px-10 sm:pb-10">
@@ -215,7 +215,7 @@ const HeroSection = () => {
         </div>
       )}
 
-      {/* Bottom fade into page */}
+      
       <div
         className="absolute bottom-0 left-0 right-0 pointer-events-none"
         style={{

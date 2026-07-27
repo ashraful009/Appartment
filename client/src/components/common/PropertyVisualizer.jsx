@@ -10,9 +10,9 @@ const PropertyVisualizer = ({ totalUnits, totalFloors, units, viewerRole = 'publ
   const location = useLocation();
   const navigate = useNavigate();
 
-  // ── Derive which role context this panel is operating under ───────────────
-  // Matches the path prefix to the role the user is acting as right now.
-  // Falls back to null for unknown contexts (will be caught by backend validation).
+  
+  
+  
   const activeContext = location.pathname.startsWith('/admin-panel')
     ? 'admin'
     : location.pathname.startsWith('/seller-panel')
@@ -21,11 +21,11 @@ const PropertyVisualizer = ({ totalUnits, totalFloors, units, viewerRole = 'publ
   
   const [localUnits, setLocalUnits] = useState([]);
   const [selectedUnit, setSelectedUnit] = useState(null);
-  const [modalType, setModalType] = useState(null); // 'actionForm' or 'infoModal'
+  const [modalType, setModalType] = useState(null); 
   
-  // Form State
-  const [bookingTarget, setBookingTarget] = useState('customer'); // 'own' or 'customer'
-  const [actionType, setActionType] = useState('Sold'); // 'Booked' or 'Sold'
+  
+  const [bookingTarget, setBookingTarget] = useState('customer'); 
+  const [actionType, setActionType] = useState('Sold'); 
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -66,7 +66,7 @@ const PropertyVisualizer = ({ totalUnits, totalFloors, units, viewerRole = 'publ
   }
 
   const handleUnitClick = (unitName, cellUnit) => {
-    // If unit hasn't been saved to DB yet (preview mode)
+    
     if (!cellUnit || !cellUnit._id) {
       if (viewerRole !== 'public') toast.error("Unit must be saved to the database first.", { id: 'unsaved-unit' });
       return;
@@ -122,7 +122,7 @@ const PropertyVisualizer = ({ totalUnits, totalFloors, units, viewerRole = 'publ
 
       toast.success(data.message || "Unit updated.");
       
-      // Update local state
+      
       setLocalUnits(prev => prev.map(u => (u._id || u.id) === unitId ? data.unit : u));
       
       closeModal();
@@ -166,7 +166,7 @@ const PropertyVisualizer = ({ totalUnits, totalFloors, units, viewerRole = 'publ
           <h3 className="font-extrabold text-gray-900 text-2xl mb-1">Book / Sell: {selectedUnit?.unitName}</h3>
           <p className="text-gray-500 text-sm mb-6">Select action and provide customer details if selling.</p>
 
-          {/* Auto-filled Header - User Info */}
+          
           <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 mb-6">
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
@@ -301,7 +301,7 @@ const PropertyVisualizer = ({ totalUnits, totalFloors, units, viewerRole = 'publ
           </div>
 
           <div className="p-6 space-y-6">
-            {/* Action By Section */}
+            
             {actionBy && (
               <div>
                 <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Processed By</p>
@@ -312,7 +312,7 @@ const PropertyVisualizer = ({ totalUnits, totalFloors, units, viewerRole = 'publ
                   <div>
                     <p className="text-sm font-bold text-gray-800 leading-tight">{actionBy.name}</p>
                     <p className="text-xs text-gray-500">
-                      {/* Show the stored role context (e.g. "admin", "seller") — capitalize it */}
+                      
                       {selectedUnit?.actionRoleContext
                         ? selectedUnit.actionRoleContext.charAt(0).toUpperCase() +
                           selectedUnit.actionRoleContext.slice(1)
@@ -324,7 +324,7 @@ const PropertyVisualizer = ({ totalUnits, totalFloors, units, viewerRole = 'publ
               </div>
             )}
 
-            {/* Customer Section */}
+            
             {(selectedUnit?.customerName || selectedUnit?.customerPhone) ? (
               <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-4">
                 <p className="text-xs font-bold text-indigo-400 uppercase tracking-widest mb-3">Customer Info</p>
@@ -350,7 +350,7 @@ const PropertyVisualizer = ({ totalUnits, totalFloors, units, viewerRole = 'publ
 
   return (
     <div className="w-full space-y-6">
-      {/* Legend */}
+      
       <div className="flex flex-wrap items-center justify-center gap-6 text-[10px] font-bold uppercase tracking-wider text-gray-600 bg-gray-50/80 py-3 px-6 rounded-2xl border border-gray-100">
         <div className="flex items-center gap-2">
           <div className="w-3.5 h-3.5 rounded-full border border-gray-300 bg-white shadow-sm"></div>
@@ -366,22 +366,22 @@ const PropertyVisualizer = ({ totalUnits, totalFloors, units, viewerRole = 'publ
         </div>
       </div>
 
-      {/* Building visualizer */}
+      
       <div className="bg-white border flex flex-col items-center justify-center border-gray-200 rounded-3xl p-6 shadow-sm overflow-x-auto">
         <div className="min-w-max flex flex-col gap-3">
           {floorsGrid.map((floor) => (
             <div key={floor} className="flex items-center gap-4">
-              {/* Floor Label */}
+              
               <div className="w-16 text-right pr-4 border-r-2 border-dashed border-gray-200 py-1">
                 <span className="text-[11px] font-extrabold text-gray-400 uppercase tracking-widest">
                   FL {floor}
                 </span>
               </div>
               
-              {/* Units */}
+              
               <div className="flex items-center gap-3 py-1">
                 {Array.from({ length: unitsPerFloor }, (_, i) => {
-                  const letter = String.fromCharCode(65 + i); // 65 is 'A'
+                  const letter = String.fromCharCode(65 + i); 
                   const unitName = `${letter}-${floor}`;
                   const cellUnit = unitMap[unitName] || null;
                   const status = cellUnit ? cellUnit.status : 'Unsold';
@@ -403,7 +403,7 @@ const PropertyVisualizer = ({ totalUnits, totalFloors, units, viewerRole = 'publ
             </div>
           ))}
 
-          {/* Ground Floor */}
+          
           <div className="flex items-center gap-4 mt-1">
              <div className="w-16 text-right pr-4 border-r-2 border-dashed border-gray-200 py-2">
                 <span className="text-[11px] font-extrabold text-gray-400 uppercase tracking-widest">

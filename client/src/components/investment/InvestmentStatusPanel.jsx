@@ -33,7 +33,7 @@ const InvestmentStatusPanel = ({ membership, summary }) => {
 
   return (
     <div className="space-y-5">
-      {/* Progress toward 50 lakh */}
+      
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
         <div className="flex items-center justify-between mb-2">
           <span className="text-sm font-semibold text-gray-700">
@@ -52,7 +52,7 @@ const InvestmentStatusPanel = ({ membership, summary }) => {
         </p>
       </div>
 
-      {/* Stat grid */}
+      
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <StatCard
           icon={ShieldCheck}
@@ -73,7 +73,7 @@ const InvestmentStatusPanel = ({ membership, summary }) => {
         />
       </div>
 
-      {/* Deadline banner for members */}
+      
       {membership.status === "member" && deadlineDays != null && (
         <div
           className={`flex items-center gap-2 rounded-xl px-4 py-3 text-sm ${

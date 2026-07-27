@@ -32,10 +32,10 @@ const EditBuilding = () => {
   const navigate = useNavigate();
 
   const [form, setForm]               = useState(INITIAL_FORM);
-  const [mainImage, setMainImage]     = useState(null); // new file upload
-  const [mainPreview, setMainPreview] = useState(null); // url to show
-  const [extraFiles, setExtraFiles]   = useState([]); // new files
-  const [extraPreviews, setExtraPreviews] = useState([]); // urls to show
+  const [mainImage, setMainImage]     = useState(null); 
+  const [mainPreview, setMainPreview] = useState(null); 
+  const [extraFiles, setExtraFiles]   = useState([]); 
+  const [extraPreviews, setExtraPreviews] = useState([]); 
   const [progressFiles, setProgressFiles] = useState([]);
   const [progressPreviews, setProgressPreviews] = useState([]);
   const [aptSizes, setAptSizes]       = useState([{ type: "", size: "", description: "" }]);
@@ -97,11 +97,11 @@ const EditBuilding = () => {
         progressVideoUrl: prop.progressVideoUrl || "",
       });
 
-      // Set cascading location state from the loaded area
+      
       if (prop.area) {
         const areaId = prop.area?._id || prop.area;
-        // We need the areas list to be loaded first to find the country/city
-        // This will be handled in a separate useEffect below
+        
+        
       }
 
       if (prop.mapLocation?.lat && prop.mapLocation?.lng) {
@@ -113,7 +113,7 @@ const EditBuilding = () => {
       }
 
       if (prop.extraImages && prop.extraImages.length > 0) {
-         // for edit form we only show preview strings for now since we replace the entire array if new ones are uploaded
+         
          setExtraPreviews(prop.extraImages);
       }
 
@@ -132,7 +132,7 @@ const EditBuilding = () => {
     }
   };
 
-  // Sync cascading dropdowns when both areas and form.area are loaded
+  
   useEffect(() => {
     if (areas.length > 0 && form.area) {
       const matched = areas.find((a) => a._id === form.area);
@@ -166,7 +166,7 @@ const EditBuilding = () => {
   };
 
 
-  // ── Main Image ──────────────────────────────────────────────────────────
+  
   const handleMainImage = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -174,10 +174,10 @@ const EditBuilding = () => {
     setMainPreview(URL.createObjectURL(file));
   };
 
-  // ── Extra Images ────────────────────────────────────────────────────────
+  
   const handleExtraImages = (e) => {
     const selected = Array.from(e.target.files);
-    // Note: To keep things simple matching AddBuilding logic, selecting new files replaces the array
+    
     const merged = [...extraFiles, ...selected].slice(0, 10);
     setExtraFiles(merged);
     setExtraPreviews(merged.map((f) => URL.createObjectURL(f)));
@@ -188,7 +188,7 @@ const EditBuilding = () => {
     setExtraPreviews((p) => p.filter((_, i) => i !== idx));
   };
 
-  // ── Progress Images ─────────────────────────────────────────────────────
+  
   const handleProgressImages = (e) => {
     const selected = Array.from(e.target.files);
     const merged = [...progressFiles, ...selected].slice(0, 10);
@@ -201,13 +201,13 @@ const EditBuilding = () => {
     setProgressPreviews((p) => p.filter((_, i) => i !== idx));
   };
 
-  // ── Apartment Sizes ─────────────────────────────────────────────────────
+  
   const addSizeRow    = () => setAptSizes((p) => [...p, { type: "", size: "", description: "" }]);
   const removeSizeRow = (idx) => setAptSizes((p) => p.filter((_, i) => i !== idx));
   const updateSize    = (idx, field, val) =>
     setAptSizes((p) => p.map((row, i) => (i === idx ? { ...row, [field]: val } : row)));
 
-  // ── Submit ──────────────────────────────────────────────────────────────
+  
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.name || !form.address || !form.description) {
@@ -242,7 +242,7 @@ const EditBuilding = () => {
 
       showToast("success", "Property updated successfully!");
       
-      // Give a tiny delay so the toast goes through before navigating
+      
       setTimeout(() => navigate('/admin-panel/manage-buildings'), 1500);
       
     } catch (err) {
@@ -271,7 +271,7 @@ const EditBuilding = () => {
 
       <form onSubmit={handleSubmit} className="space-y-6">
 
-        {/* ── Section: Images ── */}
+        
         <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
 
           <h2 className="text-xs font-bold uppercase tracking-widest text-indigo-600 mb-2">
@@ -284,10 +284,10 @@ const EditBuilding = () => {
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
 
-            {/* ── Left: image uploaders ── */}
+            
             <div className="space-y-7">
 
-              {/* Main Image */}
+              
               <div>
                 <p className="text-[10px] font-bold uppercase tracking-widest text-indigo-500 mb-3">Main Image</p>
 
@@ -318,7 +318,7 @@ const EditBuilding = () => {
                 )}
               </div>
 
-              {/* Gallery Images */}
+              
               <div>
                 <p className="text-[10px] font-bold uppercase tracking-widest text-indigo-500 mb-3">
                   Gallery Images <span className="text-gray-400 normal-case font-normal">(max 10)</span>
@@ -353,7 +353,7 @@ const EditBuilding = () => {
 
             </div>
 
-            {/* ── Right: full-bleed live card preview ── */}
+            
             <div className="flex flex-col gap-3">
               <p className="text-[10px] font-bold uppercase tracking-widest text-indigo-600">
                 Live Card Preview
@@ -363,7 +363,7 @@ const EditBuilding = () => {
                 className="relative w-full rounded-2xl overflow-hidden shadow-lg bg-gray-900"
                 style={{ aspectRatio: "3/4" }}
               >
-                {/* Background image fills entire card */}
+                
                 {mainPreview ? (
                   <img
                     src={mainPreview}
@@ -376,10 +376,10 @@ const EditBuilding = () => {
                   </div>
                 )}
 
-                {/* Bottom gradient overlay */}
+                
                 <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-black/85 via-black/45 to-transparent pointer-events-none" />
 
-                {/* Pill tags */}
+                
                 <div className="absolute bottom-[88px] left-5 right-5 flex flex-wrap gap-1.5 pointer-events-none">
                   {Number(form.floors) > 0 && (
                     <span className="bg-white/20 backdrop-blur-sm text-white text-[10px] font-bold px-2.5 py-1 rounded-full border border-white/20">
@@ -393,17 +393,17 @@ const EditBuilding = () => {
                   )}
                   {form.handoverTime && (
                     <span className="bg-yellow-400/85 text-yellow-900 text-[10px] font-bold px-2.5 py-1 rounded-full">
-                      📅 {form.handoverTime}
+                       {form.handoverTime}
                     </span>
                   )}
                 </div>
 
-                {/* Building name */}
+                
                 <h3 className="absolute bottom-[58px] left-5 right-5 text-white font-extrabold text-lg leading-snug drop-shadow-lg line-clamp-2 pointer-events-none">
                   {form.name || <span className="text-white/40 italic font-medium text-base">Building Name</span>}
                 </h3>
 
-                {/* Address row */}
+                
                 <div className="absolute bottom-5 left-5 right-5 flex items-center gap-1.5 pointer-events-none">
                   <MapPin size={13} className="text-yellow-300 flex-shrink-0" />
                   <p className="text-white/75 text-xs font-medium line-clamp-1">
@@ -411,7 +411,7 @@ const EditBuilding = () => {
                   </p>
                 </div>
 
-                {/* Ghost hint when empty */}
+                
                 {!mainPreview && !form.name && (
                   <div className="absolute top-5 inset-x-5 text-center pointer-events-none">
                     <p className="text-white/30 text-xs">Fill in details to see preview</p>
@@ -423,12 +423,12 @@ const EditBuilding = () => {
           </div>
         </div>
 
-        {/* ── Section: Details ── */}
+        
         <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
 
           <h2 className="text-xs font-bold uppercase tracking-widest text-indigo-600 mb-7">Building Details</h2>
 
-          {/* Row 1 — Property Name */}
+          
           <div>
             <label className="text-sm font-semibold text-gray-600 mb-1.5 block">
               Property Name <span className="text-red-400">*</span>
@@ -443,7 +443,7 @@ const EditBuilding = () => {
             />
           </div>
 
-          {/* Row 2 — Stats Grid */}
+          
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
 
             <div>
@@ -525,7 +525,7 @@ const EditBuilding = () => {
 
           </div>
 
-          {/* Row 2b — Categorization Grid */}
+          
           {(() => {
             const uniqueCountries = [...new Set(areas.map((a) => a.country))].filter(Boolean).sort();
             const uniqueCities = selectedCountry
@@ -538,7 +538,7 @@ const EditBuilding = () => {
             return (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
 
-            {/* Country */}
+            
             <div>
               <label className="text-sm font-semibold text-gray-600 mb-1.5 block">Country</label>
               <select
@@ -553,7 +553,7 @@ const EditBuilding = () => {
               </select>
             </div>
 
-            {/* City */}
+            
             <div>
               <label className="text-sm font-semibold text-gray-600 mb-1.5 block">City</label>
               <select
@@ -569,7 +569,7 @@ const EditBuilding = () => {
               </select>
             </div>
 
-            {/* Area */}
+            
             <div>
               <label className="text-sm font-semibold text-gray-600 mb-1.5 block">Area</label>
               <select
@@ -586,7 +586,7 @@ const EditBuilding = () => {
               </select>
             </div>
 
-            {/* Status */}
+            
             <div>
               <label className="text-sm font-semibold text-gray-600 mb-1.5 block">Status</label>
               <select
@@ -607,7 +607,7 @@ const EditBuilding = () => {
             );
           })()}
 
-          {/* Row 2c — Total Price & Total Sqft */}
+          
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
             <div>
               <label className="text-sm font-semibold text-gray-600 mb-1.5 block">Total Price (BDT)</label>
@@ -619,7 +619,7 @@ const EditBuilding = () => {
             </div>
           </div>
 
-          {/* Row 3 — Location */}
+          
           <div className="mt-6">
             <label className="text-sm font-semibold text-gray-600 mb-1.5 block">
               Full Address <span className="text-red-400">*</span>
@@ -643,12 +643,12 @@ const EditBuilding = () => {
                 }`}
               >
                 <MapPin size={15} />
-                {mapLocation.lat !== DEFAULT_MAP_LOCATION.lat ? "Location Set ✓" : "Add Location"}
+                {mapLocation.lat !== DEFAULT_MAP_LOCATION.lat ? "Location Set " : "Add Location"}
               </button>
             </div>
           </div>
 
-          {/* Row 4 — Description */}
+          
           <div className="mt-6">
             <label className="text-sm font-semibold text-gray-600 mb-1.5 block">
               Building Description <span className="text-red-400">*</span>
@@ -666,7 +666,7 @@ const EditBuilding = () => {
 
         </div>
 
-        {/* ── Section: Construction Progress ── */}
+        
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
           <h2 className="text-sm font-bold text-gray-700 uppercase tracking-wide mb-4">Construction Progress</h2>
           
@@ -715,7 +715,7 @@ const EditBuilding = () => {
           </div>
         </div>
 
-        {/* ── Section: Apartment Sizes ── */}
+        
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
            <div className="flex items-center justify-between mb-4">
             <h2 className="text-sm font-bold text-gray-700 uppercase tracking-wide">Apartment Sizes</h2>
@@ -729,7 +729,7 @@ const EditBuilding = () => {
            </div>
 
            <div className="space-y-4">
-            {/* Header */}
+            
             <div className="grid grid-cols-[1fr_1fr_32px] gap-3 px-1">
                <p className="text-xs font-semibold text-gray-500">Type</p>
                <p className="text-xs font-semibold text-gray-500">Size</p>
@@ -770,7 +770,7 @@ const EditBuilding = () => {
            </div>
         </div>
 
-        {/* ── Submit ── */}
+        
         <button
           type="submit"
           disabled={loading}
@@ -790,7 +790,7 @@ const EditBuilding = () => {
         </button>
       </form>
 
-      {/* Google Maps Picker Modal */}
+      
       <MapPickerModal
         isOpen={showMapModal}
         onClose={() => setShowMapModal(false)}

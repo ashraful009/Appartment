@@ -221,7 +221,7 @@
 
   /* -- SECTION WRAPPER -------------------------------------------- */
   .section-wrap {
-    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+    @apply w-full xl:w-[80%] mx-auto px-4 sm:px-6 lg:px-8;
   }
 
   /* -- PREMIUM BADGE ---------------------------------------------- */

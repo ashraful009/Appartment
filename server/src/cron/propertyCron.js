@@ -1,10 +1,10 @@
 const cron = require("node-cron");
 const propertyRepository = require("../repositories/PropertyRepository");
 
-// Helper function to parse 'Month Year' into a Date object
+
 const parseHandoverTime = (timeStr) => {
   if (!timeStr) return null;
-  // Assumes format like "December 2026"
+  
   const [monthStr, yearStr] = timeStr.trim().split(" ");
   if (!monthStr || !yearStr) return null;
 
@@ -14,12 +14,12 @@ const parseHandoverTime = (timeStr) => {
   const year = parseInt(yearStr, 10);
   if (isNaN(year)) return null;
 
-  // Set to the end of the specified month
+  
   return new Date(year, monthIndex + 1, 0, 23, 59, 59);
 };
 
 const startPropertyCron = () => {
-  // Run daily at midnight: '0 0 * * *'
+  
   const JOB_EXPRESSION = "0 0 * * *";
 
   if (!cron.validate(JOB_EXPRESSION)) {
@@ -33,7 +33,7 @@ const startPropertyCron = () => {
     let updatedCount = 0;
     try {
       const now = new Date();
-      // Find properties that are not yet Completed and have a handoverTime
+      
       const properties = await propertyRepository.db('properties')
         .whereIn('status', ["Ongoing", "Upcoming"])
         .whereNotNull('handover_time')

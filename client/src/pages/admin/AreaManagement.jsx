@@ -64,7 +64,7 @@ const AreaManagement = () => {
       
       showToast("success", `"${name.trim()}" added successfully.`);
       setName("");
-      // intentionally keeping country and city so user can add multiple areas to the same city easily
+      
       fetchAreas();
     } catch (err) {
       showToast("error", err?.response?.data?.message || "Failed to add area.");
@@ -91,7 +91,7 @@ const AreaManagement = () => {
     <div className="max-w-3xl mx-auto p-8 space-y-8">
       {toast && <Toast {...toast} onClose={() => setToast(null)} />}
 
-      {/* Header */}
+      
       <div>
         <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
           <MapPin className="text-indigo-600" />
@@ -102,7 +102,7 @@ const AreaManagement = () => {
         </p>
       </div>
 
-      {/* Add Area Form */}
+      
       <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
         <h2 className="text-xs font-bold uppercase tracking-widest text-indigo-600 mb-5">
           Add New Area
@@ -162,7 +162,7 @@ const AreaManagement = () => {
         </form>
       </div>
 
-      {/* Area List */}
+      
       <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
         <h2 className="text-xs font-bold uppercase tracking-widest text-indigo-600 mb-5">
           Existing Areas ({areas.length})

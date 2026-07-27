@@ -94,11 +94,7 @@ const AuditTrail = ({ audit = {} }) => {
   );
 };
 
-/**
- * Generic confirmation queue for any pipeline stage.
- * Props: basePath ("/api/accountant"), stageKey ("accountant"|"dataEntry"|"management"),
- *        title, subtitle.
- */
+
 const ConfirmationQueue = ({ basePath, stageKey, title, subtitle }) => {
   const { user } = useAuth();
   const [groups, setGroups] = useState([]);
@@ -225,7 +221,7 @@ const ConfirmationQueue = ({ basePath, stageKey, title, subtitle }) => {
                   </div>
                 </div>
 
-                {/* Items */}
+                
                 <div className="mt-3 flex flex-wrap gap-2">
                   {group.entries.map((e) => (
                     <span
@@ -240,7 +236,7 @@ const ConfirmationQueue = ({ basePath, stageKey, title, subtitle }) => {
                   ))}
                 </div>
 
-                {/* Footer actions */}
+                
                 <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-gray-50 pt-3">
                   {lead.invoiceUrl && (
                     <button

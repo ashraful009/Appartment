@@ -14,8 +14,8 @@ const BookUnitDetail = () => {
   const [units, setUnits] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Determine viewer role based on React Router path prefix
-  // If located in admin panel -> 'admin', if seller -> 'seller'
+  
+  
   const isSeller = window.location.pathname.includes('/seller-panel');
   const viewerRole = isSeller ? 'seller' : 'admin';
   const backPath = isSeller ? '/seller-panel/book-unit' : '/admin-panel/book-unit';
@@ -59,7 +59,7 @@ const BookUnitDetail = () => {
 
   return (
     <div className="max-w-7xl mx-auto p-6 lg:p-10 space-y-8">
-      {/* Header */}
+      
       <div>
         <button
           onClick={() => navigate(backPath)}

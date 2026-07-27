@@ -18,7 +18,7 @@ const MAP_OPTIONS = {
   scrollwheel: false, gestureHandling: "none",
 };
 
-// ── Toast ─────────────────────────────────────────────────────────────────────
+
 const Toast = ({ toast, onClose }) => {
   if (!toast) return null;
   return (
@@ -31,17 +31,17 @@ const Toast = ({ toast, onClose }) => {
         ? <CheckCircle size={18} className="flex-shrink-0 mt-0.5" />
         : <AlertCircle size={18} className="flex-shrink-0 mt-0.5" />}
       <span className="flex-1">{toast.msg}</span>
-      <button onClick={onClose} className="text-current opacity-60 hover:opacity-100">✕</button>
+      <button onClick={onClose} className="text-current opacity-60 hover:opacity-100"></button>
     </div>
   );
 };
 
-// ── Skeleton ──────────────────────────────────────────────────────────────────
+
 const Skeleton = ({ className }) => (
   <div className={`animate-pulse bg-gray-200 rounded-lg ${className}`} />
 );
 
-// ── Detail row ────────────────────────────────────────────────────────────────
+
 const DetailRow = ({ icon: Icon, label, value }) => {
   if (!value && value !== 0) return null;
   return (
@@ -55,7 +55,7 @@ const DetailRow = ({ icon: Icon, label, value }) => {
   );
 };
 
-// ── Main Page ─────────────────────────────────────────────────────────────────
+
 const PropertyDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -75,7 +75,7 @@ const PropertyDetails = () => {
     libraries: MAPS_LIBRARIES,
   });
 
-  // ── Guest form state ──────────────────────────────────────────────────────
+  
   const [showGuestForm, setShowGuestForm] = useState(false);
   const [guestSubmitting, setGuestSubmitting] = useState(false);
   const [guestData, setGuestData] = useState({ name: "", email: "", phone: "" });
@@ -107,12 +107,12 @@ const PropertyDetails = () => {
     fetchPropertyData();
   }, [id]);
 
-  // ── "Contact for Pricing" handler ─────────────────────────────────────────
+  
   const handleRequestPrice = async () => {
     if (requested || requesting) return;
 
     if (!isAuthenticated) {
-      // Guest flow: reveal the inline form instead of redirecting
+      
       setShowGuestForm(true);
       return;
     }
@@ -130,7 +130,7 @@ const PropertyDetails = () => {
     }
   };
 
-  // ── Guest form submit ─────────────────────────────────────────────────────
+  
   const handleGuestSubmit = async (e) => {
     e.preventDefault();
     const { name, email, phone } = guestData;
@@ -153,7 +153,7 @@ const PropertyDetails = () => {
     }
   };
 
-  // ── Loading ───────────────────────────────────────────────────────────────
+  
   if (loading) {
     return (
       <div className="max-w-7xl mx-auto p-6 mt-8">
@@ -170,7 +170,7 @@ const PropertyDetails = () => {
     );
   }
 
-  // ── Error ─────────────────────────────────────────────────────────────────
+  
   if (error) {
     return (
       <div className="max-w-7xl mx-auto p-6 mt-16 flex flex-col items-center gap-4 text-center">
@@ -193,7 +193,7 @@ const PropertyDetails = () => {
     <>
       <Toast toast={toast} onClose={() => setToast(null)} />
 
-      {/* Lightbox */}
+      
       {lightbox && (
         <div className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4" onClick={() => setLightbox(null)}>
           <img src={lightbox} alt="Gallery preview" className="max-w-full max-h-full rounded-lg shadow-2xl object-contain" />
@@ -214,7 +214,7 @@ const PropertyDetails = () => {
           </p>
         </div>
 
-        {/* ── Building Description ──────────────────────────────── */}
+        
         {description && (
           <section className="mb-8 bg-white border border-gray-100 rounded-2xl p-6 shadow-sm">
             <div className="flex items-center gap-2 mb-3">
@@ -225,9 +225,9 @@ const PropertyDetails = () => {
           </section>
         )}
 
-        {/* Main Grid */}
+        
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch">
-          {/* Left — Image */}
+          
           <div className="h-full min-h-[400px]">
             {mainImage ? (
               <img src={mainImage} alt={name} className="w-full h-full object-cover rounded-xl shadow-md" />
@@ -238,7 +238,7 @@ const PropertyDetails = () => {
             )}
           </div>
 
-          {/* Right — Info + CTA */}
+          
           <div className="flex flex-col">
             <div className="pb-3 border-b-2 border-gray-900 mb-1">
               <p className="text-xs font-bold uppercase tracking-[0.15em] text-gray-400 mb-0.5">Property Overview</p>
@@ -276,7 +276,7 @@ const PropertyDetails = () => {
               )}
             </div>
 
-            {/* Call for details */}
+            
             <div className="mt-6 flex items-center justify-between px-5 py-4 bg-gray-50 border border-gray-200 rounded-xl">
               <span className="text-xs font-bold uppercase tracking-widest text-gray-500">Call for details</span>
               <a href="tel:01784446633" className="text-lg font-extrabold text-gray-900 flex items-center gap-2 hover:text-gray-600 transition-colors">
@@ -285,7 +285,7 @@ const PropertyDetails = () => {
               </a>
             </div>
 
-            {/* CTA Button */}
+            
             <button
               onClick={handleRequestPrice}
               disabled={requesting || requested}
@@ -308,7 +308,7 @@ const PropertyDetails = () => {
               }
             </button>
 
-            {/* ── Inline Guest Form ─────────────────────────────────── */}
+            
             {showGuestForm && !requested && (
               <form
                 onSubmit={handleGuestSubmit}
@@ -316,7 +316,7 @@ const PropertyDetails = () => {
               >
                 <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-1">Your Details</p>
 
-                {/* Full Name */}
+                
                 <div className="relative">
                   <User size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
                   <input
@@ -330,7 +330,7 @@ const PropertyDetails = () => {
                   />
                 </div>
 
-                {/* Email Address */}
+                
                 <div className="relative">
                   <Mail size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
                   <input
@@ -344,7 +344,7 @@ const PropertyDetails = () => {
                   />
                 </div>
 
-                {/* Phone Number */}
+                
                 <div className="relative">
                   <Phone size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
                   <input
@@ -358,7 +358,7 @@ const PropertyDetails = () => {
                   />
                 </div>
 
-                {/* Actions */}
+                
                 <div className="flex gap-2 pt-1">
                   <button
                     type="submit"
@@ -388,14 +388,14 @@ const PropertyDetails = () => {
           </div>
         </div>
 
-        {/* ── Unit Visualizer ────────────────────────────────────── */}
+        
         {(totalUnits > 0 && floors > 0) && (
           <section className="mt-14">
             <PropertyUnitsTab property={property} units={propertyUnits} />
           </section>
         )}
 
-        {/* Gallery */}
+        
         {extraImages.length > 0 && (
           <section className="mt-14">
             <div className="mb-5 pb-3 border-b border-gray-200">
@@ -418,7 +418,7 @@ const PropertyDetails = () => {
           </div>
         )}
 
-        {/* ── Satellite Map ──────────────────────────────────────── */}
+        
         {mapLocation?.lat && mapLocation?.lng && (
           <section className="mt-14">
             <div className="mb-5 pb-3 border-b border-gray-200">

@@ -1,10 +1,7 @@
 import React from "react";
 import { Building2, MapPin } from "lucide-react";
 
-/**
- * PropertyCell — building thumbnail + name + address.
- * Props: property object
- */
+
 const PropertyCell = ({ property }) => (
   <div className="flex items-center gap-3">
     {property?.mainImage ? (

@@ -1,7 +1,4 @@
-/**
- * @param { import("knex").Knex } knex
- * @returns { Promise<void> }
- */
+
 exports.up = function(knex) {
   return knex.schema.createTable('price_requests', (table) => {
     table.string('id', 36).primary();
@@ -27,20 +24,17 @@ exports.up = function(knex) {
     
     table.timestamps(true, true);
     
-    // Unique index for one per user per property
+    
     table.unique(['property_id', 'user_id']);
   }).then(() => {
-    // We add the foreign key to payment_plans here since price_requests is created after
+    
     return knex.schema.alterTable('payment_plans', (table) => {
         table.foreign('request_id').references('id').inTable('price_requests').onDelete('SET NULL');
     });
   });
 };
 
-/**
- * @param { import("knex").Knex } knex
- * @returns { Promise<void> }
- */
+
 exports.down = function(knex) {
   return knex.schema.alterTable('payment_plans', (table) => {
       table.dropForeign('request_id');

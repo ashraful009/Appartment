@@ -35,7 +35,7 @@ const UserManagement = () => {
   const handleToggleRole = (roleKey) => {
     setTempRoles(prev => {
       let next = prev.includes(roleKey) ? prev.filter(r => r !== roleKey) : [...prev, roleKey];
-      // Auto-remove 'user' if there are other roles, ensure 'user' if none
+      
       const nonUserRoles = next.filter(r => r !== "user");
       return nonUserRoles.length > 0 ? nonUserRoles : ["user"];
     });
@@ -69,7 +69,7 @@ const UserManagement = () => {
 
   return (
     <div className="p-8">
-      {/* Header */}
+      
       <div className="mb-8">
         <h1 className="text-2xl font-extrabold text-gray-800">Manage Users</h1>
         <p className="text-gray-500 text-sm mt-1">
@@ -81,7 +81,7 @@ const UserManagement = () => {
         <div className="mb-6 bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm">{error}</div>
       )}
 
-      {/* Table */}
+      
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
@@ -97,7 +97,7 @@ const UserManagement = () => {
             <tbody className="divide-y divide-gray-50">
               {users.map(user => (
                 <tr key={user._id} className="hover:bg-gray-50/70 transition-colors">
-                  {/* Avatar + Name */}
+                  
                   <td className="px-5 py-4">
                     <div className="flex items-center gap-3">
                       {user.avatar ? (
@@ -151,7 +151,7 @@ const UserManagement = () => {
         </div>
       </div>
 
-      {/* Edit Role Modal */}
+      
       {editingUser && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm px-4">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-200">

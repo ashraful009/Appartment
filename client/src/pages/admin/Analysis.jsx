@@ -55,7 +55,7 @@ const Analysis = () => {
   const [processFilter, setProcessFilter] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
 
-  // Unit Allocation states
+  
   const [properties, setProperties] = useState([]);
   const [selectedPropertyId, setSelectedPropertyId] = useState("");
   const [availableUnits, setAvailableUnits] = useState([]);
@@ -65,7 +65,7 @@ const Analysis = () => {
   const [handoverYear, setHandoverYear] = useState(new Date().getFullYear());
   const [showAllocate, setShowAllocate] = useState(false);
 
-  // Due Date Extension states
+  
   const [extendingId, setExtendingId] = useState(null);
   const [extendedDate, setExtendedDate] = useState("");
 
@@ -77,7 +77,7 @@ const Analysis = () => {
       });
       setMemberships(data);
 
-      // If we have a selectedItem, update it from fresh data
+      
       if (selectedItem) {
         const fresh = data.find((m) => m._id === selectedItem._id);
         if (fresh) setSelectedItem(fresh);
@@ -100,7 +100,7 @@ const Analysis = () => {
       .catch(() => {});
   }, []);
 
-  // Fetch unsold units when allocation panel is opened
+  
   const fetchAvailableUnits = async (propertyId) => {
     if (!propertyId) return;
     setLoadingUnits(true);
@@ -108,7 +108,7 @@ const Analysis = () => {
       const { data } = await axios.get(`/api/management/buildings/${propertyId}/units`, {
         withCredentials: true,
       });
-      // Filter only unsold units
+      
       const unsold = data.filter((u) => u.status === "Unsold");
       setAvailableUnits(unsold);
     } catch {
@@ -205,7 +205,7 @@ const Analysis = () => {
     }
   };
 
-  // Client-side filtering logic
+  
   const now = new Date();
   const currentYear = now.getFullYear();
   const currentMonth = now.getMonth();
@@ -215,12 +215,12 @@ const Analysis = () => {
 
   const getFilteredLedger = (ledger = []) => {
     return ledger.filter((e) => {
-      // Show booking and downpayment if they are not paid
+      
       if (e.type === "booking" || e.type === "downpayment") {
         return e.status !== "Paid";
       }
 
-      // Show installment if it falls in running or previous month
+      
       if (e.type === "installment" && e.dueDate) {
         const d = new Date(e.dueDate);
         const year = d.getFullYear();
@@ -238,7 +238,7 @@ const Analysis = () => {
   };
 
   const filteredMemberships = memberships.filter((m) => {
-    // 1. Search Query filter (matches name, email, phone, or property name)
+    
     const matchesSearch =
       !search ||
       m.userId?.name?.toLowerCase().includes(search.toLowerCase()) ||
@@ -248,10 +248,10 @@ const Analysis = () => {
 
     if (!matchesSearch) return false;
 
-    // 2. Status filter
+    
     if (statusFilter && m.status !== statusFilter) return false;
 
-    // 3. Process filter (only memberships with unpaid/pending in running & prev month)
+    
     if (processFilter) {
       return m.hasUnpaidInProcessRange;
     }
@@ -261,7 +261,7 @@ const Analysis = () => {
 
   return (
     <div className="p-6 md:p-8 space-y-6">
-      {/* Header */}
+      
       <div className="flex items-center gap-3">
         <div className="w-12 h-12 rounded-2xl bg-brand-600 flex items-center justify-center shadow-lg shadow-brand-500/20">
           <BarChart3 className="text-white" size={24} />
@@ -276,10 +276,10 @@ const Analysis = () => {
         </div>
       </div>
 
-      {/* Control / Filter Bar */}
+      
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex flex-wrap items-center gap-4 justify-between">
         <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
-          {/* Search */}
+          
           <div className="relative w-full sm:w-64">
             <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
               <Search size={16} />
@@ -293,7 +293,7 @@ const Analysis = () => {
             />
           </div>
 
-          {/* Status Filter */}
+          
           <div className="relative w-full sm:w-44">
             <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
               <Filter size={16} />
@@ -310,7 +310,7 @@ const Analysis = () => {
           </div>
         </div>
 
-        {/* Process Filter Toggle */}
+        
         <button
           onClick={() => setProcessFilter(!processFilter)}
           className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all shadow-sm ${
@@ -324,7 +324,7 @@ const Analysis = () => {
         </button>
       </div>
 
-      {/* Grid of Investor Cards */}
+      
       {loading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {[...Array(6)].map((_, i) => (
@@ -354,7 +354,7 @@ const Analysis = () => {
                 className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all p-5 cursor-pointer flex flex-col justify-between hover:-translate-y-0.5 duration-200"
               >
                 <div>
-                  {/* User Profile Header */}
+                  
                   <div className="flex items-center justify-between gap-2 mb-4">
                     <div className="flex items-center gap-3 min-w-0">
                       <div className="w-10 h-10 rounded-full bg-brand-50 flex items-center justify-center text-brand-600 font-extrabold shrink-0 border border-brand-100">
@@ -378,7 +378,7 @@ const Analysis = () => {
                     </span>
                   </div>
 
-                  {/* Property details */}
+                  
                   <div className="mb-4 flex items-center gap-2 p-2 bg-gray-50 border border-gray-100 rounded-xl">
                     {m.propertyId?.mainImage ? (
                       <img
@@ -401,7 +401,7 @@ const Analysis = () => {
                     </div>
                   </div>
 
-                  {/* Allocation Status Badge */}
+                  
                   <div className="mb-4">
                     {hasUnit ? (
                       <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-700 border border-emerald-100 rounded-xl text-xs font-semibold">
@@ -432,11 +432,11 @@ const Analysis = () => {
         </div>
       )}
 
-      {/* Details Side-Over Modal */}
+      
       {selectedItem && (
         <div className="fixed inset-0 z-50 flex justify-end bg-black/40 backdrop-blur-sm p-0 md:p-4">
           <div className="bg-white w-full max-w-4xl h-full md:h-auto md:rounded-2xl shadow-2xl flex flex-col overflow-hidden">
-            {/* Modal Header */}
+            
             <div className="px-6 py-5 border-b border-gray-100 bg-gray-50 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-brand-50 flex items-center justify-center font-extrabold text-brand-600 text-lg border border-brand-100">
@@ -455,9 +455,9 @@ const Analysis = () => {
               </button>
             </div>
 
-            {/* Modal Content */}
+            
             <div className="flex-1 overflow-y-auto p-6 space-y-6">
-              {/* Unit Allocation Panel */}
+              
               <div className="bg-gray-50 rounded-2xl border border-gray-100 p-5 space-y-4">
                 <div className="flex items-center justify-between">
                   <h3 className="text-sm font-extrabold text-gray-900 flex items-center gap-2">
@@ -542,7 +542,7 @@ const Analysis = () => {
                       <div className="mt-4 text-left max-w-md mx-auto p-4 bg-gray-50 rounded-xl border border-gray-100 space-y-4">
                         <h4 className="text-xs font-bold text-gray-700">Allocate Apartment Unit</h4>
 
-                        {/* Building Dropdown Selector */}
+                        
                         <div>
                           <label className="block text-[10px] text-gray-400 font-bold uppercase mb-1">
                             Select Building / Project
@@ -654,7 +654,7 @@ const Analysis = () => {
                 )}
               </div>
 
-              {/* Transactions Ledger Table */}
+              
               <div>
                 <h3 className="text-sm font-extrabold text-gray-900 mb-3 flex items-center gap-2">
                   <CalendarDays size={16} className="text-brand-600" />
@@ -683,7 +683,7 @@ const Analysis = () => {
                         ) : (
                           getFilteredLedger(selectedItem.ledger).map((e) => (
                             <tr key={e._id} className="hover:bg-gray-50/50 align-top">
-                              {/* Details */}
+                              
                               <td className="px-4 py-3">
                                 <span className="font-bold block text-gray-800">
                                   {TYPE_LABEL[e.type]}
@@ -699,10 +699,10 @@ const Analysis = () => {
                                 )}
                               </td>
 
-                              {/* Amount */}
+                              
                               <td className="px-4 py-3 font-bold text-gray-900">{fmtTk(e.amount)}</td>
 
-                              {/* Due Date */}
+                              
                               <td className="px-4 py-3 whitespace-nowrap">
                                 {extendingId === e._id ? (
                                   <div className="flex items-center gap-1.5">
@@ -732,7 +732,7 @@ const Analysis = () => {
                                 )}
                               </td>
 
-                              {/* Status */}
+                              
                               <td className="px-4 py-3">
                                 <span
                                   className={`px-2 py-0.5 text-[10px] font-bold rounded-full border ${
@@ -743,32 +743,32 @@ const Analysis = () => {
                                 </span>
                               </td>
 
-                              {/* Audit Trail */}
+                              
                               <td className="px-4 py-3 space-y-0.5 max-w-[200px]">
                                 {e.audit?.accountant?.by?.name ? (
                                   <p className="text-[10px] text-emerald-600 font-medium leading-none">
-                                    ✓ Acct: {e.audit.accountant.by.name} · {fmtDate(e.audit.accountant.at)}
+                                     Acct: {e.audit.accountant.by.name} · {fmtDate(e.audit.accountant.at)}
                                   </p>
                                 ) : (
                                   <p className="text-[10px] text-gray-300">Acct: pending</p>
                                 )}
                                 {e.audit?.dataEntry?.by?.name ? (
                                   <p className="text-[10px] text-emerald-600 font-medium leading-none">
-                                    ✓ Data: {e.audit.dataEntry.by.name} · {fmtDate(e.audit.dataEntry.at)}
+                                     Data: {e.audit.dataEntry.by.name} · {fmtDate(e.audit.dataEntry.at)}
                                   </p>
                                 ) : (
                                   <p className="text-[10px] text-gray-300">Data: pending</p>
                                 )}
                                 {e.audit?.management?.by?.name ? (
                                   <p className="text-[10px] text-emerald-600 font-medium leading-none">
-                                    ✓ Mgmt: {e.audit.management.by.name} · {fmtDate(e.audit.management.at)}
+                                     Mgmt: {e.audit.management.by.name} · {fmtDate(e.audit.management.at)}
                                   </p>
                                 ) : (
                                   <p className="text-[10px] text-gray-300">Mgmt: pending</p>
                                 )}
                               </td>
 
-                              {/* Actions */}
+                              
                               <td className="px-4 py-3 text-right">
                                 {e.status !== "Paid" && (
                                   <div className="flex items-center justify-end gap-2">

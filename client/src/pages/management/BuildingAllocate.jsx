@@ -26,13 +26,13 @@ const STATUS = {
   Sold: { label: "Sold", cls: "bg-rose-50 text-rose-700 border-rose-200" },
 };
 
-// ── Allocate modal ────────────────────────────────────────────────────────────
+
 const AllocateModal = ({ investor, buildings, onClose, onDone }) => {
   const [buildingId, setBuildingId] = useState("");
   const [units, setUnits] = useState([]);
   const [unitId, setUnitId] = useState("");
   const [loadingUnits, setLoadingUnits] = useState(false);
-  const [monthVal, setMonthVal] = useState(""); // "YYYY-MM" from <input type="month">
+  const [monthVal, setMonthVal] = useState(""); 
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -87,7 +87,7 @@ const AllocateModal = ({ investor, buildings, onClose, onDone }) => {
         </div>
 
         <div className="p-6 space-y-4">
-          {/* Building dropdown */}
+          
           <div>
             <label className="block text-xs font-bold text-gray-700 mb-1.5">Building</label>
             <select
@@ -104,7 +104,7 @@ const AllocateModal = ({ investor, buildings, onClose, onDone }) => {
             </select>
           </div>
 
-          {/* Available units */}
+          
           {buildingId && (
             <div>
               <label className="block text-xs font-bold text-gray-700 mb-1.5">Available Unit</label>
@@ -131,7 +131,7 @@ const AllocateModal = ({ investor, buildings, onClose, onDone }) => {
             </div>
           )}
 
-          {/* Handover month/year */}
+          
           <div>
             <label className="block text-xs font-bold text-gray-700 mb-1.5">
               Handover (month & year)
@@ -166,7 +166,7 @@ const AllocateModal = ({ investor, buildings, onClose, onDone }) => {
   );
 };
 
-// ── Building card with expandable units ──────────────────────────────────────
+
 const BuildingCard = ({ building }) => {
   const [open, setOpen] = useState(false);
   const [units, setUnits] = useState(null);
@@ -255,7 +255,7 @@ const BuildingCard = ({ building }) => {
   );
 };
 
-// ── Page ──────────────────────────────────────────────────────────────────────
+
 const BuildingAllocate = () => {
   const [tab, setTab] = useState("investors");
   const [buildings, setBuildings] = useState([]);
@@ -320,7 +320,7 @@ const BuildingAllocate = () => {
         </div>
       </div>
 
-      {/* Tabs */}
+      
       <div className="flex gap-2 mb-5">
         {[
           { key: "investors", label: "Investors", icon: Users },

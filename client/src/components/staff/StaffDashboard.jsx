@@ -19,9 +19,7 @@ const StatCard = ({ icon: Icon, label, value, to, accent }) => (
   </Link>
 );
 
-/**
- * Shared dashboard for any staff panel. Props: basePath, title, subtitle.
- */
+
 const StaffDashboard = ({ basePath, title, subtitle }) => {
   const [pending, setPending] = useState(null);
   const [members, setMembers] = useState([]);

@@ -1,9 +1,7 @@
 const jwt = require("jsonwebtoken");
 const userRepository = require("../repositories/UserRepository");
 
-/**
- * protect — Verify JWT from HttpOnly cookie and attach user to req.user.
- */
+
 const protect = async (req, res, next) => {
   try {
     const token = req.cookies?.token;
@@ -40,9 +38,7 @@ const protect = async (req, res, next) => {
   }
 };
 
-/**
- * authorizeRoles(...roles) — Role-Based Access Control middleware factory.
- */
+
 const authorizeRoles = (...allowedRoles) => {
   return (req, res, next) => {
     if (!req.user) {
@@ -62,9 +58,7 @@ const authorizeRoles = (...allowedRoles) => {
   };
 };
 
-/**
- * optionalAuth — Soft-protect middleware.
- */
+
 const optionalAuth = async (req, res, next) => {
   try {
     const token = req.cookies?.token;
@@ -78,7 +72,7 @@ const optionalAuth = async (req, res, next) => {
       if (user) req.user = user;
     }
   } catch (_) {
-    // Invalid or expired token — treat as guest, do not block
+    
   }
   next();
 };

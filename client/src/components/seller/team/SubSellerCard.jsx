@@ -8,7 +8,7 @@ const SubSellerCard = ({ member, onViewTimeline }) => {
 
   return (
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-      {/* Card Header */}
+      
       <div
         onClick={() => hasLeads && setExpanded(e => !e)}
         className={`flex items-center gap-4 px-5 py-4 transition-colors ${hasLeads ? "cursor-pointer hover:bg-gray-50" : ""}`}
@@ -29,7 +29,7 @@ const SubSellerCard = ({ member, onViewTimeline }) => {
           )}
         </div>
 
-        {/* Stats */}
+        
         <div className="flex items-center gap-3 flex-shrink-0">
           <div className="text-center hidden sm:block">
             <p className="text-lg font-extrabold text-gray-800">{member.totalLeads}</p>
@@ -53,7 +53,7 @@ const SubSellerCard = ({ member, onViewTimeline }) => {
         </div>
       </div>
 
-      {/* Expanded Leads */}
+      
       {expanded && hasLeads && (
         <div className="border-t border-gray-100 bg-gray-50 px-5 py-3">
           <p className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">

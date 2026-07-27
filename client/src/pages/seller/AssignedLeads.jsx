@@ -6,7 +6,7 @@ import AssignedRow from "../../components/seller/leads/AssignedRow";
 import DelegateModal from "../../components/seller/leads/DelegateModal";
 import FollowUpTaskCard from "../../components/seller/leads/FollowUpTaskCard";
 
-// ── Helper ────────────────────────────────────────────────────────────────────
+
 const isToday = (dateStr) => {
   if (!dateStr) return false;
   const d = new Date(dateStr);
@@ -18,7 +18,7 @@ const isToday = (dateStr) => {
   );
 };
 
-// ── Main Component ────────────────────────────────────────────────────────────
+
 const AssignedLeads = () => {
   const [requests, setRequests]             = useState([]);
   const [loading, setLoading]               = useState(true);
@@ -103,7 +103,7 @@ const AssignedLeads = () => {
 
   return (
     <div className="p-8">
-      {/* Header */}
+      
       <div className="mb-8">
         <h1 className="text-3xl font-extrabold text-gray-900">My Assigned Leads</h1>
         {!loading && todayCount > 0 && (
@@ -118,7 +118,7 @@ const AssignedLeads = () => {
         <div className="mb-6 bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm">{error}</div>
       )}
 
-      {/* ── Follow-up Tasks Section ── */}
+      
       {!tasksLoading && hasTasks && (
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 mb-6">
           <h2 className="text-sm font-bold text-gray-700 uppercase tracking-widest mb-4 flex items-center gap-2">
@@ -129,7 +129,7 @@ const AssignedLeads = () => {
           {previousTasks.length > 0 && (
             <div className="mb-4">
               <p className="text-xs font-semibold text-red-500 uppercase tracking-wider mb-2">
-                ⚠️ PREVIOUS TASKS — OVERDUE ({previousTasks.length})
+                ️ PREVIOUS TASKS — OVERDUE ({previousTasks.length})
               </p>
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-2">
                 {previousTasks.map(t => (
@@ -148,7 +148,7 @@ const AssignedLeads = () => {
           {todayTasks.length > 0 && (
             <div>
               <p className="text-xs font-semibold text-emerald-600 uppercase tracking-wider mb-2">
-                📅 TODAY'S FOLLOW-UPS ({todayTasks.length})
+                 TODAY'S FOLLOW-UPS ({todayTasks.length})
               </p>
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-2">
                 {todayTasks.map(t => (
@@ -166,7 +166,7 @@ const AssignedLeads = () => {
         </div>
       )}
 
-      {/* Tasks skeleton */}
+      
       {tasksLoading && (
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 mb-6">
           <div className="h-4 bg-gray-200 rounded w-36 animate-pulse mb-4" />
@@ -178,7 +178,7 @@ const AssignedLeads = () => {
         </div>
       )}
 
-      {/* Leads Skeleton */}
+      
       {loading && (
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
           <div className="divide-y divide-gray-50">
@@ -195,7 +195,7 @@ const AssignedLeads = () => {
         </div>
       )}
 
-      {/* Empty State */}
+      
       {!loading && requests.length === 0 && !error && (
         <div className="flex flex-col items-center justify-center py-24 text-center">
           <InboxIcon size={56} className="text-gray-200 mb-4" />
@@ -204,7 +204,7 @@ const AssignedLeads = () => {
         </div>
       )}
 
-      {/* Leads Table */}
+      
       {!loading && requests.length > 0 && (
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
           <div className="overflow-x-auto">
@@ -244,7 +244,7 @@ const AssignedLeads = () => {
         </div>
       )}
 
-      {/* Delegation Modal */}
+      
       {delegateTarget && (
         <DelegateModal
           lead={delegateTarget}

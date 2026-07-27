@@ -16,10 +16,7 @@ const ALL_ROLES = [
   { key: "Investor",   label: "Investor",   colorClass: "bg-cyan-50 text-cyan-700 border-cyan-200" },
 ];
 
-/**
- * RoleToggles — row of 4 role toggles for a single user.
- * Props: user, isSelf, savingToggle (map), onToggle(user, roleKey)
- */
+
 const RoleToggles = ({ user, isSelf, savingToggle, onToggle }) => {
   const roles = user.roles || ["user"];
   return (

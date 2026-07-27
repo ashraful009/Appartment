@@ -6,7 +6,7 @@ import { ShieldCheck, Upload, Inbox, Lock } from "lucide-react";
 import DocumentCard from "../../components/customer/vault/DocumentCard";
 import UploadDocumentModal from "../../components/customer/vault/UploadDocumentModal";
 
-// ── Skeleton card ─────────────────────────────────────────────────────────────
+
 const CardSkeleton = () => (
   <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex items-start gap-4 animate-pulse">
     <div className="w-12 h-12 rounded-xl bg-gray-200 flex-shrink-0" />
@@ -21,13 +21,13 @@ const CardSkeleton = () => (
   </div>
 );
 
-// ── Main Page ─────────────────────────────────────────────────────────────────
+
 const DocumentVaultPage = () => {
   const [documents,   setDocuments]   = useState([]);
   const [loading,     setLoading]     = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // ── Fetch (called on mount AND after a successful upload) ──────────────
+  
   const fetchDocuments = useCallback(async () => {
     setLoading(true);
     try {
@@ -44,12 +44,12 @@ const DocumentVaultPage = () => {
 
   useEffect(() => { fetchDocuments(); }, [fetchDocuments]);
 
-  // ── Re-fetch after a successful upload ────────────────────────────────
+  
   const handleUploadSuccess = () => {
     fetchDocuments();
   };
 
-  // ── Delete ─────────────────────────────────────────────────────────────
+  
   const handleDelete = async (docId) => {
     try {
       await axios.delete(`/api/documents/${docId}`, { withCredentials: true });
@@ -60,11 +60,11 @@ const DocumentVaultPage = () => {
     }
   };
 
-  // ── Render ──────────────────────────────────────────────────────────────
+  
   return (
     <div className="p-6 md:p-8 max-w-6xl mx-auto">
 
-      {/* ── Header ──────────────────────────────────────────────────────── */}
+      
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-10">
         <div>
           <p className="text-xs font-bold uppercase tracking-widest text-brand-500 mb-1">
@@ -81,7 +81,7 @@ const DocumentVaultPage = () => {
           </p>
         </div>
 
-        {/* ── Upload button ─────────────────────────────────────── */}
+        
         <button
           onClick={() => setIsModalOpen(true)}
           className="self-start sm:self-auto inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold shadow-sm transition-colors flex-shrink-0"
@@ -91,15 +91,15 @@ const DocumentVaultPage = () => {
         </button>
       </div>
 
-      {/* ── Body ──────────────────────────────────────────────────────── */}
+      
       {loading ? (
-        /* ── Skeleton grid ───────────────────────────────────────── */
+        
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {Array.from({ length: 6 }).map((_, i) => <CardSkeleton key={i} />)}
         </div>
 
       ) : documents.length === 0 ? (
-        /* ── Empty state ─────────────────────────────────────────── */
+        
         <div className="flex flex-col items-center justify-center py-24 text-center bg-white rounded-2xl border-2 border-dashed border-gray-200">
           <div className="w-16 h-16 rounded-2xl bg-gray-100 flex items-center justify-center mb-5">
             <Inbox size={28} className="text-gray-300" />
@@ -122,7 +122,7 @@ const DocumentVaultPage = () => {
         </div>
 
       ) : (
-        /* ── Document cards grid ─────────────────────────────────── */
+        
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {documents.map((doc) => (
             <DocumentCard
@@ -134,7 +134,7 @@ const DocumentVaultPage = () => {
         </div>
       )}
 
-      {/* ── Upload modal ─────────────────────────────────────────────── */}
+      
       <UploadDocumentModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}

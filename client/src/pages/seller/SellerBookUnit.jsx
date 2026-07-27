@@ -13,7 +13,7 @@ const SellerBookUnit = () => {
     const fetchProperties = async () => {
       try {
         const { data } = await axios.get("/api/properties/public", {
-          params: { limit: 100 } // Get all for booking portal
+          params: { limit: 100 } 
         });
         setProperties(data.properties || []);
       } catch (error) {
@@ -27,7 +27,7 @@ const SellerBookUnit = () => {
 
   return (
     <div className="max-w-7xl mx-auto p-6 lg:p-10 space-y-8">
-      {/* Header */}
+      
       <div>
         <h1 className="text-3xl font-extrabold text-gray-900 flex items-center gap-3">
           <Building2 className="text-brand-600" />

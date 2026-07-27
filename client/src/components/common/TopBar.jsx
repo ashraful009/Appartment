@@ -9,7 +9,7 @@ const TopBar = () => (
       height: "var(--topbar-h, 40px)",
     }}
   >
-    {/* Subtle gold shimmer line at bottom */}
+    
     <div
       className="absolute bottom-0 left-0 right-0 h-px"
       style={{
@@ -18,16 +18,16 @@ const TopBar = () => (
       }}
     />
 
-    {/* Decorative gold orb */}
+    
     <div
       className="absolute -top-6 left-1/3 w-32 h-16 opacity-5 pointer-events-none"
       style={{ background: "radial-gradient(ellipse, #E8B84B 0%, transparent 70%)" }}
     />
 
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full">
+    <div className="w-full xl:w-[80%] mx-auto px-4 sm:px-6 lg:px-8 h-full">
       <div className="flex items-center justify-between h-full">
 
-        {/* LEFT — email + phone */}
+        
         <div className="flex items-center gap-4 sm:gap-5">
           <a
             href="mailto:info@nirapodnibash.com"
@@ -53,7 +53,7 @@ const TopBar = () => (
             </span>
           </a>
 
-          {/* Divider dot */}
+          
           <span
             className="hidden sm:block w-0.5 h-3 rounded-full opacity-20"
             style={{ background: "#C9942A" }}
@@ -78,7 +78,7 @@ const TopBar = () => (
           </a>
         </div>
 
-        {/* CENTER — tagline (lg only) */}
+        
         <div className="hidden lg:flex items-center gap-1.5 absolute left-1/2 -translate-x-1/2">
           <div
             className="w-1 h-1 rounded-full animate-pulse-ring"
@@ -102,7 +102,7 @@ const TopBar = () => (
           />
         </div>
 
-        {/* RIGHT — hours + location */}
+        
         <div className="flex items-center gap-4 sm:gap-5">
           <div
             className="hidden md:flex items-center gap-1.5"

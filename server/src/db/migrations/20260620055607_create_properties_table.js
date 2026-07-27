@@ -1,7 +1,4 @@
-/**
- * @param { import("knex").Knex } knex
- * @returns { Promise<void> }
- */
+
 exports.up = function(knex) {
   return knex.schema.createTable('properties', (table) => {
     table.string('id', 36).primary();
@@ -26,7 +23,7 @@ exports.up = function(knex) {
     table.integer('display_order').defaultTo(999);
     table.json('apartment_sizes');
     
-    // Foreign key to areas table
+    
     table.string('area_id', 36).references('id').inTable('areas').onDelete('SET NULL');
     
     table.enu('status', ['Ongoing', 'Completed', 'Upcoming']).defaultTo('Ongoing');
@@ -37,10 +34,7 @@ exports.up = function(knex) {
   });
 };
 
-/**
- * @param { import("knex").Knex } knex
- * @returns { Promise<void> }
- */
+
 exports.down = function(knex) {
   return knex.schema.dropTable('properties');
 };

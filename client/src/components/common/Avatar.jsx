@@ -1,13 +1,6 @@
 import React from "react";
 
-/**
- * Avatar component.
- *
- * Props:
- *  - src   {string}  Optional image URL. If provided, renders an <img>.
- *  - alt   {string}  Alt text / fallback name for the initial.
- *  - size  {string}  "sm" | "md" | "lg" | "xl"  (default: "md")
- */
+
 const sizeMap = {
   sm: { wrapper: "w-7 h-7  text-xs",  img: "w-7 h-7"  },
   md: { wrapper: "w-9 h-9  text-sm",  img: "w-9 h-9"  },

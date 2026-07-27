@@ -33,7 +33,7 @@ const SummaryCard = ({ label, value }) => (
   </div>
 );
 
-// Compact confirmation trail for a ledger entry.
+
 const Trail = ({ audit = {} }) => {
   const stages = [
     ["Acct", audit.accountant],
@@ -113,7 +113,7 @@ const MemberPaymentDetail = () => {
         <ArrowLeft size={15} /> Back to memberships
       </Link>
 
-      {/* Header */}
+      
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-6">
         <div className="flex items-center gap-4">
           <div className="w-12 h-12 rounded-full bg-brand-100 text-brand-700 flex items-center justify-center font-bold text-lg">
@@ -131,7 +131,7 @@ const MemberPaymentDetail = () => {
             <p className="text-xs text-gray-500 mt-0.5">{membership.shares} share(s)</p>
           </div>
         </div>
-        {/* Property info */}
+        
         {membership.propertyId && (
           <div className="mt-4 pt-4 border-t border-gray-100 flex items-center gap-3">
             {membership.propertyId.mainImage ? (
@@ -153,7 +153,7 @@ const MemberPaymentDetail = () => {
         )}
       </div>
 
-      {/* Summary cards */}
+      
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         <SummaryCard label="Booking" value={fmtTk(totals.booking)} />
         <SummaryCard label="Down Payment" value={fmtTk(totals.downpayment)} />
@@ -161,7 +161,7 @@ const MemberPaymentDetail = () => {
         <SummaryCard label="Total Invested" value={fmtTk(totals.totalPaid)} />
       </div>
 
-      {/* Ledger */}
+      
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
         <div className="flex flex-wrap items-center gap-2 px-5 py-3 border-b border-gray-100 bg-gray-50/60">
           <h2 className="font-bold text-gray-800 mr-2">All Payments</h2>

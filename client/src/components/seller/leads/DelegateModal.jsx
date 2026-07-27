@@ -36,7 +36,7 @@ const DelegateModal = ({ lead, onClose, onDelegated }) => {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
-        {/* Header */}
+        
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
           <div>
             <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-0.5">Delegate Lead</p>
@@ -47,7 +47,7 @@ const DelegateModal = ({ lead, onClose, onDelegated }) => {
           </button>
         </div>
 
-        {/* Body */}
+        
         <div className="px-6 py-5 space-y-4">
           <p className="text-sm text-gray-500">
             Select one of your sub-sellers to transfer this lead. A delegation note will be auto-logged.
@@ -74,7 +74,7 @@ const DelegateModal = ({ lead, onClose, onDelegated }) => {
           )}
         </div>
 
-        {/* Footer */}
+        
         <div className="px-6 py-4 border-t border-gray-100 flex gap-3">
           <button
             onClick={onClose}

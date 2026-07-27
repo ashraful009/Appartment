@@ -11,7 +11,7 @@ const Dashboard = () => {
   const [pendingConversions, setPendingConversions] = useState(0);
   const [loading, setLoading]                   = useState(true);
   const [error, setError]                       = useState("");
-  const [timelineModal, setTimelineModal]       = useState(null); // { leadId, leadName }
+  const [timelineModal, setTimelineModal]       = useState(null); 
 
   useEffect(() => {
     const fetchAll = async () => {
@@ -39,37 +39,33 @@ const Dashboard = () => {
 
   return (
     <div className="p-8">
-      {/* Header */}
+      
       <div className="mb-8">
-        <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-1">Admin Panel</p>
-        <h1 className="text-3xl font-extrabold text-gray-900">Command Center</h1>
-        <p className="text-gray-500 text-sm mt-1">
-          Platform oversight, idle lead alerts, and monthly target control.
-        </p>
+        <h1 className="text-3xl font-extrabold text-gray-900">Admin Dashboard</h1>
       </div>
 
       {error && (
         <div className="mb-6 bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm">{error}</div>
       )}
 
-      {/* Stat Cards */}
+      
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5 mb-8">
         {cards.map(card => <StatCard key={card.label} {...card} loading={loading} />)}
       </div>
 
-      {/* Bottom two-column layout */}
+      
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
         <div className="xl:col-span-2">
-          <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">🔴 Idle Leads Monitor</p>
+          <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3"> Idle Leads Monitor</p>
           <IdleLeadsWidget onViewTimeline={(id, name) => setTimelineModal({ leadId: id, leadName: name })} />
         </div>
         <div>
-          <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">🎯 Monthly Target</p>
+          <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3"> Monthly Target</p>
           <MonthlyTargetSetter />
         </div>
       </div>
 
-      {/* 360° Timeline Modal */}
+      
       {timelineModal && (
         <AdminTimelineViewer
           leadId={timelineModal.leadId}

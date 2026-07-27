@@ -3,10 +3,7 @@ import axios from "axios";
 import toast from "react-hot-toast";
 import { Target, Clock, CheckCheck, Loader2 } from "lucide-react";
 
-/**
- * MonthlyTargetSetter — admin widget to view & set the monthly global target.
- * Self-contained with its own fetch and save logic.
- */
+
 const MonthlyTargetSetter = () => {
   const now          = new Date();
   const currentMonth = now.toLocaleString("en-US", { month: "long" });
@@ -49,7 +46,7 @@ const MonthlyTargetSetter = () => {
 
   return (
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-      {/* Header */}
+      
       <div className="flex items-center gap-3 mb-5">
         <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center flex-shrink-0">
           <Target size={20} className="text-amber-600" />
@@ -60,7 +57,7 @@ const MonthlyTargetSetter = () => {
         </div>
       </div>
 
-      {/* Current target display */}
+      
       {loadingCurrent ? (
         <div className="h-10 bg-gray-100 rounded-xl mb-4 animate-pulse" />
       ) : current ? (
@@ -77,7 +74,7 @@ const MonthlyTargetSetter = () => {
         <div className="mb-4 text-xs text-gray-400 italic">No target set for this month yet.</div>
       )}
 
-      {/* Input form */}
+      
       <div className="flex gap-3">
         <input
           type="number"

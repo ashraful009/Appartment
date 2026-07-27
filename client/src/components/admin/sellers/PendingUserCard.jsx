@@ -7,7 +7,7 @@ import {
 } from "lucide-react";
 import Avatar from "../../common/Avatar";
 
-// ── Type Badge ────────────────────────────────────────────────────────────────
+
 const TypeBadge = ({ type }) =>
   type === "seller" ? (
     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-brand-100 text-brand-700 text-xs font-bold border border-brand-200">
@@ -19,14 +19,8 @@ const TypeBadge = ({ type }) =>
     </span>
   );
 
-// ── PendingUserCard ───────────────────────────────────────────────────────────
-/**
- * Props:
- *  - request  {object}  The PriceRequest document (populated with user + property)
- *  - type     {string}  "customer" | "seller"
- *  - sellerId {string}  The seller who owns this request
- *  - onAction {fn}      (sellerId, requestId, type, result) => void
- */
+
+
 const PendingUserCard = ({ request, type, sellerId, onAction }) => {
   const [accepting, setAccepting] = useState(false);
   const [rejecting, setRejecting] = useState(false);
@@ -44,9 +38,9 @@ const PendingUserCard = ({ request, type, sellerId, onAction }) => {
     const endpoint   = actionType === "approve" ? approveEndpoint : rejectEndpoint;
     const successMsg = actionType === "approve"
       ? type === "seller"
-        ? `✅ ${request.user?.name} has been promoted to Seller!`
-        : `✅ ${request.user?.name} has been converted to a Customer!`
-      : `❌ ${type === "seller" ? "Seller" : "Conversion"} request rejected.`;
+        ? ` ${request.user?.name} has been promoted to Seller!`
+        : ` ${request.user?.name} has been converted to a Customer!`
+      : ` ${type === "seller" ? "Seller" : "Conversion"} request rejected.`;
 
     setter(true);
     try {
@@ -62,7 +56,7 @@ const PendingUserCard = ({ request, type, sellerId, onAction }) => {
 
   return (
     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 bg-amber-50/60 border border-amber-100 rounded-xl">
-      {/* User Info */}
+      
       <div className="flex items-start gap-3 min-w-0">
         <Avatar alt={request.user?.name} size="md" />
         <div className="min-w-0">
@@ -93,7 +87,7 @@ const PendingUserCard = ({ request, type, sellerId, onAction }) => {
         </div>
       </div>
 
-      {/* Action Buttons */}
+      
       <div className="flex items-center gap-2 flex-shrink-0">
         <button
           onClick={() => handleAction("reject")}

@@ -10,10 +10,7 @@ const STATUS_CLASSES = {
   Pending: "bg-amber-50 text-amber-700 border-amber-200",
 };
 
-/**
- * PaymentPlanCard — shows a payment plan summary with a collapsible installment table.
- * Props: plan {object}  — populated PaymentPlan document
- */
+
 const PaymentPlanCard = ({ plan }) => {
   const [expanded, setExpanded] = useState(false);
 
@@ -27,7 +24,7 @@ const PaymentPlanCard = ({ plan }) => {
 
   return (
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow overflow-hidden">
-      {/* ── Card Header ─────────────────────────────────────────────── */}
+      
       <div className="flex items-center gap-4 p-5 border-b border-gray-50">
         <img
           src={property?.mainImage || FALLBACK_IMG}
@@ -43,13 +40,13 @@ const PaymentPlanCard = ({ plan }) => {
             <span>Total: <strong className="text-gray-800">{formatCurrency(plan.totalPrice)}</strong></span>
             <span>Booking: <strong className="text-gray-800">{formatCurrency(plan.bookingMoney)}</strong></span>
             {overdueCount > 0 && (
-              <span className="text-red-600 font-semibold">⚠ {overdueCount} Overdue</span>
+              <span className="text-red-600 font-semibold"> {overdueCount} Overdue</span>
             )}
           </div>
         </div>
       </div>
 
-      {/* ── Progress Bar ─────────────────────────────────────────────── */}
+      
       <div className="px-5 pt-4">
         <PaymentProgressBar
           totalInstallments={plan.totalInstallments}
@@ -57,7 +54,7 @@ const PaymentPlanCard = ({ plan }) => {
         />
       </div>
 
-      {/* ── Accordion Toggle ─────────────────────────────────────────── */}
+      
       <button
         onClick={() => setExpanded((prev) => !prev)}
         className="w-full flex items-center justify-between px-5 py-3 text-xs font-semibold text-gray-500 hover:text-brand-600 hover:bg-gray-50 transition-colors border-t border-gray-100"
@@ -66,7 +63,7 @@ const PaymentPlanCard = ({ plan }) => {
         {expanded ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
       </button>
 
-      {/* ── Collapsible Installment Table ────────────────────────────── */}
+      
       {expanded && (
         <div className="px-5 pb-5">
           {installments.length === 0 ? (

@@ -97,7 +97,7 @@ const generateInstallments = async (membership, completedAt) => {
   let currentInstallmentNumber = 1;
   const docs = [];
 
-  // First 2 installments of 5 lakh each
+  
   for (let i = 0; i < 2; i++) {
     if (currentRemaining <= 0) break;
     const amount = Math.min(SPECIAL_INSTALLMENT_AMOUNT, currentRemaining);
@@ -115,7 +115,7 @@ const generateInstallments = async (membership, completedAt) => {
     currentInstallmentNumber++;
   }
 
-  // Rest of the installments with regular INSTALLMENT_AMOUNT
+  
   if (currentRemaining > 0) {
     const count = Math.ceil(currentRemaining / INSTALLMENT_AMOUNT);
     for (let i = 0; i < count; i++) {
@@ -152,7 +152,7 @@ const applyDueDayToAllInstallments = async (dueDay) => {
     .select("id", "due_date");
 
   let updatedCount = 0;
-  // Doing it sequentially since we need to compute for each. Better for knex than raw complex updates unless we use raw sql
+  
   for (const inst of installments) {
     const d = inst.due_date ? new Date(inst.due_date) : new Date();
     const day = Math.min(dueDay, daysInMonth(d.getFullYear(), d.getMonth()));

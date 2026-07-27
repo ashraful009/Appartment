@@ -1,10 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 
-/**
- * StatCard — reusable admin dashboard stat tile.
- * Props: icon, label, value, color (bg class), loading, badge (number), to (Link href)
- */
+
 const StatCard = ({ icon: Icon, label, value, color, loading, badge, to }) => {
   const inner = (
     <div className="relative bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex items-center gap-5 transition-all hover:shadow-md hover:-translate-y-0.5 cursor-pointer group">

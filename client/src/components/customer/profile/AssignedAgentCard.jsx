@@ -1,12 +1,9 @@
 import React from "react";
 import { Phone, Mail, MessageCircle, ShieldCheck, User } from "lucide-react";
 
-/**
- * AssignedAgentCard — premium digital visiting card for the assigned seller.
- * Props: agent {object | null}
- */
+
 const AssignedAgentCard = ({ agent }) => {
-  // ── Empty state ──────────────────────────────────────────────────────────
+  
   if (!agent) {
     return (
       <div className="flex flex-col items-center justify-center text-center py-10 px-6 rounded-2xl border-2 border-dashed border-gray-200 bg-gray-50">
@@ -21,17 +18,17 @@ const AssignedAgentCard = ({ agent }) => {
     );
   }
 
-  // ── Populated agent card ─────────────────────────────────────────────────
+  
   const { name, profilePhoto, email, phone, bio, expertise = [], socialLinks } = agent;
   const whatsapp = socialLinks?.whatsapp;
 
   return (
     <div className="relative rounded-2xl overflow-hidden border border-brand-100 shadow-md bg-white">
 
-      {/* ── Gradient header strip ─────────────────────────────────────── */}
+      
       <div className="h-20 bg-gradient-to-r from-brand-600 to-brand-400" />
 
-      {/* ── Avatar ───────────────────────────────────────────────────── */}
+      
       <div className="px-6">
         <div className="-mt-10 mb-3">
           {profilePhoto ? (
@@ -47,7 +44,7 @@ const AssignedAgentCard = ({ agent }) => {
           )}
         </div>
 
-        {/* ── Name + badge ─────────────────────────────────────────────── */}
+        
         <div className="flex items-center gap-2 flex-wrap mb-1">
           <h3 className="text-lg font-extrabold text-gray-900">{name}</h3>
           <span className="inline-flex items-center gap-1 text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 px-2.5 py-0.5 rounded-full">
@@ -56,14 +53,14 @@ const AssignedAgentCard = ({ agent }) => {
           </span>
         </div>
 
-        {/* ── Bio ──────────────────────────────────────────────────────── */}
+        
         {bio && (
           <p className="text-sm text-gray-500 italic leading-relaxed mb-4">
             "{bio}"
           </p>
         )}
 
-        {/* ── Expertise pills ──────────────────────────────────────────── */}
+        
         {expertise.length > 0 && (
           <div className="flex flex-wrap gap-1.5 mb-5">
             {expertise.map((tag) => (
@@ -77,7 +74,7 @@ const AssignedAgentCard = ({ agent }) => {
           </div>
         )}
 
-        {/* ── Quick-action buttons ─────────────────────────────────────── */}
+        
         <div className="flex flex-wrap gap-2 pb-6">
           {phone && (
             <a

@@ -95,7 +95,7 @@ const DueDaySettings = () => {
   );
 };
 
-// ── Create Booking Modal ─────────────────────────────────────────────────────
+
 const CreateBookingModal = ({ onClose, onCreated }) => {
   const [users, setUsers] = useState([]);
   const [properties, setProperties] = useState([]);
@@ -153,7 +153,7 @@ const CreateBookingModal = ({ onClose, onCreated }) => {
           </button>
         </div>
 
-        {/* User search */}
+        
         <div>
           <label className="block text-xs font-bold text-gray-700 mb-1">User</label>
           <input
@@ -177,7 +177,7 @@ const CreateBookingModal = ({ onClose, onCreated }) => {
           </select>
         </div>
 
-        {/* Property selector */}
+        
         <div>
           <label className="block text-xs font-bold text-gray-700 mb-1">Property</label>
           <select
@@ -194,7 +194,7 @@ const CreateBookingModal = ({ onClose, onCreated }) => {
           </select>
         </div>
 
-        {/* Auto-approve */}
+        
         <label className="flex items-center gap-2 text-sm text-gray-700">
           <input
             type="checkbox"
@@ -217,7 +217,7 @@ const CreateBookingModal = ({ onClose, onCreated }) => {
   );
 };
 
-// ── Main Page ────────────────────────────────────────────────────────────────
+
 const MembershipManagement = () => {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -250,7 +250,7 @@ const MembershipManagement = () => {
     fetchRows();
   }, [fetchRows]);
 
-  // Load property list for filter
+  
   useEffect(() => {
     axios
       .get("/api/admin/memberships/properties-list", { withCredentials: true })
@@ -284,7 +284,7 @@ const MembershipManagement = () => {
 
       <DueDaySettings />
 
-      {/* Filters */}
+      
       <div className="flex flex-wrap items-center gap-3 mb-5">
         <div className="flex flex-wrap gap-2">
           {FILTERS.map((f) => (

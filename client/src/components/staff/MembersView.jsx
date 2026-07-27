@@ -10,10 +10,7 @@ const STATUS_PILL = {
   investor: "bg-cyan-50 text-cyan-700 border-cyan-200",
 };
 
-/**
- * Generic members card list for any staff panel.
- * Props: basePath ("/api/accountant"), title, subtitle.
- */
+
 const MembersView = ({ basePath, title = "Members", subtitle }) => {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);

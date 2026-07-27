@@ -29,7 +29,7 @@ const TargetProgressBar = () => {
         });
         setConversions(approved.length);
       } catch {
-        // silently skip — non-critical widget
+        
       } finally {
         setLoading(false);
       }
@@ -62,7 +62,7 @@ const TargetProgressBar = () => {
           : "bg-white border-gray-100"
       }`}
     >
-      {/* Top row */}
+      
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <div
@@ -85,7 +85,7 @@ const TargetProgressBar = () => {
                 achieved ? "text-emerald-700" : "text-gray-800"
               }`}
             >
-              {achieved ? "🎉 Goal Reached!" : `${month} Target`}
+              {achieved ? " Goal Reached!" : `${month} Target`}
             </p>
           </div>
         </div>
@@ -104,7 +104,7 @@ const TargetProgressBar = () => {
         </div>
       </div>
 
-      {/* Progress bar */}
+      
       <div className="w-full bg-gray-100 rounded-full h-3 overflow-hidden">
         <div
           className={`h-full rounded-full transition-all duration-700 ease-out ${
@@ -118,7 +118,7 @@ const TargetProgressBar = () => {
         />
       </div>
 
-      {/* Status text */}
+      
       <p className="text-xs text-gray-500 mt-2 flex items-center gap-1.5">
         <TrendingUp
           size={11}

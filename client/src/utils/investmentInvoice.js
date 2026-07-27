@@ -31,10 +31,7 @@ const methodLine = (entry) => {
   return "Method: Cash";
 };
 
-/**
- * Build & save an invoice PDF for one or more ledger entries that share a single
- * payment (same user, same invoice/batch). Pass an array of entries.
- */
+
 const buildInvoice = (entries) => {
   const list = Array.isArray(entries) ? entries : [entries];
   if (list.length === 0) return;
@@ -46,7 +43,7 @@ const buildInvoice = (entries) => {
 
   const doc = new jsPDF();
 
-  // Header
+  
   doc.setFontSize(18);
   doc.setFont(undefined, "bold");
   doc.text("Payment Invoice", 14, 18);
@@ -56,13 +53,13 @@ const buildInvoice = (entries) => {
   doc.text(SCHEME_NAME, 14, 25);
   doc.setTextColor(0);
 
-  // Meta
+  
   const metaX = 130;
   doc.setFontSize(9);
   doc.text(`Invoice #: ${String(lead._id || "").slice(-8).toUpperCase()}`, metaX, 18);
   doc.text(`Payment Date: ${fmtDate(lead.submittedAt)}`, metaX, 24);
 
-  // Bill to
+  
   doc.setFontSize(11);
   doc.setFont(undefined, "bold");
   doc.text("Billed To", 14, 40);
@@ -72,7 +69,7 @@ const buildInvoice = (entries) => {
   doc.text(user.email || "—", 14, 52);
   doc.text(user.phone || "—", 14, 58);
 
-  // Items
+  
   autoTable(doc, {
     startY: 66,
     head: [["Description", "Installment #", "Due Date", "Amount"]],
@@ -83,7 +80,7 @@ const buildInvoice = (entries) => {
     styles: { fontSize: 10, cellPadding: 3 },
   });
 
-  // Footer — payment method + confirmation audit trail
+  
   let y = doc.lastAutoTable.finalY + 10;
   doc.setFontSize(9);
   doc.setTextColor(90);

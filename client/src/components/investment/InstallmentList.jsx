@@ -13,12 +13,7 @@ const StatusBadge = ({ status }) => (
   </span>
 );
 
-/**
- * All installments in one list. Investors can either:
- *   • click the "Unpaid" status of a single row → pay that one installment, or
- *   • multi-select Unpaid rows and "Pay Selected" together.
- * Both routes navigate to the shared PaymentPage (/membership/pay).
- */
+
 const FILTERS = ["All", "Unpaid", "In Progress", "Paid"];
 
 const matchesFilter = (inst, filter) => {
@@ -73,7 +68,7 @@ const InstallmentList = ({ installments, membershipId }) => {
 
   return (
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-      {/* Filter bar */}
+      
       <div className="flex flex-wrap items-center gap-2 px-5 py-3 border-b border-gray-100 bg-gray-50/60">
         {FILTERS.map((f) => {
           const count = installments.filter((i) => matchesFilter(i, f)).length;
@@ -93,7 +88,7 @@ const InstallmentList = ({ installments, membershipId }) => {
         })}
       </div>
 
-      {/* Action bar */}
+      
       <div className="flex flex-wrap items-center gap-3 px-5 py-2.5 border-b border-gray-100">
         <button
           onClick={toggleAll}
@@ -118,7 +113,7 @@ const InstallmentList = ({ installments, membershipId }) => {
         </button>
       </div>
 
-      {/* Scrollable list — ~8 rows tall */}
+      
       <div className="overflow-auto max-h-[400px]">
         <table className="w-full text-sm min-w-[560px]">
           <thead className="sticky top-0 z-10">

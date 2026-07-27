@@ -29,14 +29,14 @@ const AdminPendingLeads = () => {
 
   return (
     <div className="p-8">
-      {/* Header */}
+      
       <div className="mb-8">
         <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-1">Admin Panel</p>
         <h1 className="text-3xl font-extrabold text-gray-900">Pending Leads</h1>
         <p className="text-gray-500 text-sm mt-1">Assign incoming price requests to the right seller.</p>
       </div>
 
-      {/* Summary strip */}
+      
       {!loading && !error && (
         <div className="flex items-center gap-6 mb-6">
           <div className="flex items-center gap-2 bg-white rounded-2xl border border-gray-100 shadow-sm px-5 py-3">
@@ -58,7 +58,7 @@ const AdminPendingLeads = () => {
         </div>
       )}
 
-      {/* Skeleton */}
+      
       {loading && (
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
           <div className="divide-y divide-gray-50">
@@ -77,7 +77,7 @@ const AdminPendingLeads = () => {
         </div>
       )}
 
-      {/* Empty state */}
+      
       {!loading && !error && leads.length === 0 && (
         <div className="flex flex-col items-center justify-center py-24 text-center">
           <div className="w-16 h-16 rounded-2xl bg-emerald-100 flex items-center justify-center mb-4">
@@ -88,7 +88,7 @@ const AdminPendingLeads = () => {
         </div>
       )}
 
-      {/* Table */}
+      
       {!loading && leads.length > 0 && (
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
           <div className="overflow-x-auto">

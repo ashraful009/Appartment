@@ -1,57 +1,13 @@
 import React from 'react';
-import { NavLink, Outlet } from 'react-router-dom';
+import GenericPanelLayout from './GenericPanelLayout';
 import { LayoutDashboard, Building2 } from 'lucide-react';
 
 const InvestorLayout = () => {
-  return (
-    <div className="flex min-h-screen bg-gray-50">
-      {/* Sidebar */}
-      <aside className="w-64 bg-white border-r border-gray-200 hidden md:flex flex-col">
-        <div className="p-6 border-b border-gray-100">
-          <h2 className="text-xl font-bold text-gray-800">Investor Panel</h2>
-        </div>
-        <nav className="flex-1 p-4 space-y-1">
-          <NavLink
-            to="/investor"
-            end
-            className={({ isActive }) =>
-              `flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all ${
-                isActive
-                  ? "bg-brand-50 text-brand-700"
-                  : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-              }`
-            }
-          >
-            <LayoutDashboard size={20} />
-            Dashboard
-          </NavLink>
-          <NavLink
-            to="/investor/properties"
-            className={({ isActive }) =>
-              `flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all ${
-                isActive
-                  ? "bg-brand-50 text-brand-700"
-                  : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-              }`
-            }
-          >
-            <Building2 size={20} />
-            Properties
-          </NavLink>
-        </nav>
-      </aside>
-
-      {/* Main Content */}
-      <main className="flex-1 w-full flex flex-col min-h-screen relative overflow-hidden">
-        <header className="h-16 bg-white border-b border-gray-200 flex items-center px-6 md:hidden">
-            <h2 className="text-lg font-bold text-gray-800">Investor Panel</h2>
-        </header>
-        <div className="flex-1 overflow-auto">
-          <Outlet />
-        </div>
-      </main>
-    </div>
-  );
+  const links = [
+    { to: "/investor", label: "Dashboard", icon: LayoutDashboard, end: true },
+    { to: "/investor/properties", label: "Properties", icon: Building2 }
+  ];
+  return <GenericPanelLayout title="Investor Panel" links={links} />;
 };
 
 export default InvestorLayout;

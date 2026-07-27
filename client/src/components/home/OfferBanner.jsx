@@ -9,7 +9,7 @@ const OfferBanner = () => {
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentIndex((prevIndex) => (prevIndex + 1) % images.length);
-    }, 4000); // Change image every 4 seconds
+    }, 4000); 
     return () => clearInterval(interval);
   }, []);
 
@@ -24,7 +24,7 @@ const OfferBanner = () => {
             perspective: "1200px"
           }}
         >
-          {/* Inner container for 3D effect */}
+          
           <div className="absolute inset-0 w-full h-full transition-transform duration-500 ease-out group-hover:scale-[1.02] group-hover:rotate-x-2 group-hover:-rotate-y-2">
             {images.map((src, index) => (
               <img
@@ -37,10 +37,10 @@ const OfferBanner = () => {
               />
             ))}
             
-            {/* Overlay gradient for better text visibility if we want to add text, or just for style */}
+            
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-50" />
             
-            {/* Optional glowing border effect */}
+            
             <div className="absolute inset-0 border border-white/20 rounded-3xl pointer-events-none" />
           </div>
         </div>

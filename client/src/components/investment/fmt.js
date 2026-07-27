@@ -1,4 +1,4 @@
-// Shared formatting helpers for the investment panels.
+
 
 export const fmtTk = (n) =>
   n != null ? `৳ ${Number(n).toLocaleString("en-BD")}` : "—";
@@ -12,7 +12,7 @@ export const fmtDate = (d) =>
       })
     : "—";
 
-// Days remaining until a deadline (negative if past).
+
 export const daysUntil = (d) => {
   if (!d) return null;
   const ms = new Date(d).getTime() - Date.now();
@@ -27,12 +27,12 @@ export const STATUS_PILL = {
   Unpaid:              "bg-gray-100 text-gray-600 ring-gray-300",
 };
 
-// Friendly labels for the multi-stage confirmation pipeline.
+
 export const STATUS_LABEL = {
   Unpaid:              "Unpaid",
   Pending:             "Submitted",
-  AccountantConfirmed: "Accountant ✓",
-  DataEntryConfirmed:  "Data Entry ✓",
+  AccountantConfirmed: "Accountant ",
+  DataEntryConfirmed:  "Data Entry ",
   Paid:                "Paid",
 };
 

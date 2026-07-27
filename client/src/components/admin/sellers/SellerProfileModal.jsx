@@ -3,16 +3,7 @@ import axios from "axios";
 import { X, Mail, Phone, ExternalLink, Linkedin } from "lucide-react";
 import { formatDate } from "../../../utils/helpers";
 
-/**
- * Seller Profile Modal — read-only "Digital Visiting Card".
- *
- * Props:
- *  - sellerId     {string}  MongoDB _id for the seller (used to lazy-fetch full profile)
- *  - sellerBasic  {object}  Minimal seller data (name, email, phone) — shown while loading
- *  - approvedCount {number} From the sellers-performance response
- *  - pendingCount  {number} From the sellers-performance response
- *  - onClose      {fn}      Called when backdrop or X is clicked
- */
+
 const SellerProfileModal = ({
   sellerId,
   sellerBasic,
@@ -29,7 +20,7 @@ const SellerProfileModal = ({
     axios
       .get(`/api/admin/users/${sellerId}`, { withCredentials: true })
       .then(({ data }) => setProfile(data.user))
-      .catch(() => setProfile(sellerBasic))   // fallback to minimal data
+      .catch(() => setProfile(sellerBasic))   
       .finally(() => setFetching(false));
   }, [sellerId]);
 
@@ -44,7 +35,7 @@ const SellerProfileModal = ({
         className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl overflow-hidden relative max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* ── Close Button ── */}
+        
         <button
           onClick={onClose}
           className="absolute top-4 right-4 z-20 w-8 h-8 rounded-full bg-white/20 hover:bg-white/40
@@ -53,7 +44,7 @@ const SellerProfileModal = ({
           <X size={15} className="text-white" />
         </button>
 
-        {/* ── Section 1: Header ── */}
+        
         <div className="bg-gradient-to-br from-indigo-600 via-indigo-700 to-purple-700 px-8 pt-8 pb-10">
           {fetching ? (
             <div className="flex items-center gap-5 animate-pulse">
@@ -66,7 +57,7 @@ const SellerProfileModal = ({
             </div>
           ) : (
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5">
-              {/* Photo */}
+              
               {u?.profilePhoto ? (
                 <img
                   src={u.profilePhoto}
@@ -80,7 +71,7 @@ const SellerProfileModal = ({
                 </div>
               )}
 
-              {/* Identity */}
+              
               <div className="min-w-0 flex-1">
                 <h2 className="text-3xl font-bold text-white truncate">{u?.name}</h2>
                 <p className="text-indigo-200 text-xs font-medium mt-1">
@@ -103,7 +94,7 @@ const SellerProfileModal = ({
           )}
         </div>
 
-        {/* ── Sections 2 & 3: Body ── */}
+        
         <div className="p-6 md:p-8 space-y-6">
           {fetching ? (
             <div className="space-y-4 animate-pulse">
@@ -113,9 +104,9 @@ const SellerProfileModal = ({
             </div>
           ) : (
             <>
-              {/* ── Section 2: Professional Details ── */}
+              
 
-              {/* Bio */}
+              
               {u?.bio && (
                 <div>
                   <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-2">
@@ -127,7 +118,7 @@ const SellerProfileModal = ({
                 </div>
               )}
 
-              {/* Expertise */}
+              
               {u?.expertise?.length > 0 && (
                 <div>
                   <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-2">
@@ -146,7 +137,7 @@ const SellerProfileModal = ({
                 </div>
               )}
 
-              {/* Social Links */}
+              
               {(u?.socialLinks?.whatsapp || u?.socialLinks?.facebook || u?.socialLinks?.linkedin) && (
                 <div>
                   <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">
@@ -187,10 +178,10 @@ const SellerProfileModal = ({
                 </div>
               )}
 
-              {/* ── Section 3: Network & Performance ── */}
+              
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5 pt-2 border-t border-gray-100">
 
-                {/* Left: Network */}
+                
                 <div className="space-y-4">
                   <p className="text-xs font-bold uppercase tracking-widest text-gray-400">Network</p>
 
@@ -223,7 +214,7 @@ const SellerProfileModal = ({
                   </div>
                 </div>
 
-                {/* Right: Performance */}
+                
                 <div className="space-y-4">
                   <p className="text-xs font-bold uppercase tracking-widest text-gray-400">Performance</p>
                   <div className="grid grid-cols-2 gap-3">

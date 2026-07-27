@@ -11,7 +11,7 @@ import MentorCard from "../../components/seller/profile/MentorCard";
 const CLOUDINARY_URL = "https://api.cloudinary.com/v1_1/dzi9yfdw9/image/upload";
 const CLOUDINARY_UPLOAD_PRESET = "ml_default";
 
-// ── Main ──────────────────────────────────────────────────────────────────────
+
 const SellerProfile = () => {
   useAuth();
   const [profileData, setProfileData] = useState(null);
@@ -122,7 +122,7 @@ const SellerProfile = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Left column — form */}
+        
         <div className="lg:col-span-2">
           <ProfileForm
             profileData={profileData}
@@ -136,7 +136,7 @@ const SellerProfile = () => {
           />
         </div>
 
-        {/* Right column — widgets */}
+        
         <div className="space-y-6">
           <ReferralCodeWidget referralCode={profileData?.referralCode} />
           <PerformanceStats stats={stats} />

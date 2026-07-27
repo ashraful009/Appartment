@@ -112,7 +112,7 @@ const ActivityTimeline = ({ leadId, refreshKey }) => {
               {item.adminNote && (
                 <div className="mt-2 bg-red-50 border-l-4 border-red-500 border border-red-200 rounded-xl px-3 py-2.5">
                   <p className="text-xs font-extrabold text-red-600 uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
-                    🚨 Admin Instruction
+                     Admin Instruction
                   </p>
                   <p className="text-sm font-semibold text-red-800 leading-relaxed">{item.adminNote}</p>
                 </div>

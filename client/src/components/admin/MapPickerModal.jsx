@@ -11,21 +11,21 @@ const MAP_OPTIONS = {
   zoomControlOptions: { position: 3 },
 };
 
-// ─── MapPickerModal ───────────────────────────────────────────────────────────
-// Props:
-//   isOpen      – boolean controlling visibility
-//   onClose     – fn to close modal
-//   mapLocation – { lat, lng } current stored location
-//   onConfirm   – fn(pos) called with the confirmed { lat, lng }
-//   isLoaded    – boolean from parent's useLoadScript
-//   loadError   – error from parent's useLoadScript (or undefined)
-// ─────────────────────────────────────────────────────────────────────────────
+
+
+
+
+
+
+
+
+
 const MapPickerModal = ({ isOpen, onClose, mapLocation, onConfirm, isLoaded, loadError }) => {
   const [markerPos, setMarkerPos] = useState(mapLocation);
 
   const [prevIsOpen, setPrevIsOpen] = useState(isOpen);
 
-  // Reset working position every time the modal opens without triggering a cascading render
+  
   if (isOpen !== prevIsOpen) {
     setPrevIsOpen(isOpen);
     if (isOpen) {
@@ -43,7 +43,7 @@ const MapPickerModal = ({ isOpen, onClose, mapLocation, onConfirm, isLoaded, loa
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden">
 
-        {/* Header */}
+        
         <div className="flex items-center justify-between px-6 py-4 border-b">
           <div className="flex items-center gap-2">
             <MapPin size={18} className="text-indigo-600" />
@@ -58,11 +58,11 @@ const MapPickerModal = ({ isOpen, onClose, mapLocation, onConfirm, isLoaded, loa
           </button>
         </div>
 
-        {/* Map area */}
+        
         <div className="relative">
           {loadError && (
             <div className="h-[450px] flex flex-col items-center justify-center bg-red-50 text-red-600 text-sm gap-2">
-              <span className="text-2xl">⚠️</span>
+              <span className="text-2xl">️</span>
               <p className="font-semibold">Failed to load Google Maps</p>
               <p className="text-xs text-red-400">Check your VITE_GOOGLE_MAPS_API_KEY in .env.local</p>
             </div>
@@ -89,7 +89,7 @@ const MapPickerModal = ({ isOpen, onClose, mapLocation, onConfirm, isLoaded, loa
           )}
         </div>
 
-        {/* Footer */}
+        
         <div className="px-6 py-4 border-t bg-gray-50 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <div className="text-xs text-gray-500 leading-relaxed">
             <p>

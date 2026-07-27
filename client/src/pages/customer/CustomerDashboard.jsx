@@ -8,7 +8,7 @@ import WelcomeHeader from "../../components/customer/dashboard/WelcomeHeader";
 import CustomerStatCard from "../../components/customer/dashboard/CustomerStatCard";
 import NextActionBanner from "../../components/customer/dashboard/NextActionBanner";
 
-// ── Skeleton loader for stat cards ───────────────────────────────────────────
+
 const StatCardSkeleton = () => (
   <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex items-center gap-5 animate-pulse">
     <div className="w-14 h-14 rounded-2xl bg-gray-200 flex-shrink-0" />
@@ -19,7 +19,7 @@ const StatCardSkeleton = () => (
   </div>
 );
 
-// ── Stat card config ──────────────────────────────────────────────────────────
+
 const buildCards = (data) => [
   {
     id: "active-requests",
@@ -38,16 +38,16 @@ const buildCards = (data) => [
   {
     id: "upcoming-meetings",
     title: "Upcoming Meetings",
-    // Derive count: 1 if a meeting is scheduled, 0 otherwise.
-    // The overview API returns the *next* single meeting; use its presence
-    // as a boolean count. Extend this if a dedicated count endpoint is added.
+    
+    
+    
     value: data?.upcomingMeeting ? 1 : 0,
     icon: CalendarDays,
     colorClass: "bg-indigo-500",
   },
 ];
 
-// ── Main Component ────────────────────────────────────────────────────────────
+
 const CustomerDashboard = () => {
   const { user } = useAuth();
 
@@ -79,20 +79,20 @@ const CustomerDashboard = () => {
 
   return (
     <div className="p-6 md:p-8 max-w-6xl mx-auto">
-      {/* ── Welcome Header ────────────────────────────────────────────── */}
+      
       <WelcomeHeader userName={user?.name} />
 
-      {/* ── Next Meeting Banner (only rendered if a meeting exists) ──── */}
+      
       {!loading && (
         <NextActionBanner meeting={overviewData?.upcomingMeeting} />
       )}
 
-      {/* ── Banner skeleton while loading ────────────────────────────── */}
+      
       {loading && (
         <div className="mb-8 h-[88px] rounded-2xl bg-gray-100 animate-pulse" />
       )}
 
-      {/* ── Stat Cards Grid ───────────────────────────────────────────── */}
+      
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {loading
           ? Array.from({ length: 3 }).map((_, i) => (

@@ -64,7 +64,7 @@ const PaymentPage = () => {
   const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  // No valid context (e.g. page refresh) → back to the journey.
+  
   if (!kind) return <Navigate to="/membership" replace />;
 
   const submit = async () => {
@@ -140,7 +140,7 @@ const PaymentPage = () => {
         <ArrowLeft size={15} /> Back
       </button>
 
-      {/* Summary */}
+      
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-5">
         <div className="flex items-center gap-3">
           <div className="w-11 h-11 rounded-2xl bg-brand-50 flex items-center justify-center">
@@ -157,7 +157,7 @@ const PaymentPage = () => {
         </div>
       </div>
 
-      {/* Method picker */}
+      
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-5">
         <div>
           <p className="text-xs font-bold text-gray-700 mb-2">Payment Method</p>
@@ -181,7 +181,7 @@ const PaymentPage = () => {
           </div>
         </div>
 
-        {/* MFS fields */}
+        
         {method === "MFS" && (
           <div className="space-y-4 border-t border-gray-100 pt-4">
             <Field label="MFS Provider" required>
@@ -221,7 +221,7 @@ const PaymentPage = () => {
           </div>
         )}
 
-        {/* Bank fields */}
+        
         {method === "Bank" && (
           <div className="space-y-4 border-t border-gray-100 pt-4">
             <Field label="Bank" required>
@@ -261,7 +261,7 @@ const PaymentPage = () => {
           </div>
         )}
 
-        {/* Cash note */}
+        
         {method === "Cash" && (
           <div className="border-t border-gray-100 pt-4">
             <div className="bg-amber-50 border border-amber-200 text-amber-700 rounded-xl px-4 py-3 text-sm">
@@ -270,7 +270,7 @@ const PaymentPage = () => {
           </div>
         )}
 
-        {/* Invoice + description (all methods) */}
+        
         {method && (
           <div className="space-y-4 border-t border-gray-100 pt-4">
             <Field label="Invoice / Receipt (Image or PDF)" required>

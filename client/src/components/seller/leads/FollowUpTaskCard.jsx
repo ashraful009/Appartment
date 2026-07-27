@@ -16,7 +16,7 @@ const FollowUpTaskCard = ({ task, isOverdue, onUpdateStatus, onExpandLead }) => 
     <div className={`rounded-xl border p-3.5 transition-all ${
       isOverdue ? "bg-red-50 border-red-200" : "bg-emerald-50 border-emerald-200"
     }`}>
-      {/* Top row */}
+      
       <div className="flex items-start gap-3">
         <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5 ${
           isOverdue ? "bg-red-100" : "bg-emerald-100"
@@ -57,7 +57,7 @@ const FollowUpTaskCard = ({ task, isOverdue, onUpdateStatus, onExpandLead }) => 
         </div>
       </div>
 
-      {/* Action Buttons */}
+      
       <div className="flex items-center gap-2 mt-2.5 ml-11">
         <button
           onClick={() => handleAction("Completed")}

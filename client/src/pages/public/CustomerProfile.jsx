@@ -5,16 +5,16 @@ import { Camera, Mail, Phone, MapPin, Briefcase, Clock, Loader2, User, Facebook,
 import { useAuth } from "../../context/AuthContext";
 
 const CustomerProfile = () => {
-  useAuth(); // ensures page is rendered in an authenticated context
+  useAuth(); 
   const [profileData, setProfileData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
   
-  // Modal State
+  
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Form State
+  
   const [formData, setFormData] = useState({
     name: "",
     phone: "",
@@ -26,8 +26,8 @@ const CustomerProfile = () => {
 
   const fileInputRef = useRef(null);
 
-  // Constants for Cloudinary (Ideally these are from environment variables in a real app, 
-  // but for pure frontend upload using unsigned presets, name and preset are public)
+  
+  
   const CLOUDINARY_URL = "https://api.cloudinary.com/v1_1/dzi9yfdw9/image/upload";
   const CLOUDINARY_UPLOAD_PRESET = "ml_default"; 
 
@@ -72,12 +72,12 @@ const CustomerProfile = () => {
     }
   };
 
-  // Image Upload Logic
+  
   const handleImageUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    // Validate size (e.g., max 5MB)
+    
     if (file.size > 5 * 1024 * 1024) {
       toast.error("Image must be less than 5MB");
       return;
@@ -134,14 +134,14 @@ const CustomerProfile = () => {
     );
   }
 
-  // Derived properties for UI
+  
   const assignedSeller = profileData?.currentAssignedSeller;
   const wishlist = profileData?.wishlist || [];
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
       
-      {/* Header */}
+      
       <div className="mb-8">
         <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">My Profile</h1>
         <p className="text-gray-500 mt-2">Manage your personal information and contact preferences.</p>
@@ -149,11 +149,11 @@ const CustomerProfile = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         
-        {/* Left Column: Form */}
+        
         <div className="lg:col-span-2 space-y-6">
           <form onSubmit={handleSubmit} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 sm:p-8">
             
-            {/* Avatar Section */}
+            
             <div className="flex flex-col sm:flex-row items-center gap-6 pb-8 border-b border-gray-100">
               <div className="relative group">
                 <div className="w-24 h-24 rounded-full border-4 border-white shadow-lg overflow-hidden bg-gray-50 flex items-center justify-center text-gray-300">
@@ -163,7 +163,7 @@ const CustomerProfile = () => {
                     <User size={40} />
                   )}
                   
-                  {/* Overlay for hover */}
+                  
                   <div 
                     onClick={() => fileInputRef.current?.click()}
                     className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
@@ -172,7 +172,7 @@ const CustomerProfile = () => {
                     <span className="text-[10px] text-white font-medium uppercase tracking-wider">Change</span>
                   </div>
                   
-                  {/* Uploading Spinner */}
+                  
                   {uploadingImage && (
                     <div className="absolute inset-0 bg-white/80 flex items-center justify-center">
                       <Loader2 className="w-6 h-6 animate-spin text-brand-600" />
@@ -202,7 +202,7 @@ const CustomerProfile = () => {
               </div>
             </div>
 
-            {/* Inputs Grid */}
+            
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-8">
               
               <div className="space-y-1.5">
@@ -347,10 +347,10 @@ const CustomerProfile = () => {
 
         </div>
 
-        {/* Right Column: Widgets */}
+        
         <div className="space-y-6">
           
-          {/* Assigned Agent Widget */}
+          
           {assignedSeller && (
             <div className="bg-gradient-to-br from-indigo-900 to-brand-900 rounded-2xl shadow-lg border border-indigo-800 overflow-hidden relative">
               <div className="absolute top-0 right-0 p-4 opacity-10">
@@ -401,7 +401,7 @@ const CustomerProfile = () => {
             </div>
           )}
 
-          {/* Wishlist Widget */}
+          
           {wishlist.length > 0 && (
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 line-clamp-1">
               <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2 mb-4">
@@ -445,29 +445,29 @@ const CustomerProfile = () => {
         </div>
       </div>
 
-      {/* ── Seller Biodata Modal ── */}
+      
       {isModalOpen && assignedSeller && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           
-          {/* Click outside to close */}
+          
           <div className="absolute inset-0" onClick={() => setIsModalOpen(false)} />
           
           <div className="bg-white rounded-3xl w-full max-w-md relative z-10 shadow-2xl overflow-hidden transform transition-all">
             
-            {/* Header / Cover Space */}
+            
             <div className="h-32 bg-gradient-to-r from-brand-600 to-indigo-600 relative">
               <button 
                 onClick={() => setIsModalOpen(false)}
                 className="absolute top-4 right-4 text-white/70 hover:text-white bg-black/20 hover:bg-black/40 rounded-full w-8 h-8 flex items-center justify-center transition-all"
               >
-                ✕
+                
               </button>
             </div>
 
-            {/* Avatar & Content */}
+            
             <div className="px-8 pb-8">
               
-              {/* Avatar lifted out of the header */}
+              
               <div className="flex justify-center -mt-16 mb-4">
                 <div className="w-32 h-32 rounded-full border-4 border-white shadow-lg overflow-hidden bg-gray-100 flex flex-col items-center justify-center">
                   {assignedSeller.profilePhoto ? (
@@ -478,13 +478,13 @@ const CustomerProfile = () => {
                 </div>
               </div>
 
-              {/* Name & Titles */}
+              
               <div className="text-center mb-6">
                 <h2 className="text-2xl font-black text-gray-900 border-b-2 border-transparent inline-flex pb-1">{assignedSeller.name}</h2>
                 <p className="text-sm font-medium text-brand-600 tracking-wide uppercase mt-1">Real Estate Agent</p>
               </div>
 
-              {/* Bio block */}
+              
               {assignedSeller.bio && (
                 <div className="bg-gray-50 rounded-2xl p-4 mb-6 relative">
                   <div className="absolute top-2 left-2 text-gray-300 text-3xl font-serif">"</div>
@@ -494,7 +494,7 @@ const CustomerProfile = () => {
                 </div>
               )}
 
-              {/* Expertise Pills */}
+              
               {assignedSeller.expertise && assignedSeller.expertise.length > 0 && (
                 <div className="mb-8">
                   <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3 text-center">Areas of Expertise</p>
@@ -508,7 +508,7 @@ const CustomerProfile = () => {
                 </div>
               )}
 
-              {/* Contact Icons */}
+              
               <div className="flex items-center justify-center gap-4 mt-6">
                 <a 
                   href={`tel:${assignedSeller.phone}`}
@@ -525,14 +525,14 @@ const CustomerProfile = () => {
                   <Mail size={20} />
                 </a>
 
-                {/* Social Links */}
+                
                 {assignedSeller.socialLinks?.whatsapp && (
                   <a 
                     href={`https://wa.me/${assignedSeller.socialLinks.whatsapp.replace(/[^0-9]/g, '')}`} 
                     target="_blank" rel="noreferrer"
                     className="w-12 h-12 rounded-full bg-[#25D366]/10 text-[#25D366] hover:bg-[#25D366] hover:text-white flex items-center justify-center transition-all shadow-sm"
                   >
-                    <Code size={20} className="hidden" /> {/* Using Code as placeholder if whatsapp icon missing, though Phone works too */}
+                    <Code size={20} className="hidden" /> 
                     <span className="font-bold font-serif text-lg leading-none">W</span>
                   </a>
                 )}

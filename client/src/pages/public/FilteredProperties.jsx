@@ -6,7 +6,7 @@ import PropertyCard from "../../components/common/PropertyCard";
 import { PropertyGridSkeleton } from "../../components/common/SkeletonLoader";
 import PropertyFilterSidebar from "../../components/home/PropertyFilterSidebar";
 
-/* ─ Color tokens ────────────────────────────────────────────────────────── */
+
 const C = {
   navy:      "#0A1628",
   navyLight: "#1A3060",
@@ -24,7 +24,7 @@ const FilteredProperties = () => {
   const [loading, setLoading] = useState(true);
   const [activeStatus, setActiveStatus] = useState("All");
 
-  // Extract query params
+  
   const minPrice        = searchParams.get("minPrice") || "";
   const maxPrice        = searchParams.get("maxPrice") || "";
   const minSqft         = searchParams.get("minSqft") || "";
@@ -60,13 +60,13 @@ const FilteredProperties = () => {
     fetchProperties();
   }, [minPrice, maxPrice, minSqft, maxSqft, country, city, area, installmentType]);
 
-  // Client-side status filtering
+  
   const filteredProperties = useMemo(() => {
     if (activeStatus === "All") return properties;
     return properties.filter((p) => p.status === activeStatus);
   }, [properties, activeStatus]);
 
-  // Build human-readable active filters summary
+  
   const filterSummary = useMemo(() => {
     const parts = [];
     if (minPrice || maxPrice) {
@@ -84,7 +84,7 @@ const FilteredProperties = () => {
   return (
     <div className="min-h-screen" style={{ background: C.ivory, fontFamily: "'Jost', sans-serif" }}>
 
-      {/* ── Page Header ─────────────────────────────────────────────────────── */}
+      
       <div
         className="relative overflow-hidden"
         style={{
@@ -93,7 +93,7 @@ const FilteredProperties = () => {
           paddingBottom: "clamp(48px, 8vw, 72px)",
         }}
       >
-        {/* Decorative orbs */}
+        
         <div
           className="absolute pointer-events-none"
           style={{
@@ -157,7 +157,7 @@ const FilteredProperties = () => {
           )}
         </div>
 
-        {/* Bottom fade */}
+        
         <div
           className="absolute bottom-0 left-0 right-0 pointer-events-none"
           style={{
@@ -167,20 +167,20 @@ const FilteredProperties = () => {
         />
       </div>
 
-      {/* ── Main Content ──────────────────────────────────────────────── */}
+      
       <div className="section-wrap py-10 sm:py-14">
 
         <div className="flex flex-col lg:flex-row gap-8">
           
-          {/* Left Sidebar Filter */}
+          
           <div className="w-full lg:w-72 flex-shrink-0">
             <PropertyFilterSidebar />
           </div>
 
-          {/* Right Content */}
+          
           <div className="flex-1 min-w-0">
 
-            {/* Status Tab Bar */}
+            
             <div className="flex items-center gap-1.5 mb-8 overflow-x-auto pb-1">
           {STATUS_TABS.map((tab) => {
             const isActive = activeStatus === tab;
@@ -207,7 +207,7 @@ const FilteredProperties = () => {
           })}
         </div>
 
-        {/* Results */}
+        
         {loading ? (
           <PropertyGridSkeleton count={6} />
         ) : filteredProperties.length === 0 ? (

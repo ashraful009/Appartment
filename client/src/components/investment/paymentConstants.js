@@ -1,8 +1,8 @@
-// Shared payment-method constants for the investment payment page.
+
 
 export const MFS_PROVIDERS = ["Bikash", "Nagad", "Rocket", "Upay"];
 
-// Scheduled banks of Bangladesh (state-owned, specialised, private & foreign).
+
 export const BD_BANKS = [
   "Sonali Bank PLC",
   "Janata Bank PLC",
@@ -44,7 +44,7 @@ export const BD_BANKS = [
   "Uttara Bank PLC",
   "Bengal Commercial Bank PLC",
   "Citizens Bank PLC",
-  // ── Islami / Shariah-based ──
+  
   "Islami Bank Bangladesh PLC",
   "Al-Arafah Islami Bank PLC",
   "Social Islami Bank PLC",

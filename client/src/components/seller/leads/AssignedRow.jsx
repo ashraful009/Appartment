@@ -48,7 +48,7 @@ const AssignedRow = ({ req, expanded, onToggle, onStatusChange, onUpdate, onDele
           expanded ? "bg-brand-50 border-brand-200" : "hover:bg-gray-50/70 border-gray-100"
         } last:border-b-0`}
       >
-        {/* Property */}
+        
         <td className="px-5 py-4">
           <div className="flex items-center gap-3">
             {property?.mainImage ? (
@@ -69,7 +69,7 @@ const AssignedRow = ({ req, expanded, onToggle, onStatusChange, onUpdate, onDele
           </div>
         </td>
 
-        {/* User */}
+        
         <td className="px-5 py-4">
           <div className="flex items-center gap-2 flex-wrap">
             <div className="w-8 h-8 rounded-full bg-brand-100 flex items-center justify-center text-brand-700 font-bold text-xs flex-shrink-0">
@@ -86,7 +86,7 @@ const AssignedRow = ({ req, expanded, onToggle, onStatusChange, onUpdate, onDele
           </div>
         </td>
 
-        {/* Contact */}
+        
         <td className="px-5 py-4">
           <div className="space-y-1">
             {user?.email && (
@@ -104,23 +104,23 @@ const AssignedRow = ({ req, expanded, onToggle, onStatusChange, onUpdate, onDele
           </div>
         </td>
 
-        {/* Stage */}
+        
         <td className="px-5 py-4">
           <span className={`text-xs px-2.5 py-1 rounded-full font-semibold ${STAGE_COLORS[stage]}`}>{stage}</span>
         </td>
 
-        {/* Priority */}
+        
         <td className="px-5 py-4">
           <span className={`text-xs px-2.5 py-1 rounded-full font-semibold ${PRIORITY_COLORS[priority]}`}>{priority}</span>
         </td>
 
-        {/* Assigned On */}
+        
         <td className="px-5 py-4 text-xs text-gray-400 whitespace-nowrap">{formatDate(req.assignedAt)}</td>
 
-        {/* Last Interaction */}
+        
         <td className="px-5 py-4 text-xs text-gray-400 whitespace-nowrap">{formatDate(req.lastInteractionDate)}</td>
 
-        {/* Expand toggle */}
+        
         <td className="px-4 py-4 text-right">
           <button
             onClick={onToggle}

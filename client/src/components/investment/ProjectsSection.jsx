@@ -35,9 +35,7 @@ const ProjectCard = ({ project }) => (
   </div>
 );
 
-/**
- * Running & completed projects grid for members/investors (GET /api/projects).
- */
+
 const ProjectsSection = () => {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);

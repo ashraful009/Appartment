@@ -6,7 +6,7 @@ import PipelineColumn from "./PipelineColumn";
 import ActivityTimeline from "./ActivityTimeline";
 import InteractionForm from "./InteractionForm";
 
-// ── Status Toggle (used only inside ExpandedPanel) ────────────────────────────
+
 const StatusToggle = ({ req, statusKey, endpoint, onStatusChange, approvedLabel, approvedColor = "emerald" }) => {
   const [loading, setLoading] = useState(false);
   const status = req[statusKey];
@@ -58,7 +58,7 @@ const StatusToggle = ({ req, statusKey, endpoint, onStatusChange, approvedLabel,
   );
 };
 
-// ── Expanded Panel ────────────────────────────────────────────────────────────
+
 const ExpandedPanel = ({ req, onStatusChange, onUpdate, onDelegate }) => {
   const [timelineKey, setTimelineKey] = useState(0);
   const refreshTimeline = () => setTimelineKey(k => k + 1);
@@ -68,7 +68,7 @@ const ExpandedPanel = ({ req, onStatusChange, onUpdate, onDelegate }) => {
       <td colSpan={8} className="px-0 py-0">
         <div className="bg-gray-50 border-t border-b border-gray-200 px-5 py-5">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Left: Pipeline & Preferences */}
+            
             <div className="bg-white rounded-xl border border-gray-200 p-4">
               <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4 flex items-center gap-1.5">
                 <AlertCircle size={12} className="text-brand-500" /> Lead Details
@@ -76,7 +76,7 @@ const ExpandedPanel = ({ req, onStatusChange, onUpdate, onDelegate }) => {
               <PipelineColumn req={req} onUpdate={onUpdate} />
             </div>
 
-            {/* Middle: Activity Timeline */}
+            
             <div className="bg-white rounded-xl border border-gray-200 p-4">
               <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4 flex items-center gap-1.5">
                 <Clock size={12} className="text-brand-500" /> Activity Timeline
@@ -84,7 +84,7 @@ const ExpandedPanel = ({ req, onStatusChange, onUpdate, onDelegate }) => {
               <ActivityTimeline leadId={req._id} refreshKey={timelineKey} />
             </div>
 
-            {/* Right: New Interaction Form */}
+            
             <div className="bg-white rounded-xl border border-gray-200 p-4">
               <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4 flex items-center gap-1.5">
                 <Send size={12} className="text-brand-500" /> Log Interaction
@@ -93,7 +93,7 @@ const ExpandedPanel = ({ req, onStatusChange, onUpdate, onDelegate }) => {
             </div>
           </div>
 
-          {/* Bottom actions row */}
+          
           <div className="mt-4 pt-4 border-t border-gray-200 flex flex-wrap items-center gap-6">
             <div className="flex items-center gap-3">
               <span className="text-xs font-semibold text-gray-500">Accept as Customer</span>

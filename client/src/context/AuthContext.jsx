@@ -5,21 +5,21 @@ import axios from "axios";
 
 const AuthContext = createContext(null);
 
-// ── Provider ──────────────────────────────────────────────────────────────
+
 export const AuthProvider = ({ children }) => {
   const [user, setUser]                       = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [loading, setLoading]                 = useState(true); // true while verifying session
+  const [loading, setLoading]                 = useState(true); 
 
-  // On app mount: silently check if the user has a valid session cookie
+  
   useEffect(() => {
     const verifySession = async () => {
       try {
         const { data } = await axios.get("/api/auth/me");
-        setUser(data.user);
+        setUser(data.data.user);
         setIsAuthenticated(true);
       } catch {
-        // No valid session — this is expected for guests
+        
         setUser(null);
         setIsAuthenticated(false);
       } finally {
@@ -30,41 +30,31 @@ export const AuthProvider = ({ children }) => {
     verifySession();
   }, []);
 
-  /**
-   * register — accepts a FormData object so it supports optional avatar uploads.
-   * Sends multipart/form-data to /api/auth/register, then updates user state.
-   */
+  
   const register = async (formData) => {
     const { data } = await axios.post("/api/auth/register", formData, {
       headers: { "Content-Type": "multipart/form-data" },
     });
-    setUser(data.user);
+    setUser(data.data);
     setIsAuthenticated(true);
-    return data.user;
+    return data.data;
   };
 
-  /**
-   * login — call this after a successful /api/auth/login response.
-   * Accepts plain credentials object { email, password }.
-   */
+  
   const login = async (credentials) => {
     const { data } = await axios.post("/api/auth/login", credentials);
-    setUser(data.user);
+    setUser(data.data);
     setIsAuthenticated(true);
-    return data.user;
+    return data.data;
   };
 
-  /**
-   * refreshUser — re-fetch the current user from /api/auth/me.
-   * Use after a server-side role change (e.g. membership approval) so the UI
-   * unlocks new panels without forcing a full logout/login.
-   */
+  
   const refreshUser = async () => {
     try {
       const { data } = await axios.get("/api/auth/me");
-      setUser(data.user);
+      setUser(data.data.user);
       setIsAuthenticated(true);
-      return data.user;
+      return data.data.user;
     } catch {
       setUser(null);
       setIsAuthenticated(false);
@@ -72,9 +62,7 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  /**
-   * logout — clear cookie on server, reset state.
-   */
+  
   const logout = async () => {
     try {
       await axios.post("/api/auth/logout");
@@ -86,8 +74,8 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // ── Role helpers — convenience wrappers used throughout the UI ────────────
-  // Safely handles guests (user === null) so components don't need to null-guard.
+  
+  
   const hasRole    = (role)    => Array.isArray(user?.roles) && user.roles.includes(role);
   const hasAnyRole = (...roles) => Array.isArray(user?.roles) && roles.some(r => user.roles.includes(r));
 
@@ -100,7 +88,7 @@ export const AuthProvider = ({ children }) => {
   );
 };
 
-// ── Custom hook ───────────────────────────────────────────────────────────
+
 export const useAuth = () => {
   const ctx = useContext(AuthContext);
   if (!ctx) throw new Error("useAuth must be used inside <AuthProvider>");

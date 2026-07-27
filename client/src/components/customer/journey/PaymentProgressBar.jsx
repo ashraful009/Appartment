@@ -1,11 +1,6 @@
 import React from "react";
 
-/**
- * PaymentProgressBar — sleek progress bar for installment completion.
- * Props:
- *   totalInstallments {number}
- *   paidInstallments  {number}
- */
+
 const PaymentProgressBar = ({ totalInstallments = 0, paidInstallments = 0 }) => {
   const safeTotal = Math.max(totalInstallments, 1);
   const safePaid  = Math.min(paidInstallments, safeTotal);
@@ -20,7 +15,7 @@ const PaymentProgressBar = ({ totalInstallments = 0, paidInstallments = 0 }) => 
         <span className="text-xs font-bold text-brand-600">{pct}%</span>
       </div>
 
-      {/* Track */}
+      
       <div className="w-full h-3 bg-gray-100 rounded-full overflow-hidden">
         <div
           className="h-full rounded-full bg-gradient-to-r from-brand-500 to-emerald-400 transition-all duration-700"

@@ -11,10 +11,7 @@ const Stat = ({ label, value, accent }) => (
   </div>
 );
 
-/**
- * Shared member-profile modal. Fetches `${basePath}/members/:userId` so it works
- * for any staff panel (accountant / data-entry / management).
- */
+
 const MemberProfileModal = ({ basePath, userId, onClose }) => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);

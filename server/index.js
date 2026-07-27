@@ -4,29 +4,29 @@ const cookieParser = require("cookie-parser");
 const cors = require("cors");
 const db = require("./src/config/db");
 
-const authRoutes = require("./src/routes/authRoutes");
-const adminRoutes = require("./src/routes/adminRoutes");
-const publicRoutes = require("./src/routes/publicRoutes");
-const requestRoutes = require("./src/routes/requestRoutes");
-const sellerRoutes = require("./src/routes/sellerRoutes");
-const interactionRoutes = require("./src/routes/interactionRoutes");
-const unitRoutes      = require("./src/routes/unitRoutes");
-const userRoutes      = require("./src/routes/userRoutes");
-const customerRoutes  = require("./src/routes/customerRoutes");
-const documentRoutes  = require("./src/routes/documentRoutes");
-const accountantRoutes = require("./src/routes/accountantRoutes");
-const dataEntryRoutes  = require("./src/routes/dataEntryRoutes");
-const managementRoutes = require("./src/routes/managementRoutes");
-const areaRoutes       = require("./src/routes/areaRoutes");
-const membershipRoutes = require("./src/routes/membershipRoutes");
-const projectRoutes    = require("./src/routes/projectRoutes");
+const dataEntryRoutes  = require("./src/modules/management/dataEntryRoutes");
+const authRoutes = require("./src/modules/auth/authRoutes");
+const adminRoutes = require("./src/modules/admin/adminRoutes");
+const publicRoutes = require("./src/modules/catalog/publicRoutes");
+const requestRoutes = require("./src/modules/requests/requestRoutes");
+const sellerRoutes = require("./src/modules/seller/sellerRoutes");
+const interactionRoutes = require("./src/modules/requests/interactionRoutes");
+const unitRoutes      = require("./src/modules/catalog/unitRoutes");
+const userRoutes      = require("./src/modules/users/userRoutes");
+const customerRoutes  = require("./src/modules/customer/customerRoutes");
+const documentRoutes  = require("./src/modules/document/documentRoutes");
+const accountantRoutes = require("./src/modules/management/accountantRoutes");
+const managementRoutes = require("./src/modules/management/managementRoutes");
+const areaRoutes       = require("./src/modules/catalog/areaRoutes");
+const membershipRoutes = require("./src/modules/membership/membershipRoutes");
+const projectRoutes    = require("./src/modules/catalog/projectRoutes");
 
 const { startMembershipCron }  = require("./src/cron/membershipCron");
 const { startPropertyCron }    = require("./src/cron/propertyCron");
 
 const { protect } = require("./src/middleware/authMiddleware");
 const { authorizeRoles } = require("./src/middleware/authMiddleware");
-const { getCurrentTarget } = require("./src/controllers/adminEngineController");
+const { getCurrentTarget } = require("./src/modules/admin/adminEngineController");
 
 const app  = express();
 const PORT = process.env.PORT || 5000;
@@ -79,6 +79,9 @@ app.use(
   })
 );
 
+const helmet = require("helmet");
+
+app.use(helmet());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());

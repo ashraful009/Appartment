@@ -31,12 +31,12 @@ const SellerRow = ({ sellerData, onAction, onViewProfile }) => {
     return (
         <div className="group rounded-2xl border border-gray-200 bg-white shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden">
 
-            {/* Header */}
+            
             <div
                 className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 cursor-pointer transition-colors group-hover:bg-gray-50"
                 onClick={handleClick}
             >
-                {/* Seller Info */}
+                
                 <div className="flex items-center gap-3 min-w-0">
 
                     <Avatar name={seller?.name} size="md" />
@@ -78,10 +78,10 @@ const SellerRow = ({ sellerData, onAction, onViewProfile }) => {
                     </div>
                 </div>
 
-                {/* Stats */}
+                
                 <div className="flex items-center gap-3 flex-shrink-0">
 
-                    {/* Converted */}
+                    
                     <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200">
 
                         <TrendingUp size={13} className="text-emerald-600" />
@@ -96,7 +96,7 @@ const SellerRow = ({ sellerData, onAction, onViewProfile }) => {
 
                     </div>
 
-                    {/* Pending */}
+                    
                     {hasPending ? (
                         <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-50 border border-amber-200">
 
@@ -119,7 +119,7 @@ const SellerRow = ({ sellerData, onAction, onViewProfile }) => {
                         </div>
                     )}
 
-                    {/* Toggle Icon */}
+                    
                     {hasPending && (
                         <div className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 group-hover:bg-gray-200 transition-colors">
 
@@ -135,7 +135,7 @@ const SellerRow = ({ sellerData, onAction, onViewProfile }) => {
                 </div>
             </div>
 
-            {/* Accordion */}
+            
             {hasPending && (
                 <div
                     className={`transition-all duration-300 overflow-hidden ${open ? "max-h-[1000px]" : "max-h-0"

@@ -8,10 +8,7 @@ const daysSince = (dateStr) => {
   return Math.floor(diff / (1000 * 60 * 60 * 24));
 };
 
-/**
- * IdleLeadsWidget — fetches and displays leads with no interaction in 7+ days.
- * Props: onViewTimeline(leadId, leadName) => void
- */
+
 const IdleLeadsWidget = ({ onViewTimeline }) => {
   const [idleLeads, setIdleLeads] = useState([]);
   const [loading, setLoading]     = useState(true);
@@ -46,7 +43,7 @@ const IdleLeadsWidget = ({ onViewTimeline }) => {
 
   return (
     <div className="bg-white rounded-2xl border border-red-200 shadow-sm overflow-hidden">
-      {/* Red alert banner */}
+      
       <div className="flex items-center gap-3 px-5 py-3 bg-red-50 border-b border-red-200">
         <AlertTriangle size={16} className="text-red-500 flex-shrink-0 animate-pulse" />
         <div className="flex-1">
@@ -54,7 +51,7 @@ const IdleLeadsWidget = ({ onViewTimeline }) => {
           <p className="text-xs text-red-500">These leads have had no activity in 7+ days.</p>
         </div>
       </div>
-      {/* Lead list */}
+      
       <div className="divide-y divide-gray-50 max-h-80 overflow-y-auto">
         {idleLeads.map(lead => {
           const days   = daysSince(lead.lastInteractionDate);

@@ -11,13 +11,7 @@ const DOCUMENT_TYPES = [
   "Other",
 ];
 
-/**
- * UploadDocumentModal — Tailwind backdrop modal for uploading a document.
- * Props:
- *   isOpen     {boolean}
- *   onClose    {function}
- *   onSuccess  {function}  — called after a successful upload with the new document
- */
+
 const UploadDocumentModal = ({ isOpen, onClose, onSuccess }) => {
   const [title,      setTitle]      = useState(DOCUMENT_TYPES[0]);
   const [file,       setFile]       = useState(null);
@@ -25,7 +19,7 @@ const UploadDocumentModal = ({ isOpen, onClose, onSuccess }) => {
   const [dragOver,   setDragOver]   = useState(false);
   const fileInputRef                = useRef(null);
 
-  // Reset form when modal opens
+  
   useEffect(() => {
     if (isOpen) {
       setTitle(DOCUMENT_TYPES[0]);
@@ -34,7 +28,7 @@ const UploadDocumentModal = ({ isOpen, onClose, onSuccess }) => {
     }
   }, [isOpen]);
 
-  // ── Keyboard close ──────────────────────────────────────────────────────
+  
   useEffect(() => {
     const handler = (e) => { if (e.key === "Escape") onClose(); };
     if (isOpen) document.addEventListener("keydown", handler);
@@ -43,7 +37,7 @@ const UploadDocumentModal = ({ isOpen, onClose, onSuccess }) => {
 
   if (!isOpen) return null;
 
-  // ── File selection helpers ───────────────────────────────────────────────
+  
   const handleFileChange = (e) => setFile(e.target.files[0] ?? null);
 
   const handleDrop = (e) => {
@@ -53,14 +47,14 @@ const UploadDocumentModal = ({ isOpen, onClose, onSuccess }) => {
     if (dropped) setFile(dropped);
   };
 
-  // ── Submit ───────────────────────────────────────────────────────────────
+  
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!file) return toast.error("Please select a file to upload.");
 
     const formData = new FormData();
     formData.append("title",    title);
-    formData.append("document", file); // field name must match uploadMiddleware
+    formData.append("document", file); 
 
     setUploading(true);
     try {
@@ -84,17 +78,17 @@ const UploadDocumentModal = ({ isOpen, onClose, onSuccess }) => {
     : null;
 
   return (
-    /* ── Backdrop ─────────────────────────────────────────────────────────── */
+    
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm px-4"
       onClick={onClose}
     >
-      {/* ── Modal panel ───────────────────────────────────────────────────── */}
+      
       <div
         className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 relative"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* ── Header ──────────────────────────────────────────────────────── */}
+        
         <div className="flex items-center justify-between mb-6">
           <div>
             <h2 className="text-lg font-extrabold text-gray-900">Upload Document</h2>
@@ -109,7 +103,7 @@ const UploadDocumentModal = ({ isOpen, onClose, onSuccess }) => {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-5">
-          {/* ── Document type dropdown ─────────────────────────────────────── */}
+          
           <div>
             <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
               Document Type
@@ -126,7 +120,7 @@ const UploadDocumentModal = ({ isOpen, onClose, onSuccess }) => {
             </select>
           </div>
 
-          {/* ── Drag-and-drop file zone ────────────────────────────────────── */}
+          
           <div>
             <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
               File
@@ -163,7 +157,7 @@ const UploadDocumentModal = ({ isOpen, onClose, onSuccess }) => {
               )}
             </div>
 
-            {/* Hidden native file input */}
+            
             <input
               ref={fileInputRef}
               type="file"
@@ -173,7 +167,7 @@ const UploadDocumentModal = ({ isOpen, onClose, onSuccess }) => {
             />
           </div>
 
-          {/* ── Actions ────────────────────────────────────────────────────── */}
+          
           <div className="flex justify-end gap-3 pt-1">
             <button
               type="button"

@@ -12,7 +12,7 @@ import PropertyCard         from "../../components/common/PropertyCard";
 import { PropertyGridSkeleton } from "../../components/common/SkeletonLoader";
 import OfferBanner          from "../../components/home/OfferBanner";
 
-/* ─ Color tokens ─────────────────────────────────────────────────────────── */
+
 const C = {
   navy:       "#0A1628",
   navyMid:    "#122040",
@@ -27,7 +27,7 @@ const C = {
   textMuted:  "#5A4E3A",
 };
 
-/* ─ Stats data ───────────────────────────────────────────────────────────── */
+
 const STATS = [
   { value: "1,200+", label: "Properties Listed",  icon: Building2 },
   { value: "850+",   label: "Happy Families",      icon: Users     },
@@ -35,7 +35,7 @@ const STATS = [
   { value: "10+",    label: "Years of Trust",       icon: Award     },
 ];
 
-/* ─ Features ─────────────────────────────────────────────────────────────── */
+
 const FEATURES = [
   {
     title: "Verified Listings",
@@ -63,7 +63,7 @@ const FEATURES = [
   },
 ];
 
-/* ─ Testimonials ─────────────────────────────────────────────────────────── */
+
 const TESTIMONIALS = [
   {
     name:    "Rahim & Nusrat Ahmed",
@@ -88,7 +88,7 @@ const TESTIMONIALS = [
   },
 ];
 
-/* ─ Animated counter hook ────────────────────────────────────────────────── */
+
 function useInView(ref) {
   const [inView, setInView] = useState(false);
   useEffect(() => {
@@ -103,7 +103,7 @@ function useInView(ref) {
   return inView;
 }
 
-/* ─ StatCard ─────────────────────────────────────────────────────────────── */
+
 const StatCard = ({ stat, delay }) => {
   const ref  = useRef(null);
   const Icon = stat.icon;
@@ -158,7 +158,7 @@ const StatCard = ({ stat, delay }) => {
   );
 };
 
-/* ─ FeatureCard ──────────────────────────────────────────────────────────── */
+
 const FeatureCard = ({ f, i }) => {
   const ref  = useRef(null);
   const Icon = f.icon;
@@ -204,7 +204,7 @@ const FeatureCard = ({ f, i }) => {
   );
 };
 
-/* ─ TestimonialCard ──────────────────────────────────────────────────────── */
+
 const TestimonialCard = ({ t, i }) => {
   const ref = useRef(null);
   const vis = useInView(ref);
@@ -221,13 +221,13 @@ const TestimonialCard = ({ t, i }) => {
         transform: vis ? "translateY(0)" : "translateY(28px)",
       }}
     >
-      {/* Stars */}
+      
       <div className="flex gap-1 mb-4">
         {[...Array(t.rating)].map((_, k) => (
           <Star key={k} size={14} fill="#C9942A" style={{ color: "#C9942A" }} />
         ))}
       </div>
-      {/* Quote */}
+      
       <p
         style={{
           fontFamily: "'Cormorant Garamond', Georgia, serif",
@@ -240,7 +240,7 @@ const TestimonialCard = ({ t, i }) => {
       >
         "{t.quote}"
       </p>
-      {/* Author */}
+      
       <div className="flex items-center gap-3 mt-5 pt-4" style={{ borderTop: "1px solid rgba(232,223,200,0.7)" }}>
         <div
           className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0"
@@ -261,7 +261,7 @@ const TestimonialCard = ({ t, i }) => {
   );
 };
 
-/* ─ Section Header ───────────────────────────────────────────────────────── */
+
 const SectionHeader = ({ label, title, subtitle, center = false }) => {
   const ref = useRef(null);
   const vis = useInView(ref);
@@ -308,7 +308,7 @@ const SectionHeader = ({ label, title, subtitle, center = false }) => {
   );
 };
 
-/* ─ Main Home ────────────────────────────────────────────────────────────── */
+
 const Home = () => {
   const { isAuthenticated, user }              = useAuth();
   const [properties, setProperties] = useState([]);
@@ -335,10 +335,10 @@ const Home = () => {
   return (
     <div className="min-h-screen" style={{ background: C.ivory, fontFamily: "'Jost', sans-serif" }}>
 
-      {/* ══ 1. HERO ══════════════════════════════════════════════════════════ */}
+      
       <HeroSection />
 
-      {/* ══ 2. WELCOME STRIP (logged-in) ═════════════════════════════════════ */}
+      
       {isAuthenticated && (
         <div
           className="animate-fade-in"
@@ -350,20 +350,20 @@ const Home = () => {
           }}
         >
           <p style={{ fontFamily: "'Jost', sans-serif", fontSize: "0.875rem", color: C.navy }}>
-            👋 Welcome back,{" "}
+             Welcome back,{" "}
             <strong style={{ color: C.gold }}>{user?.name}</strong>! Your premium portfolio awaits below.
           </p>
         </div>
       )}
 
-      {/* ══ 3. STATS BAND ════════════════════════════════════════════════════ */}
+      
       <section
         className="relative overflow-hidden"
         style={{
           background: "linear-gradient(135deg, #040810 0%, #0A1628 40%, #0D1830 70%, #040810 100%)",
         }}
       >
-        {/* Decorative blobs */}
+        
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
           <div
             style={{
@@ -383,7 +383,7 @@ const Home = () => {
           />
         </div>
 
-        {/* Gold top rule */}
+        
         <div
           style={{
             height: "1px",
@@ -402,7 +402,7 @@ const Home = () => {
           </div>
         </div>
 
-        {/* Gold bottom rule */}
+        
         <div
           style={{
             height: "1px",
@@ -411,27 +411,27 @@ const Home = () => {
         />
       </section>
 
-      {/* ══ 3.5. OFFER BANNER ════════════════════════════════════════════════ */}
+      
       <OfferBanner />
 
-      {/* ══ 4. PROPERTIES SECTION ════════════════════════════════════════════ */}
+      
       <section className="pb-16 sm:pb-24 pt-6 sm:pt-10" style={{ background: C.ivory }}>
         <div className="section-wrap">
 
-          {/* Section Header */}
+          
           <SectionHeader
             title="Available Properties"
           />
 
-          {/* 2-column layout: Sidebar + Carousels */}
+          
           <div className="flex flex-col lg:flex-row gap-8">
 
-            {/* Left Sidebar Filter */}
+            
             <div className="w-full lg:w-72 flex-shrink-0">
               <PropertyFilterSidebar />
             </div>
 
-            {/* Right Content — Carousels */}
+            
             <div className="flex-1 min-w-0">
 
               {loading ? (
@@ -453,7 +453,7 @@ const Home = () => {
                     ))}
                   </div>
 
-                  {/* Pagination */}
+                  
                   {totalPages > 1 && (
                     <div className="flex justify-center items-center gap-4 mt-10">
                       <button
@@ -485,7 +485,7 @@ const Home = () => {
         </div>
       </section>
 
-      {/* ══ 5. WHY CHOOSE US ═════════════════════════════════════════════════ */}
+      
       <section
         className="py-16 sm:py-24"
         style={{ background: C.ivoryWarm, borderTop: `1px solid ${C.ivoryDeep}`, borderBottom: `1px solid ${C.ivoryDeep}` }}
@@ -503,7 +503,7 @@ const Home = () => {
         </div>
       </section>
 
-      {/* ══ 6. TESTIMONIALS ══════════════════════════════════════════════════ */}
+      
       <section className="py-16 sm:py-24" style={{ background: C.ivory }}>
         <div className="section-wrap">
           <SectionHeader
@@ -518,7 +518,7 @@ const Home = () => {
         </div>
       </section>
 
-      {/* ══ 7. CTA BAND (guests only) ═════════════════════════════════════════ */}
+      
       {!isAuthenticated && (
         <section
           className="relative overflow-hidden py-20 sm:py-28"
@@ -526,7 +526,7 @@ const Home = () => {
             background: "linear-gradient(150deg, #040810 0%, #0A1628 30%, #122040 60%, #8B600A 85%, #C9942A 100%)",
           }}
         >
-          {/* Orb decorations */}
+          
           <div className="absolute inset-0 pointer-events-none overflow-hidden">
             <div
               style={{
@@ -546,7 +546,7 @@ const Home = () => {
             />
           </div>
 
-          {/* Grid */}
+          
           <div
             className="absolute inset-0 pointer-events-none opacity-10"
             style={{
@@ -612,7 +612,7 @@ const Home = () => {
               </Link>
             </div>
 
-            {/* Trust badges */}
+            
             <div
               className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 mt-10"
               style={{ color: "rgba(200,211,232,0.65)", fontFamily: "'Jost', sans-serif", fontSize: "0.8rem", fontWeight: 500 }}
@@ -628,7 +628,7 @@ const Home = () => {
         </section>
       )}
 
-      {/* ══ 8. CONTACT STRIP ════════════════════════════════════════════════ */}
+      
       <section
         className="py-10 sm:py-12"
         style={{
@@ -696,9 +696,9 @@ const Home = () => {
         </div>
       </section>
 
-      {/* ══ 9. FOOTER ════════════════════════════════════════════════════════ */}
+      
       <footer style={{ background: "#040810", color: "rgba(200,211,232,0.7)" }}>
-        {/* Gold accent */}
+        
         <div
           style={{
             height: "1px",
@@ -709,7 +709,7 @@ const Home = () => {
         <div className="section-wrap py-14">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 mb-10">
 
-            {/* Brand */}
+            
             <div className="lg:col-span-2">
               <div className="flex items-center gap-3 mb-5">
                 <div
@@ -736,7 +736,7 @@ const Home = () => {
               </p>
             </div>
 
-            {/* Quick Links */}
+            
             <div>
               <p style={{ fontFamily: "'Jost', sans-serif", fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.2em", textTransform: "uppercase", color: C.gold, marginBottom: "16px" }}>
                 Quick Links
@@ -759,17 +759,17 @@ const Home = () => {
               </ul>
             </div>
 
-            {/* Contact */}
+            
             <div>
               <p style={{ fontFamily: "'Jost', sans-serif", fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.2em", textTransform: "uppercase", color: C.gold, marginBottom: "16px" }}>
                 Contact
               </p>
               <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: "10px" }}>
                 {[
-                  { icon: "📍", text: "House No. 2, Road No. 11, Block F, Banani, Dhaka-1213" },
-                  { icon: "📞", text: "01611652555", href: "tel:01611652555" },
-                  { icon: "✉️", text: "info@nirapodnibash.com", href: "mailto:info@nirapodnibash.com" },
-                  { icon: "🕐", text: "Sat–Thu: 10.00 AM – 06.00 PM" },
+                  { icon: "", text: "House No. 2, Road No. 11, Block F, Banani, Dhaka-1213" },
+                  { icon: "", text: "01611652555", href: "tel:01611652555" },
+                  { icon: "️", text: "info@nirapodnibash.com", href: "mailto:info@nirapodnibash.com" },
+                  { icon: "", text: "Sat–Thu: 10.00 AM – 06.00 PM" },
                 ].map(({ icon, text, href }) => (
                   <li key={text}>
                     {href ? (
@@ -794,7 +794,7 @@ const Home = () => {
 
           </div>
 
-          {/* Bottom bar */}
+          
           <div
             className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-3"
             style={{
@@ -805,7 +805,7 @@ const Home = () => {
             }}
           >
             <p>© 2026 Nirapod Nibash. All rights reserved.</p>
-            <p>Built with ❤️ for Bangladesh's Real Estate Market</p>
+            <p>Built with ️ for Bangladesh's Real Estate Market</p>
           </div>
         </div>
       </footer>

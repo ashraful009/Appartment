@@ -6,13 +6,13 @@ import BroadcastCard from "../../components/seller/team/BroadcastCard";
 import SubSellerCard from "../../components/seller/team/SubSellerCard";
 import TimelineModal from "../../components/seller/team/TimelineModal";
 
-// ── Main ──────────────────────────────────────────────────────────────────────
+
 const MyTeam = () => {
   const [team, setTeam] = useState([]);
   const [overview, setOverview] = useState({ totalEarnings: 0, totalConversions: 0 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [timelineModal, setTimelineModal] = useState(null); // { leadId, leadName }
+  const [timelineModal, setTimelineModal] = useState(null); 
 
   useEffect(() => {
     const fetchOverview = async () => {
@@ -32,7 +32,7 @@ const MyTeam = () => {
 
   return (
     <div className="p-8">
-      {/* Header */}
+      
       <div className="mb-8">
         <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-1">Seller Panel</p>
         <h1 className="text-3xl font-extrabold text-gray-900">Team Hub</h1>
@@ -45,7 +45,7 @@ const MyTeam = () => {
         <div className="mb-6 bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm">{error}</div>
       )}
 
-      {/* Top Stats + Broadcast Row */}
+      
       {!loading && (
         <div className="flex flex-col lg:flex-row gap-5 mb-8">
           <EarningsCard
@@ -57,7 +57,7 @@ const MyTeam = () => {
         </div>
       )}
 
-      {/* Loading skeletons */}
+      
       {loading && (
         <div className="space-y-3 mb-8">
           <div className="flex gap-5">
@@ -76,7 +76,7 @@ const MyTeam = () => {
         </div>
       )}
 
-      {/* Empty */}
+      
       {!loading && !error && team.length === 0 && (
         <div className="flex flex-col items-center justify-center py-24 text-center">
           <div className="w-16 h-16 rounded-2xl bg-brand-100 flex items-center justify-center mb-4">
@@ -89,7 +89,7 @@ const MyTeam = () => {
         </div>
       )}
 
-      {/* Sub-seller Cards */}
+      
       {!loading && team.length > 0 && (
         <div className="space-y-3">
           <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-2">
@@ -101,7 +101,7 @@ const MyTeam = () => {
         </div>
       )}
 
-      {/* Read-only Timeline Modal */}
+      
       {timelineModal && (
         <TimelineModal
           leadId={timelineModal.leadId}

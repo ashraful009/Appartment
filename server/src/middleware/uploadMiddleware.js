@@ -2,7 +2,7 @@ const multer = require("multer");
 const { CloudinaryStorage } = require("multer-storage-cloudinary");
 const cloudinary = require("../config/cloudinary");
 
-// ─── Helper: build a CloudinaryStorage for a given folder ────────────────────
+
 const makeStorage = (folder) =>
   new CloudinaryStorage({
     cloudinary,
@@ -18,7 +18,7 @@ const makeStorage = (folder) =>
     },
   });
 
-// ─── Helper: wrap multer to work with Express 5 (no next as middleware arg) ──
+
 const wrapMulter = (upload) => (req, res, next) => {
   upload(req, res, (err) => {
     if (err instanceof multer.MulterError) {
@@ -33,7 +33,7 @@ const wrapMulter = (upload) => (req, res, next) => {
   });
 };
 
-// ── 1. Avatar (single, 2 MB, face-crop 400×400) ──────────────────────────────
+
 const _avatarUpload = multer({
   storage: new CloudinaryStorage({
     cloudinary,
@@ -54,7 +54,7 @@ const _avatarUpload = multer({
 
 const uploadAvatar = wrapMulter(_avatarUpload);
 
-// ── 2a. Banner images — legacy (field: "images", multiple, 5 MB each) ─────────
+
 const _bannerUpload = multer({
   storage: makeStorage("apartment/banners"),
   limits: { fileSize: 5 * 1024 * 1024 },
@@ -64,20 +64,20 @@ const _bannerUpload = multer({
 
 const uploadBannerImages = wrapMulter(_bannerUpload);
 
-// ── 2b. Banner media — new (fields: desktopMedia + mobileMedia; image OR video) ─
+
 const _bannerMediaUpload = multer({
   storage: new CloudinaryStorage({
     cloudinary,
     params: (_req, file) => ({
       folder: "apartment/banners",
-      resource_type: "auto", // handles both images and videos
+      resource_type: "auto", 
       allowed_formats: ["jpg", "jpeg", "png", "webp", "avif", "gif", "mp4", "webm", "mov"],
       public_id: `${Date.now()}_${file.originalname
         .replace(/\.[^.]+$/, "")
         .replace(/\s+/g, "_")}`,
     }),
   }),
-  limits: { fileSize: 50 * 1024 * 1024 }, // 50 MB — generous for videos
+  limits: { fileSize: 50 * 1024 * 1024 }, 
   fileFilter: (_req, file, cb) => {
     const isImage = file.mimetype.startsWith("image/");
     const isVideo = file.mimetype.startsWith("video/");
@@ -91,7 +91,7 @@ const _bannerMediaUpload = multer({
 
 const uploadBannerMedia = wrapMulter(_bannerMediaUpload);
 
-// ── 3. Property images (mainImage single + extraImages multiple, max 10) ─────
+
 const _propertyUpload = multer({
   storage: makeStorage("apartment/properties"),
   limits: { fileSize: 10 * 1024 * 1024 },
@@ -107,13 +107,13 @@ const _propertyUpload = multer({
 
 const uploadPropertyImages = wrapMulter(_propertyUpload);
 
-// ── 4. Customer documents (single file: images OR PDF, max 10 MB) ────────────
+
 const _documentUpload = multer({
   storage: new CloudinaryStorage({
     cloudinary,
     params: {
       folder: "apartment/documents",
-      // Allow both images and PDFs; Cloudinary needs resource_type raw for non-image
+      
       resource_type: "auto",
       allowed_formats: ["jpg", "jpeg", "png", "webp", "pdf"],
       public_id: (_req, file) => {
@@ -124,17 +124,17 @@ const _documentUpload = multer({
       },
     },
   }),
-  limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB
+  limits: { fileSize: 10 * 1024 * 1024 }, 
   fileFilter: (_req, file, cb) => {
     const allowed = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
     if (allowed.includes(file.mimetype)) return cb(null, true);
     cb(new Error("Only images (JPG/PNG/WebP) and PDF files are allowed."));
   },
-}).single("document"); // frontend must use field name "document"
+}).single("document"); 
 
 const uploadDocumentFile = wrapMulter(_documentUpload);
 
-// ── 5. Customer Installment Invoices (single file: images OR PDF, max 10 MB) ──
+
 const _invoiceUpload = multer({
   storage: new CloudinaryStorage({
     cloudinary,
@@ -154,7 +154,7 @@ const _invoiceUpload = multer({
     if (allowed.includes(file.mimetype)) return cb(null, true);
     cb(new Error("Only images (JPG/PNG/WebP) and PDF files are allowed for invoices."));
   },
-}).single("invoice"); // frontend must use field name "invoice"
+}).single("invoice"); 
 
 const uploadInvoice = wrapMulter(_invoiceUpload);
 

@@ -16,7 +16,7 @@ import {
 import { RatioBadge, CardHeader, SkeletonCard, Empty, BarTip } from "../../components/admin/analytics/SellersShared";
 import { FunnelTip, PieTip, TreeNode } from "../../components/admin/analytics/AnalyticsShared";
 
-// ── Colour palettes ──────────────────────────────────────────────────────────
+
 const FUNNEL_COLORS = ["#6366f1","#3b82f6","#8b5cf6","#f59e0b","#10b981","#ef4444"];
 const SOURCE_COLORS = {
   "Website": "#6366f1", "Facebook": "#3b82f6",
@@ -33,13 +33,13 @@ const ROW_BORDER = [
   "border-l-4 border-orange-400",
 ];
 
-// ── Main Component ───────────────────────────────────────────────────────────
+
 const MasterAnalytics = () => {
-  // Seller Analytics state
+  
   const [sellerData, setSellerData] = useState(null);
   const [loadingSeller, setLoadingSeller] = useState(true);
 
-  // Pipeline/Network state
+  
   const [funnel,      setFunnel]      = useState([]);
   const [sources,     setSources]     = useState([]);
   const [leaderboard, setLeaderboard] = useState([]);
@@ -49,13 +49,13 @@ const MasterAnalytics = () => {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    // 1. Seller analytics
+    
     axios.get("/api/admin/seller-analytics", { withCredentials: true })
       .then(({ data }) => setSellerData(data))
       .catch(err => setError(err?.response?.data?.message || "Failed to load seller analytics."))
       .finally(() => setLoadingSeller(false));
 
-    // 2. Pipeline funnel + lead sources
+    
     Promise.all([
       axios.get("/api/admin/analytics/pipeline-funnel", { withCredentials: true }),
       axios.get("/api/admin/analytics/lead-sources",    { withCredentials: true }),
@@ -67,7 +67,7 @@ const MasterAnalytics = () => {
       .catch(() => {})
       .finally(() => setLoadingPipeline(false));
 
-    // 3. Team leaderboard + genealogy tree
+    
     Promise.all([
       axios.get("/api/admin/analytics/team-leaderboard", { withCredentials: true }),
       axios.get("/api/admin/analytics/genealogy-tree",   { withCredentials: true }),
@@ -90,7 +90,7 @@ const MasterAnalytics = () => {
 
   return (
     <div className="bg-gray-50 min-h-full p-6">
-      {/* ── Page Header ── */}
+      
       <div className="mb-7">
         <h1 className="text-3xl font-extrabold text-gray-900">Super Analytics</h1>
       </div>
@@ -99,12 +99,10 @@ const MasterAnalytics = () => {
         <div className="mb-6 bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm">{error}</div>
       )}
 
-      {/* ══════════════════════════════════════════════════
-          SECTION 1 — Leaderboard | Funnel | Pie
-      ══════════════════════════════════════════════════ */}
+      
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
 
-        {/* Col 1 — Last Month Leaderboard */}
+        
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex flex-col">
           <CardHeader icon={Trophy} iconBg="bg-amber-500" title="Last Month's Leaderboard" subtitle="Top sellers by conversion ratio" />
           {loadingSeller ? (
@@ -120,14 +118,14 @@ const MasterAnalytics = () => {
               {lastMonthTop10.map((seller, idx) => (
                 <div key={idx}
                   className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-gray-50 transition-colors">
-                  {/* Rank */}
+                  
                   <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-extrabold flex-shrink-0 ${
                     idx === 0 ? "bg-amber-400 text-amber-900"
                     : idx === 1 ? "bg-gray-300 text-gray-700"
                     : idx === 2 ? "bg-orange-300 text-orange-800"
                     : "bg-gray-100 text-gray-500"
                   }`}>{idx + 1}</span>
-                  {/* Avatar */}
+                  
                   {seller.avatar ? (
                     <img src={seller.avatar} alt={seller.name}
                       className="w-8 h-8 rounded-full object-cover border border-gray-200 flex-shrink-0" />
@@ -136,7 +134,7 @@ const MasterAnalytics = () => {
                       {seller.name?.[0]?.toUpperCase() ?? "?"}
                     </div>
                   )}
-                  {/* Name */}
+                  
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-bold text-gray-800 truncate">{seller.name}</p>
                     <p className="text-[10px] text-gray-400">{seller.totalApproved}/{seller.totalAssigned} leads</p>
@@ -148,7 +146,7 @@ const MasterAnalytics = () => {
           )}
         </div>
 
-        {/* Col 2 — Pipeline Funnel */}
+        
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex flex-col">
           <CardHeader icon={TrendingDown} iconBg="bg-indigo-500" title="Sales Pipeline Funnel" subtitle={`${totalLeads} leads across all stages`} />
           {loadingPipeline ? (
@@ -192,7 +190,7 @@ const MasterAnalytics = () => {
           )}
         </div>
 
-        {/* Col 3 — Lead Source Pie */}
+        
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex flex-col">
           <CardHeader icon={PieIcon} iconBg="bg-emerald-500" title="Lead Source Breakdown" subtitle={`${totalSources} total leads tracked`} />
           {loadingPipeline ? (
@@ -234,12 +232,10 @@ const MasterAnalytics = () => {
         </div>
       </div>
 
-      {/* ══════════════════════════════════════════════════
-          SECTION 2 — Teams Table | Conv Bar | Sellers Table
-      ══════════════════════════════════════════════════ */}
+      
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
 
-        {/* Col 1 — Top Performing Teams */}
+        
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex flex-col">
           <CardHeader icon={Trophy} iconBg="bg-amber-400" title="Top Performing Teams" subtitle="Ranked by Closed Won leads" />
           {loadingNetwork ? (
@@ -298,7 +294,7 @@ const MasterAnalytics = () => {
           )}
         </div>
 
-        {/* Col 2 — Monthly Conversions Bar Chart */}
+        
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex flex-col">
           <CardHeader icon={BarChart2} iconBg="bg-brand-600" title={`${currentYear} Conversion Trend`} subtitle="Monthly customer conversions" />
           {loadingSeller ? (
@@ -326,7 +322,7 @@ const MasterAnalytics = () => {
           )}
         </div>
 
-        {/* Col 3 — All Sellers (scrollable) */}
+        
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex flex-col">
           <CardHeader icon={List} iconBg="bg-emerald-500" title="All Sellers" subtitle="Full breakdown by conversion ratio" />
           {loadingSeller ? (
@@ -393,12 +389,10 @@ const MasterAnalytics = () => {
         </div>
       </div>
 
-      {/* ══════════════════════════════════════════════════
-          SECTION 3 — Genealogy Tree | Quick Stats
-      ══════════════════════════════════════════════════ */}
+      
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-        {/* Col 1+2 — Genealogy Tree */}
+        
         <div className="lg:col-span-2 bg-white p-6 rounded-2xl border border-gray-100 shadow-sm overflow-x-auto">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-9 h-9 rounded-xl bg-purple-100 flex items-center justify-center flex-shrink-0">
@@ -431,7 +425,7 @@ const MasterAnalytics = () => {
           )}
         </div>
 
-        {/* Col 3 — Quick Stats Summary */}
+        
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex flex-col gap-4">
           <div>
             <h2 className="text-sm font-extrabold text-gray-900 uppercase tracking-wide mb-1">Quick Stats</h2>

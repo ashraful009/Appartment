@@ -1,7 +1,7 @@
 import React from "react";
 import { CheckCircle2, Circle } from "lucide-react";
 
-// Pipeline stages in display order
+
 const STAGES = [
   { key: "New",         label: "New Request" },
   { key: "Contacted",   label: "Contacted" },
@@ -11,15 +11,12 @@ const STAGES = [
   { key: "Closed Lost", label: "Closed Lost" },
 ];
 
-/**
- * InquiryStepper — horizontal visual pipeline progress bar.
- * Props: currentStage {string}  — matches PriceRequest.pipelineStage enum values
- */
+
 const InquiryStepper = ({ currentStage }) => {
-  // "Closed Lost" is a terminal failure state; treat it separately
+  
   const isClosedLost = currentStage === "Closed Lost";
 
-  // Index of the current stage (skip Closed Lost from the main flow)
+  
   const mainStages = STAGES.filter((s) => s.key !== "Closed Lost");
   const currentIdx = mainStages.findIndex((s) => s.key === currentStage);
 
@@ -33,7 +30,7 @@ const InquiryStepper = ({ currentStage }) => {
 
           return (
             <React.Fragment key={stage.key}>
-              {/* Step dot */}
+              
               <div className="flex flex-col items-center flex-shrink-0">
                 <div
                   className={`w-7 h-7 rounded-full flex items-center justify-center transition-colors
@@ -55,7 +52,7 @@ const InquiryStepper = ({ currentStage }) => {
                 </span>
               </div>
 
-              {/* Connector line between dots */}
+              
               {idx < mainStages.length - 1 && (
                 <div
                   className={`flex-1 h-1 mx-1 rounded-full transition-colors
@@ -67,7 +64,7 @@ const InquiryStepper = ({ currentStage }) => {
         })}
       </div>
 
-      {/* Closed Lost badge */}
+      
       {isClosedLost && (
         <div className="mt-3 inline-flex items-center gap-1.5 bg-red-50 border border-red-200 text-red-600 text-xs font-semibold px-3 py-1 rounded-full">
           <span className="w-1.5 h-1.5 rounded-full bg-red-500 inline-block" />

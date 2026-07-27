@@ -19,9 +19,9 @@ import {
   Layers,
 } from "lucide-react";
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Toast Notification
-// ─────────────────────────────────────────────────────────────────────────────
+
+
+
 const Toast = ({ type, msg, onClose }) => (
   <div
     className={`fixed bottom-6 right-6 z-[100] flex items-start gap-3 px-5 py-4 rounded-2xl shadow-2xl text-sm font-medium max-w-sm border backdrop-blur-sm transition-all duration-300 ${
@@ -45,9 +45,9 @@ const Toast = ({ type, msg, onClose }) => (
   </div>
 );
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Media Type Toggle
-// ─────────────────────────────────────────────────────────────────────────────
+
+
+
 const MediaTypeToggle = ({ value, onChange }) => (
   <div className="flex p-1 bg-gray-100 rounded-xl gap-1">
     {[
@@ -71,9 +71,9 @@ const MediaTypeToggle = ({ value, onChange }) => (
   </div>
 );
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Single Media Upload Slot (Desktop or Mobile)
-// ─────────────────────────────────────────────────────────────────────────────
+
+
+
 const MediaSlot = ({
   id,
   label,
@@ -122,7 +122,7 @@ const MediaSlot = ({
             />
           )}
 
-          {/* Overlay actions */}
+          
           <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
             <button
               type="button"
@@ -144,7 +144,7 @@ const MediaSlot = ({
             )}
           </div>
 
-          {/* Label badge */}
+          
           <div className="absolute top-2 left-2 bg-black/60 text-white text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
             <SlotIcon size={10} />
             {label.split(" ")[0]}
@@ -168,15 +168,15 @@ const MediaSlot = ({
   );
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Banner Card (Grid Item)
-// ─────────────────────────────────────────────────────────────────────────────
+
+
+
 const BannerCard = ({ banner, onEdit, onDelete, onToggle, deleting, toggling }) => {
   const isVideo = banner.mediaType === "video";
 
   return (
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden hover:shadow-md transition-shadow duration-200 group">
-      {/* Preview thumbnail */}
+      
       <div className="relative aspect-video bg-gray-100 overflow-hidden">
         {isVideo ? (
           <video
@@ -195,7 +195,7 @@ const BannerCard = ({ banner, onEdit, onDelete, onToggle, deleting, toggling }) 
           />
         )}
 
-        {/* Overlay badges */}
+        
         <div className="absolute top-2 left-2 flex gap-1.5">
           <span
             className={`flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full ${
@@ -219,14 +219,14 @@ const BannerCard = ({ banner, onEdit, onDelete, onToggle, deleting, toggling }) 
           </span>
         </div>
 
-        {/* Mobile preview indicator */}
+        
         <div className="absolute bottom-2 right-2 bg-black/60 text-white rounded-lg px-2 py-1 flex items-center gap-1 text-[10px] font-semibold opacity-0 group-hover:opacity-100 transition-opacity">
           <Smartphone size={10} />
           +Mobile
         </div>
       </div>
 
-      {/* Card body */}
+      
       <div className="p-4 space-y-3">
         <div>
           <p className="font-semibold text-gray-800 truncate text-sm">
@@ -241,9 +241,9 @@ const BannerCard = ({ banner, onEdit, onDelete, onToggle, deleting, toggling }) 
           </p>
         </div>
 
-        {/* Actions row */}
+        
         <div className="flex items-center gap-2 pt-1 border-t border-gray-50">
-          {/* Toggle active */}
+          
           <button
             type="button"
             onClick={() => onToggle(banner)}
@@ -267,7 +267,7 @@ const BannerCard = ({ banner, onEdit, onDelete, onToggle, deleting, toggling }) 
 
           <div className="flex-1" />
 
-          {/* Edit */}
+          
           <button
             type="button"
             onClick={() => onEdit(banner)}
@@ -277,7 +277,7 @@ const BannerCard = ({ banner, onEdit, onDelete, onToggle, deleting, toggling }) 
             Edit
           </button>
 
-          {/* Delete */}
+          
           <button
             type="button"
             onClick={() => onDelete(banner)}
@@ -297,9 +297,9 @@ const BannerCard = ({ banner, onEdit, onDelete, onToggle, deleting, toggling }) 
   );
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Delete Confirm Modal
-// ─────────────────────────────────────────────────────────────────────────────
+
+
+
 const DeleteConfirmModal = ({ banner, onConfirm, onCancel, loading }) => (
   <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm px-4">
     <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden">
@@ -346,9 +346,9 @@ const DeleteConfirmModal = ({ banner, onConfirm, onCancel, loading }) => (
   </div>
 );
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Upload / Edit Modal
-// ─────────────────────────────────────────────────────────────────────────────
+
+
+
 const BannerModal = ({ editingBanner, onClose, onSuccess, showToast }) => {
   const isEdit = !!editingBanner;
 
@@ -362,7 +362,7 @@ const BannerModal = ({ editingBanner, onClose, onSuccess, showToast }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Validate: new banners need both files; edits can update selectively
+    
     if (!isEdit && (!desktopFile || !mobileFile)) {
       showToast("error", "Both desktop and mobile media files are required.");
       return;
@@ -403,7 +403,7 @@ const BannerModal = ({ editingBanner, onClose, onSuccess, showToast }) => {
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4 py-6 overflow-y-auto">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 my-auto">
 
-        {/* Modal Header */}
+        
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-gray-50/60">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-brand-100 flex items-center justify-center">
@@ -427,16 +427,16 @@ const BannerModal = ({ editingBanner, onClose, onSuccess, showToast }) => {
           </button>
         </div>
 
-        {/* Modal Body */}
+        
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
 
-          {/* Media Type Toggle */}
+          
           <div className="space-y-2">
             <label className="form-label">Media Type</label>
             <MediaTypeToggle value={mediaType} onChange={setMediaType} />
           </div>
 
-          {/* Size helper */}
+          
           <div className="flex items-start gap-2.5 bg-blue-50 border border-blue-100 rounded-xl px-4 py-3 text-xs text-blue-700">
             <Monitor size={13} className="flex-shrink-0 mt-0.5" />
             <div className="space-y-0.5">
@@ -449,7 +449,7 @@ const BannerModal = ({ editingBanner, onClose, onSuccess, showToast }) => {
             </div>
           </div>
 
-          {/* Title */}
+          
           <div>
             <label className="form-label">Title <span className="font-normal text-gray-400">(optional)</span></label>
             <input
@@ -461,7 +461,7 @@ const BannerModal = ({ editingBanner, onClose, onSuccess, showToast }) => {
             />
           </div>
 
-          {/* Dual upload */}
+          
           <div className="grid grid-cols-2 gap-4">
             <MediaSlot
               id="desktop-media"
@@ -483,7 +483,7 @@ const BannerModal = ({ editingBanner, onClose, onSuccess, showToast }) => {
             />
           </div>
 
-          {/* Active toggle */}
+          
           <div className="flex items-center justify-between bg-gray-50 rounded-xl px-4 py-3 border border-gray-100">
             <div>
               <p className="text-sm font-semibold text-gray-700">Set as Active</p>
@@ -504,7 +504,7 @@ const BannerModal = ({ editingBanner, onClose, onSuccess, showToast }) => {
             </button>
           </div>
 
-          {/* Footer */}
+          
           <div className="flex gap-3 pt-2">
             <button
               type="button"
@@ -537,18 +537,18 @@ const BannerModal = ({ editingBanner, onClose, onSuccess, showToast }) => {
   );
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Main Page
-// ─────────────────────────────────────────────────────────────────────────────
+
+
+
 const BannerManagement = () => {
   const [banners, setBanners]         = useState([]);
   const [fetchLoading, setFetchLoading] = useState(true);
   const [toast, setToast]             = useState(null);
   const [showModal, setShowModal]     = useState(false);
-  const [editingBanner, setEditingBanner] = useState(null);  // null = create mode
-  const [deletingTarget, setDeletingTarget] = useState(null); // banner to confirm-delete
-  const [deleting, setDeleting]       = useState(null);  // banner._id being deleted
-  const [toggling, setToggling]       = useState(null);  // banner._id being toggled
+  const [editingBanner, setEditingBanner] = useState(null);  
+  const [deletingTarget, setDeletingTarget] = useState(null); 
+  const [deleting, setDeleting]       = useState(null);  
+  const [toggling, setToggling]       = useState(null);  
 
   const showToast = useCallback((type, msg) => {
     setToast({ type, msg });
@@ -569,7 +569,7 @@ const BannerManagement = () => {
 
   useEffect(() => { fetchBanners(); }, [fetchBanners]);
 
-  // ── Handlers ───────────────────────────────────────────────────────────────
+  
 
   const openCreate = () => { setEditingBanner(null); setShowModal(true); };
   const openEdit   = (banner) => { setEditingBanner(banner); setShowModal(true); };
@@ -612,7 +612,7 @@ const BannerManagement = () => {
     }
   };
 
-  // ── Render ─────────────────────────────────────────────────────────────────
+  
 
   const activeCount   = banners.filter((b) => b.isActive).length;
   const inactiveCount = banners.length - activeCount;
@@ -622,7 +622,7 @@ const BannerManagement = () => {
 
       {toast && <Toast {...toast} onClose={() => setToast(null)} />}
 
-      {/* Header */}
+      
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-extrabold text-gray-900 flex items-center gap-2">
@@ -644,7 +644,7 @@ const BannerManagement = () => {
         </button>
       </div>
 
-      {/* Stats row */}
+      
       {!fetchLoading && banners.length > 0 && (
         <div className="grid grid-cols-3 gap-4">
           {[
@@ -663,7 +663,7 @@ const BannerManagement = () => {
         </div>
       )}
 
-      {/* Banner Grid */}
+      
       {fetchLoading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {[...Array(3)].map((_, i) => (
@@ -715,7 +715,7 @@ const BannerManagement = () => {
         </div>
       )}
 
-      {/* Upload / Edit Modal */}
+      
       {showModal && (
         <BannerModal
           editingBanner={editingBanner}
@@ -725,7 +725,7 @@ const BannerManagement = () => {
         />
       )}
 
-      {/* Delete Confirm Modal */}
+      
       {deletingTarget && (
         <DeleteConfirmModal
           banner={deletingTarget}

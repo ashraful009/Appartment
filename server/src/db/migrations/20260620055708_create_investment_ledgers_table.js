@@ -1,13 +1,10 @@
-/**
- * @param { import("knex").Knex } knex
- * @returns { Promise<void> }
- */
+
 exports.up = function(knex) {
   return knex.schema.createTable('investment_ledgers', (table) => {
     table.string('id', 36).primary();
     
-    // membership_id is required but the table isn't created yet, we can't add FK. 
-    // We will add it as a string id and can add a constraint later.
+    
+    
     table.string('membership_id', 36).notNullable(); 
     
     table.string('user_id', 36).references('id').inTable('users').onDelete('CASCADE').notNullable();
@@ -33,7 +30,7 @@ exports.up = function(knex) {
     
     table.timestamps(true, true);
     
-    // Indexes
+    
     table.index(['user_id', 'type']);
     table.index('membership_id');
     table.index('status');
@@ -42,10 +39,7 @@ exports.up = function(knex) {
   });
 };
 
-/**
- * @param { import("knex").Knex } knex
- * @returns { Promise<void> }
- */
+
 exports.down = function(knex) {
   return knex.schema.dropTable('investment_ledgers');
 };
