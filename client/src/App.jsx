@@ -17,6 +17,7 @@ import AddBuilding from "./pages/admin/AddBuilding";
 import ManageBuildings from "./pages/admin/ManageBuildings";
 import EditBuilding from "./pages/admin/EditBuilding";
 import UserManagement from "./pages/admin/UserManagement";
+import SystemHierarchyView from "./pages/admin/SystemHierarchyView";
 import SellersPerformance from "./pages/admin/SellersPerformance";
 import AdminPendingLeads from "./pages/admin/AdminPendingLeads";
 import MasterAnalytics from "./pages/admin/MasterAnalytics";
@@ -57,6 +58,8 @@ import GMLayout from "./layouts/GMLayout";
 import GMDashboard from "./pages/gm/GMDashboard";
 import AGMLayout from "./layouts/AGMLayout";
 import AGMDashboard from "./pages/agm/AGMDashboard";
+import AreaManagerLayout from "./layouts/AreaManagerLayout";
+import AreaManagerDashboard from "./pages/area_manager/AreaManagerDashboard";
 import AccountantLayout from "./layouts/AccountantLayout";
 import AccountantDashboard from "./pages/accountant/AccountantDashboard";
 import PendingConfirmations from "./pages/accountant/PendingConfirmations";
@@ -122,6 +125,7 @@ function App() {
                 <Route path="manage-buildings" element={<ManageBuildings />} />
                 <Route path="edit-building/:id" element={<EditBuilding />} />
                 <Route path="users" element={<UserManagement />} />
+                <Route path="hierarchy" element={<SystemHierarchyView />} />
                 <Route path="book-unit" element={<AdminBookUnit />} />
                 <Route path="book-unit/:id" element={<BookUnitDetail />} />
                 <Route path="areas" element={<AreaManagement />} />
@@ -165,6 +169,10 @@ function App() {
 
               <Route path="/agm" element={<ProtectedRoute allowedRoles={['AGM']}><AGMLayout /></ProtectedRoute>}>
                 <Route index element={<AGMDashboard />} />
+              </Route>
+
+              <Route path="/area-manager" element={<ProtectedRoute allowedRoles={['area_manager']}><AreaManagerLayout /></ProtectedRoute>}>
+                <Route index element={<AreaManagerDashboard />} />
               </Route>
 
               <Route path="/accountant" element={<ProtectedRoute allowedRoles={['Accountant']}><AccountantLayout /></ProtectedRoute>}>

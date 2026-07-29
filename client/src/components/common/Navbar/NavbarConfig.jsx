@@ -9,6 +9,7 @@ export const ROLE_LINKS = [
   { role: "Director",   label: "Director Panel",   to: "/director",       icon: <Briefcase size={14} /> },
   { role: "GM",         label: "GM Panel",         to: "/gm",             icon: <TrendingUp size={14} /> },
   { role: "AGM",        label: "AGM Panel",        to: "/agm",            icon: <TrendingUp size={14} /> },
+  { role: "area_manager", label: "Area Manager Panel", to: "/area-manager", icon: <TrendingUp size={14} /> },
   { role: "Accountant", label: "Accountant Panel", to: "/accountant",     icon: <ShieldCheck size={14} /> },
   { role: "DataEntry",  label: "Data Entry Panel", to: "/data-entry",     icon: <ShieldCheck size={14} /> },
   { role: "Management", label: "Management Panel", to: "/management",     icon: <Briefcase size={14} /> },

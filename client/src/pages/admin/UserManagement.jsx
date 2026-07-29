@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import RoleToggles, { ALL_ROLES } from "../../components/admin/users/RoleToggles";
-import { Edit2, X } from "lucide-react";
+import { Edit2, X, UserCheck } from "lucide-react";
+
 const UserManagement = () => {
   const [users, setUsers]                   = useState([]);
   const [loading, setLoading]               = useState(true);
@@ -10,6 +11,9 @@ const UserManagement = () => {
   const [savingToggle, setSavingToggle]     = useState(false);
   const [editingUser, setEditingUser]       = useState(null);
   const [tempRoles, setTempRoles]           = useState([]);
+  const [tempSuperiorId, setTempSuperiorId] = useState("");
+  const [candidateSuperiors, setCandidateSuperiors] = useState([]);
+  const [loadingCandidates, setLoadingCandidates] = useState(false);
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -27,9 +31,43 @@ const UserManagement = () => {
     fetchUsers();
   }, []);
 
+  useEffect(() => {
+    if (!editingUser) {
+      setCandidateSuperiors([]);
+      return;
+    }
+    let targetRole = null;
+    if (tempRoles.includes("GM")) targetRole = "GM";
+    else if (tempRoles.includes("AGM")) targetRole = "AGM";
+    else if (tempRoles.includes("area_manager")) targetRole = "area_manager";
+    else if (tempRoles.includes("seller")) targetRole = "seller";
+    else if (tempRoles.includes("customer")) targetRole = "customer";
+
+    if (!targetRole) {
+      setCandidateSuperiors([]);
+      setTempSuperiorId("");
+      return;
+    }
+
+    const fetchCandidates = async () => {
+      setLoadingCandidates(true);
+      try {
+        const res = await axios.get(`/api/admin/candidate-superiors?role=${targetRole}`, { withCredentials: true });
+        const filtered = (res.data.candidates || []).filter(c => c._id !== editingUser._id);
+        setCandidateSuperiors(filtered);
+      } catch (err) {
+        console.error("Failed to load candidate superiors", err);
+      } finally {
+        setLoadingCandidates(false);
+      }
+    };
+    fetchCandidates();
+  }, [tempRoles, editingUser]);
+
   const openEditModal = (user) => {
     setEditingUser(user);
     setTempRoles(user.roles || ["user"]);
+    setTempSuperiorId(user.superiorId || user.superior?._id || "");
   };
 
   const handleToggleRole = (roleKey) => {
@@ -45,20 +83,36 @@ const UserManagement = () => {
     if (!editingUser) return;
     setSavingToggle(true);
     try {
-      await axios.put(`/api/admin/users/${editingUser._id}/roles`, { roles: tempRoles }, { withCredentials: true });
-      setUsers(prev => prev.map(u => u._id === editingUser._id ? { ...u, roles: tempRoles } : u));
+      const payload = {
+        roles: tempRoles,
+        superior_id: tempSuperiorId || null
+      };
+      const res = await axios.put(`/api/admin/users/${editingUser._id}/roles`, payload, { withCredentials: true });
+      
+      const updatedSup = candidateSuperiors.find(c => c._id === tempSuperiorId);
+      const supName = updatedSup ? updatedSup.name : (tempSuperiorId ? editingUser.superiorName || editingUser.superior?.name : null);
+
+      setUsers(prev => prev.map(u => {
+        if (u._id === editingUser._id) {
+          return {
+            ...u,
+            roles: tempRoles,
+            superiorId: tempSuperiorId || null,
+            superiorName: supName,
+            superior: tempSuperiorId ? { _id: tempSuperiorId, name: supName } : null
+          };
+        }
+        return u;
+      }));
       setEditingUser(null);
     } catch (err) {
-      alert("Failed to update roles");
+      alert(err?.response?.data?.message || "Failed to update roles");
     } finally {
       setSavingToggle(false);
     }
   };
 
-  const getRoleColor = (roleKey) => {
-    const found = ALL_ROLES.find(r => r.key === roleKey);
-    return found ? found.colorClass : "bg-gray-100 text-gray-700 border-gray-200";
-  };
+  const needsSuperior = tempRoles.some(r => ["GM", "AGM", "area_manager", "seller", "customer"].includes(r));
 
   if (loading) return (
     <div className="p-8 space-y-3">
@@ -73,7 +127,7 @@ const UserManagement = () => {
       <div className="mb-8">
         <h1 className="text-2xl font-extrabold text-gray-800">Manage Users</h1>
         <p className="text-gray-500 text-sm mt-1">
-          {users.length} total users · Toggle switches to assign / revoke roles instantly.
+          {users.length} total users · Toggle switches to assign roles and define hierarchy reporting lines.
         </p>
       </div>
 
@@ -91,58 +145,72 @@ const UserManagement = () => {
                 <th className="text-left px-5 py-3.5 font-semibold text-gray-600">Email</th>
                 <th className="text-left px-5 py-3.5 font-semibold text-gray-600">Phone</th>
                 <th className="text-left px-5 py-3.5 font-semibold text-gray-600">Roles</th>
+                <th className="text-left px-5 py-3.5 font-semibold text-gray-600">Reports To</th>
                 <th className="text-left px-5 py-3.5 font-semibold text-gray-600 whitespace-nowrap">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
-              {users.map(user => (
-                <tr key={user._id} className="hover:bg-gray-50/70 transition-colors">
-                  
-                  <td className="px-5 py-4">
-                    <div className="flex items-center gap-3">
-                      {user.avatar ? (
-                        <img src={user.avatar} alt={user.name} className="w-9 h-9 rounded-full object-cover border border-gray-200 flex-shrink-0" />
-                      ) : (
-                        <div className="w-9 h-9 rounded-full bg-brand-100 flex items-center justify-center text-brand-700 font-bold text-sm flex-shrink-0">
-                          {user.name?.[0]?.toUpperCase()}
+              {users.map(user => {
+                const supName = user.superiorName || user.superior?.name;
+                return (
+                  <tr key={user._id} className="hover:bg-gray-50/70 transition-colors">
+                    
+                    <td className="px-5 py-4">
+                      <div className="flex items-center gap-3">
+                        {user.avatar ? (
+                          <img src={user.avatar} alt={user.name} className="w-9 h-9 rounded-full object-cover border border-gray-200 flex-shrink-0" />
+                        ) : (
+                          <div className="w-9 h-9 rounded-full bg-brand-100 flex items-center justify-center text-brand-700 font-bold text-sm flex-shrink-0">
+                            {user.name?.[0]?.toUpperCase()}
+                          </div>
+                        )}
+                        <div>
+                          <p className="font-semibold text-gray-800 truncate max-w-[140px]">{user.name}</p>
+                          {user._id === currentAdminId && <p className="text-xs text-brand-500 font-medium">You</p>}
                         </div>
-                      )}
-                      <div>
-                        <p className="font-semibold text-gray-800 truncate max-w-[140px]">{user.name}</p>
-                        {user._id === currentAdminId && <p className="text-xs text-brand-500 font-medium">You</p>}
                       </div>
-                    </div>
-                  </td>
-                  <td className="px-5 py-4 text-gray-500 max-w-[200px] truncate">{user.email}</td>
-                  <td className="px-5 py-4 text-gray-500 whitespace-nowrap">
-                    {user.phone ?? <span className="text-gray-300 italic text-xs">N/A</span>}
-                  </td>
-                  <td className="px-5 py-4">
-                    <div className="flex flex-wrap gap-1.5">
-                      {(user.roles && user.roles.length > 0 ? user.roles : ["user"]).map((roleKey) => {
-                        const roleObj = ALL_ROLES.find(r => r.key === roleKey);
-                        return (
-                          <span
-                            key={roleKey}
-                            className={`px-2.5 py-1 text-[11px] font-semibold rounded-full border ${roleObj ? roleObj.colorClass : "bg-gray-100 text-gray-700 border-gray-200"}`}
-                          >
-                            {roleObj ? roleObj.label : roleKey}
-                          </span>
-                        );
-                      })}
-                    </div>
-                  </td>
-                  <td className="px-5 py-4">
-                    <button
-                      onClick={() => openEditModal(user)}
-                      className="inline-flex items-center gap-1.5 text-brand-600 hover:text-brand-800 text-sm font-medium transition-colors bg-brand-50 hover:bg-brand-100 px-3 py-1.5 rounded-lg"
-                    >
-                      <Edit2 size={14} />
-                      Edit Roles
-                    </button>
-                  </td>
-                </tr>
-              ))}
+                    </td>
+                    <td className="px-5 py-4 text-gray-500 max-w-[200px] truncate">{user.email}</td>
+                    <td className="px-5 py-4 text-gray-500 whitespace-nowrap">
+                      {user.phone ?? <span className="text-gray-300 italic text-xs">N/A</span>}
+                    </td>
+                    <td className="px-5 py-4">
+                      <div className="flex flex-wrap gap-1.5">
+                        {(user.roles && user.roles.length > 0 ? user.roles : ["user"]).map((roleKey) => {
+                          const roleObj = ALL_ROLES.find(r => r.key === roleKey);
+                          return (
+                            <span
+                              key={roleKey}
+                              className={`px-2.5 py-1 text-[11px] font-semibold rounded-full border ${roleObj ? roleObj.colorClass : "bg-gray-100 text-gray-700 border-gray-200"}`}
+                            >
+                              {roleObj ? roleObj.label : roleKey}
+                            </span>
+                          );
+                        })}
+                      </div>
+                    </td>
+                    <td className="px-5 py-4 text-gray-600">
+                      {supName ? (
+                        <div className="flex items-center gap-1.5 font-medium text-brand-700 bg-brand-50 px-2.5 py-1 rounded-lg w-fit text-xs border border-brand-100">
+                          <UserCheck size={13} />
+                          <span>{supName}</span>
+                        </div>
+                      ) : (
+                        <span className="text-gray-300 italic text-xs">Direct / Top</span>
+                      )}
+                    </td>
+                    <td className="px-5 py-4">
+                      <button
+                        onClick={() => openEditModal(user)}
+                        className="inline-flex items-center gap-1.5 text-brand-600 hover:text-brand-800 text-sm font-medium transition-colors bg-brand-50 hover:bg-brand-100 px-3 py-1.5 rounded-lg"
+                      >
+                        <Edit2 size={14} />
+                        Edit Roles & Line
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
           {users.length === 0 && (
@@ -156,7 +224,7 @@ const UserManagement = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm px-4">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-200">
             <div className="flex items-center justify-between p-5 border-b border-gray-100 bg-gray-50/50">
-              <h2 className="text-lg font-bold text-gray-800">Edit Roles</h2>
+              <h2 className="text-lg font-bold text-gray-800">Edit Roles & Reporting Line</h2>
               <button 
                 onClick={() => setEditingUser(null)} 
                 className="p-2 -mr-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
@@ -166,8 +234,8 @@ const UserManagement = () => {
               </button>
             </div>
             
-            <div className="p-6">
-              <div className="flex items-center gap-3 mb-6 p-3 bg-brand-50 border border-brand-100 rounded-xl">
+            <div className="p-6 space-y-6 max-h-[80vh] overflow-y-auto">
+              <div className="flex items-center gap-3 p-3 bg-brand-50 border border-brand-100 rounded-xl">
                 <div className="w-10 h-10 rounded-full bg-brand-200 text-brand-700 flex items-center justify-center font-bold text-sm">
                   {editingUser.name?.[0]?.toUpperCase()}
                 </div>
@@ -177,7 +245,7 @@ const UserManagement = () => {
                 </div>
               </div>
 
-              <div className="space-y-4">
+              <div>
                 <p className="text-sm font-semibold text-gray-700 mb-2">Assign Roles</p>
                 <div className="grid grid-cols-2 gap-3">
                   {ALL_ROLES.map(({ key, label }) => {
@@ -213,6 +281,42 @@ const UserManagement = () => {
                   })}
                 </div>
               </div>
+
+              {needsSuperior && (
+                <div className="pt-4 border-t border-gray-100">
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">
+                    Assign Under (Reports To)
+                  </label>
+                  <p className="text-xs text-gray-500 mb-3">
+                    Select the superior manager in the hierarchy for this role.
+                  </p>
+                  {loadingCandidates ? (
+                    <div className="h-10 bg-gray-100 rounded-xl animate-pulse" />
+                  ) : candidateSuperiors.length === 0 ? (
+                    <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-amber-700 text-xs">
+                      No eligible superiors found for the selected roles in the system yet.
+                    </div>
+                  ) : (
+                    <select
+                      value={tempSuperiorId}
+                      onChange={(e) => setTempSuperiorId(e.target.value)}
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent font-medium"
+                      disabled={savingToggle}
+                    >
+                      <option value="">-- No Superior (Direct / Top Level) --</option>
+                      {candidateSuperiors.map(cand => {
+                        const rolesList = typeof cand.roles === 'string' ? JSON.parse(cand.roles || '[]') : (cand.roles || []);
+                        return (
+                          <option key={cand._id} value={cand._id}>
+                            {cand.name} ({rolesList.join(", ")})
+                          </option>
+                        );
+                      })}
+                    </select>
+                  )}
+                </div>
+              )}
+
             </div>
 
             <div className="flex gap-3 p-5 border-t border-gray-100 bg-gray-50">

@@ -2,17 +2,21 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { Users, FileText, ClipboardList } from "lucide-react";
 import TargetProgressBar from "../../components/seller/dashboard/TargetProgressBar";
+import SubtreeReportCard from "../../components/hierarchy/SubtreeReportCard";
 
 const SellerDashboard = () => {
   return (
-    <div className="p-8">
-      <div className="mb-8">
+    <div className="p-8 space-y-8">
+      <div>
         <h1 className="text-3xl font-extrabold text-gray-900">Seller Dashboard</h1>
+        <p className="text-gray-500 mt-1 text-sm">Monitor your targets, assigned leads, and customer hierarchy.</p>
       </div>
 
       <TargetProgressBar />
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
+      <SubtreeReportCard title="My Customer Subtree & Lead Pipeline" />
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Link to="/seller-panel/assigned" className="block group">
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex items-center justify-between hover:shadow-md transition-shadow">
             <div>

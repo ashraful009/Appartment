@@ -8,6 +8,8 @@ import GMLayout from "../layouts/GMLayout";
 import GMDashboard from "../pages/gm/GMDashboard";
 import AGMLayout from "../layouts/AGMLayout";
 import AGMDashboard from "../pages/agm/AGMDashboard";
+import AreaManagerLayout from "../layouts/AreaManagerLayout";
+import AreaManagerDashboard from "../pages/area_manager/AreaManagerDashboard";
 import AccountantLayout from "../layouts/AccountantLayout";
 import AccountantDashboard from "../pages/accountant/AccountantDashboard";
 import PendingConfirmations from "../pages/accountant/PendingConfirmations";
@@ -35,6 +37,10 @@ const StaffRoutes = () => (
 
     <Route path="/agm/*" element={<ProtectedRoute allowedRoles={['AGM']}><AGMLayout /></ProtectedRoute>}>
       <Route index element={<AGMDashboard />} />
+    </Route>
+
+    <Route path="/area-manager/*" element={<ProtectedRoute allowedRoles={['area_manager']}><AreaManagerLayout /></ProtectedRoute>}>
+      <Route index element={<AreaManagerDashboard />} />
     </Route>
 
     <Route path="/accountant/*" element={<ProtectedRoute allowedRoles={['Accountant']}><AccountantLayout /></ProtectedRoute>}>

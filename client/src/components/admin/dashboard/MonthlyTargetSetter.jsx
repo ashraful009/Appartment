@@ -17,8 +17,9 @@ const MonthlyTargetSetter = () => {
   useEffect(() => {
     axios.get("/api/targets/current", { withCredentials: true })
       .then(({ data }) => {
-        setCurrent(data.target);
-        if (data.target) setTargetValue(String(data.target.globalTarget));
+        const targetObj = data?.data?.target || data?.target;
+        setCurrent(targetObj || null);
+        if (targetObj) setTargetValue(String(targetObj.globalTarget || ""));
       })
       .catch(() => {})
       .finally(() => setLoadingCurrent(false));
@@ -37,7 +38,8 @@ const MonthlyTargetSetter = () => {
         year: currentYear,
         globalTarget: num,
       }, { withCredentials: true });
-      setCurrent(data.target);
+      const targetObj = data?.data?.target || data?.target;
+      setCurrent(targetObj || null);
       toast.success(`Target set: ${num} conversions for ${currentMonth} ${currentYear}`);
     } catch (err) {
       toast.error(err?.response?.data?.message || "Failed to save target.");

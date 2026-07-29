@@ -19,6 +19,7 @@ import MemberPaymentDetail from "../pages/admin/MemberPaymentDetail";
 import ProjectsManagement from "../pages/admin/ProjectsManagement";
 import PaymentTracking from "../pages/admin/PaymentTracking";
 import Analysis from "../pages/admin/Analysis";
+import SystemHierarchyView from "../pages/admin/SystemHierarchyView";
 
 const AdminRoutes = () => (
   <Routes>
@@ -32,6 +33,7 @@ const AdminRoutes = () => (
       <Route path="manage-buildings" element={<ManageBuildings />} />
       <Route path="edit-building/:id" element={<EditBuilding />} />
       <Route path="users" element={<UserManagement />} />
+      <Route path="hierarchy" element={<SystemHierarchyView />} />
       <Route path="book-unit" element={<AdminBookUnit />} />
       <Route path="book-unit/:id" element={<BookUnitDetail />} />
       <Route path="areas" element={<AreaManagement />} />

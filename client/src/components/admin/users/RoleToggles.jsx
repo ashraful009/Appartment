@@ -9,6 +9,7 @@ const ALL_ROLES = [
   { key: "Director",   label: "Director",   colorClass: "bg-purple-50 text-purple-700 border-purple-200" },
   { key: "GM",         label: "GM",         colorClass: "bg-indigo-50 text-indigo-700 border-indigo-200" },
   { key: "AGM",        label: "AGM",        colorClass: "bg-teal-50 text-teal-700 border-teal-200" },
+  { key: "area_manager", label: "Area Manager", colorClass: "bg-orange-50 text-orange-700 border-orange-200" },
   { key: "Accountant", label: "Accountant", colorClass: "bg-emerald-50 text-emerald-700 border-emerald-200" },
   { key: "DataEntry",  label: "Data Entry", colorClass: "bg-sky-50 text-sky-700 border-sky-200" },
   { key: "Management", label: "Management", colorClass: "bg-violet-50 text-violet-700 border-violet-200" },

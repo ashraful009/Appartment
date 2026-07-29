@@ -15,8 +15,8 @@ const IdleLeadsWidget = ({ onViewTimeline }) => {
 
   useEffect(() => {
     axios.get("/api/admin/idle-leads", { withCredentials: true })
-      .then(({ data }) => setIdleLeads(data.idleLeads))
-      .catch(() => {})
+      .then(({ data }) => setIdleLeads(data?.data?.idleLeads || data?.idleLeads || []))
+      .catch(() => setIdleLeads([]))
       .finally(() => setLoading(false));
   }, []);
 
@@ -29,7 +29,7 @@ const IdleLeadsWidget = ({ onViewTimeline }) => {
     </div>
   );
 
-  if (idleLeads.length === 0) return (
+  if (!idleLeads || idleLeads.length === 0) return (
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 flex items-center gap-3">
       <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center flex-shrink-0">
         <CheckCheck size={20} className="text-emerald-600" />

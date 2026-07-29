@@ -1,17 +1,15 @@
 import React from 'react';
+import SubtreeReportCard from '../../components/hierarchy/SubtreeReportCard';
 
 const AGMDashboard = () => {
   return (
-    <div className="p-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">AGM Dashboard</h1>
-        <p className="text-gray-500 mt-2">Welcome Assistant General Manager.</p>
+    <div className="p-8 space-y-8">
+      <div>
+        <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">Assistant General Manager (AGM) Dashboard</h1>
+        <p className="text-gray-500 mt-2">Team leadership, sales pipeline oversight, and subordinate performance metrics.</p>
       </div>
 
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 text-center text-gray-500 flex flex-col items-center justify-center min-h-[300px]">
-        <p className="text-lg">Placeholder content for the AGM Dashboard.</p>
-        <p className="text-sm mt-2 opacity-75">Daily operations and department updates will appear here.</p>
-      </div>
+      <SubtreeReportCard title="AGM Subtree & Team Analytics" />
     </div>
   );
 };

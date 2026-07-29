@@ -20,6 +20,7 @@ const {
     rejectSellerConversion,
     getSellerAnalytics,
     approveSellerConversion,
+    getCandidateSuperiors,
 } = require("./adminController");
 const { createBanner, getBanners, getBannerById, updateBanner, deleteBanner } = require("../catalog/bannerController");
 const { createProperty, getProperties, updateProperty, deleteProperty, getPropertyUnits } = require("../catalog/propertyController");
@@ -47,6 +48,7 @@ router.get("/stats", adminGuard, getStats);
 
 
 router.get("/users", adminGuard, getUsers);
+router.get("/candidate-superiors", adminGuard, getCandidateSuperiors);
 router.get("/users/:id", adminGuard, getUserById);
 router.put("/users/:id/roles", adminGuard, updateUserRoles);
 
