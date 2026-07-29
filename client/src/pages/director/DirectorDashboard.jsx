@@ -1,5 +1,6 @@
 import React from 'react';
 import SubtreeReportCard from '../../components/hierarchy/SubtreeReportCard';
+import LeadPoolTable from '../../components/distribution/LeadPoolTable';
 
 const DirectorDashboard = () => {
   return (
@@ -10,6 +11,7 @@ const DirectorDashboard = () => {
       </div>
 
       <SubtreeReportCard title="Director Organization Downline Overview" />
+      <LeadPoolTable role="Director" />
     </div>
   );
 };

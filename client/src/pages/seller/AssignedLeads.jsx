@@ -5,6 +5,7 @@ import { InboxIcon, Calendar } from "lucide-react";
 import AssignedRow from "../../components/seller/leads/AssignedRow";
 import DelegateModal from "../../components/seller/leads/DelegateModal";
 import FollowUpTaskCard from "../../components/seller/leads/FollowUpTaskCard";
+import ManualAddLeadModal from "../../components/seller/leads/ManualAddLeadModal";
 
 
 const isToday = (dateStr) => {
@@ -101,17 +102,27 @@ const AssignedLeads = () => {
   const todayCount  = requests.filter(r => isToday(r.assignedAt)).length;
   const hasTasks    = todayTasks.length > 0 || previousTasks.length > 0;
 
+  const [showAddModal, setShowAddModal] = useState(false);
+
   return (
     <div className="p-8">
       
-      <div className="mb-8">
-        <h1 className="text-3xl font-extrabold text-gray-900">My Assigned Leads</h1>
-        {!loading && todayCount > 0 && (
-          <div className="mt-3 inline-flex items-center gap-2 bg-green-50 border border-green-200 text-green-700 text-sm font-semibold px-4 py-2 rounded-xl">
-            <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-            {todayCount} new lead{todayCount > 1 ? "s" : ""} assigned today!
-          </div>
-        )}
+      <div className="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-extrabold text-gray-900">My Assigned Leads</h1>
+          {!loading && todayCount > 0 && (
+            <div className="mt-3 inline-flex items-center gap-2 bg-green-50 border border-green-200 text-green-700 text-sm font-semibold px-4 py-2 rounded-xl">
+              <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+              {todayCount} new lead{todayCount > 1 ? "s" : ""} assigned today!
+            </div>
+          )}
+        </div>
+        <button
+          onClick={() => setShowAddModal(true)}
+          className="bg-brand-600 hover:bg-brand-700 text-white font-semibold py-2 px-5 rounded-xl transition-colors shadow-sm whitespace-nowrap"
+        >
+          + Add Lead
+        </button>
       </div>
 
       {error && (
@@ -252,6 +263,17 @@ const AssignedLeads = () => {
           onDelegated={handleDelegated}
         />
       )}
+
+      <ManualAddLeadModal
+        isOpen={showAddModal}
+        onClose={() => setShowAddModal(false)}
+        onSuccess={() => {
+          // Re-fetch assigned leads
+          axios.get("/api/requests/assigned", { withCredentials: true })
+            .then(res => setRequests(res.data.requests || []))
+            .catch(err => console.error(err));
+        }}
+      />
     </div>
   );
 };

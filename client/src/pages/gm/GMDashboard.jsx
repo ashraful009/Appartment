@@ -1,5 +1,6 @@
 import React from 'react';
 import SubtreeReportCard from '../../components/hierarchy/SubtreeReportCard';
+import LeadPoolTable from '../../components/distribution/LeadPoolTable';
 
 const GMDashboard = () => {
   return (
@@ -9,7 +10,8 @@ const GMDashboard = () => {
         <p className="text-gray-500 mt-2">Regional operational performance and management reporting line analytics.</p>
       </div>
 
-      <SubtreeReportCard title="GM Downline & Subtree Performance" />
+      <SubtreeReportCard title="GM Downline & Hierarchy Overview" />
+      <LeadPoolTable role="GM" />
     </div>
   );
 };

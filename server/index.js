@@ -21,6 +21,8 @@ const hierarchyRoutes = require("./src/modules/management/hierarchyRoutes");
 const areaRoutes       = require("./src/modules/catalog/areaRoutes");
 const membershipRoutes = require("./src/modules/membership/membershipRoutes");
 const projectRoutes    = require("./src/modules/catalog/projectRoutes");
+const marketingRoutes  = require("./src/modules/marketing/marketingRoutes");
+const distributionRoutes = require("./src/modules/distribution/distributionRoutes");
 
 const { startMembershipCron }  = require("./src/cron/membershipCron");
 const { startPropertyCron }    = require("./src/cron/propertyCron");
@@ -98,6 +100,8 @@ app.use("/api/users",     userRoutes);
 app.use("/api/customer",  customerRoutes);
 app.use("/api/documents", documentRoutes);
 app.use("/api/accountant", accountantRoutes);
+app.use("/api/marketing", marketingRoutes);
+app.use("/api/distribution", distributionRoutes);
 app.use("/api/data-entry", dataEntryRoutes);
 app.use("/api/management", managementRoutes);
 app.use("/api/hierarchy",  hierarchyRoutes);

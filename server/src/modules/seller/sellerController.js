@@ -4,6 +4,8 @@ const apartmentUnitRepository = require("../../repositories/ApartmentUnitReposit
 const interactionRepository = require("../../repositories/InteractionRepository");
 const { pick, whereJsonArrayContains } = require("../../utils/dbUtils");
 
+const crypto = require("crypto");
+
 const requestSellerConversion = async (req, res) => {
   try {
     const request = await priceRequestRepository.findOne({
@@ -23,7 +25,41 @@ const requestSellerConversion = async (req, res) => {
       });
     }
 
-    const updatedRequest = await priceRequestRepository.update(request.id, { seller_conversion_status: "pending_approval" });
+    const { email } = req.body;
+    let userId = request.user_id;
+
+    if (userId) {
+      const user = await userRepository.findById(userId);
+      if (user) {
+        let roles = [];
+        try {
+          roles = typeof user.roles === 'string' ? JSON.parse(user.roles) : user.roles;
+        } catch (e) {
+          roles = [];
+        }
+        if (!roles.includes("customer")) {
+          roles.push("customer");
+        }
+        await userRepository.update(userId, { roles: JSON.stringify(roles), superior_id: req.user.id });
+      }
+    } else {
+      const randomPassword = crypto.randomBytes(8).toString("hex");
+      const newUser = await userRepository.create({
+        name: request.guest_name,
+        phone: request.guest_phone,
+        email: email ? email.toLowerCase().trim() : null,
+        password: randomPassword,
+        roles: ["customer"],
+        is_guest: false,
+        superior_id: req.user.id,
+      });
+      userId = newUser.id;
+    }
+
+    const updatedRequest = await priceRequestRepository.update(request.id, { 
+      seller_conversion_status: "pending_approval",
+      user_id: userId
+    });
 
     res.status(200).json({
       message: "Seller conversion request submitted. Awaiting admin approval.",

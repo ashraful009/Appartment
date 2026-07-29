@@ -9,6 +9,8 @@ import InteractionForm from "./InteractionForm";
 
 const StatusToggle = ({ req, statusKey, endpoint, onStatusChange, approvedLabel, approvedColor = "emerald" }) => {
   const [loading, setLoading] = useState(false);
+  const [showEmailInput, setShowEmailInput] = useState(false);
+  const [email, setEmail] = useState("");
   const status = req[statusKey];
 
   if (status === "approved") {
@@ -35,18 +37,44 @@ const StatusToggle = ({ req, statusKey, endpoint, onStatusChange, approvedLabel,
     );
   }
   const handleToggle = async () => {
+    if (!req.user?.email && !showEmailInput) {
+      setShowEmailInput(true);
+      return;
+    }
+
     setLoading(true);
     try {
-      await axios.put(endpoint, {}, { withCredentials: true });
+      await axios.put(endpoint, { email }, { withCredentials: true });
       toast.success("Request sent! Awaiting admin approval.");
       onStatusChange(req._id, "pending_approval", statusKey);
+      setShowEmailInput(false);
     } catch (err) {
       toast.error(err?.response?.data?.message || "Failed to submit request.");
     } finally { setLoading(false); }
   };
+
   return (
-    <div className="flex items-center gap-2.5">
-      {loading ? (
+    <div className="flex items-center gap-2.5 relative">
+      {showEmailInput ? (
+        <div className="absolute bottom-full left-0 mb-2 p-3 bg-white border border-gray-200 shadow-xl rounded-xl z-20 w-64">
+          <label className="block text-xs font-semibold text-gray-700 mb-1">Email (Optional)</label>
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="w-full px-2 py-1 text-sm border border-gray-300 rounded-lg mb-2 focus:ring-1 focus:ring-brand-500"
+            placeholder="For their new account"
+          />
+          <div className="flex justify-end gap-2">
+            <button onClick={() => setShowEmailInput(false)} className="px-2 py-1 text-xs text-gray-500 hover:text-gray-700">Cancel</button>
+            <button onClick={handleToggle} disabled={loading} className="px-2 py-1 text-xs bg-brand-600 text-white rounded hover:bg-brand-700 flex items-center gap-1">
+              {loading && <Loader2 size={12} className="animate-spin" />} Submit
+            </button>
+          </div>
+        </div>
+      ) : null}
+
+      {loading && !showEmailInput ? (
         <Loader2 size={20} className="animate-spin text-brand-500" />
       ) : (
         <button onClick={handleToggle} className="relative inline-flex w-11 h-6 items-center rounded-full bg-gray-200 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-400 focus:ring-offset-1 transition-colors cursor-pointer">

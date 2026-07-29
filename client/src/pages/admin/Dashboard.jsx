@@ -5,6 +5,7 @@ import StatCard from "../../components/admin/dashboard/StatCard";
 import IdleLeadsWidget from "../../components/admin/dashboard/IdleLeadsWidget";
 import MonthlyTargetSetter from "../../components/admin/dashboard/MonthlyTargetSetter";
 import AdminTimelineViewer from "./AdminTimelineViewer";
+import LeadPoolTable from "../../components/distribution/LeadPoolTable";
 
 const Dashboard = () => {
   const [stats, setStats]                       = useState(null);
@@ -54,6 +55,10 @@ const Dashboard = () => {
       </div>
 
       
+      <div className="mb-8">
+        <LeadPoolTable role="admin" />
+      </div>
+
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
         <div className="xl:col-span-2">
           <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3"> Idle Leads Monitor</p>

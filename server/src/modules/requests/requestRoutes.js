@@ -7,6 +7,7 @@ const { optionalAuth } = require("../../middleware/authMiddleware");
 
 const {
   createRequest,
+  createManualLead,
   getStats,
   getAssignedRequests,
   requestConversion,
@@ -16,8 +17,8 @@ const {
 const { requestSellerConversion } = require("../seller/sellerController");
 const { delegateLead } = require("../seller/delegationController");
 
-
 router.post("/", optionalAuth, createRequest);
+router.post("/manual", protect, authorizeRoles("seller"), createManualLead);
 
 
 router.get("/stats", protect, authorizeRoles("seller", "admin"), getStats);

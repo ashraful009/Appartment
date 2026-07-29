@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import axios from "axios";
-import { Mail, Lock, Eye, EyeOff, AlertCircle, CheckCircle } from "lucide-react";
+import { Phone, Lock, Eye, EyeOff, AlertCircle, CheckCircle } from "lucide-react";
 
 // ── Small Toast for the pending-request success ────────────────────────────────
 const Toast = ({ msg, onClose }) => (
@@ -17,7 +17,7 @@ const Login = () => {
   const { login } = useAuth();
   const navigate  = useNavigate();
 
-  const [form, setForm] = useState({ email: "", password: "" });
+  const [form, setForm] = useState({ phone: "", password: "" });
   const [errors, setErrors] = useState({});
   const [serverError, setServerError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -27,10 +27,10 @@ const Login = () => {
   // ── Validation ───────────────────────────────────────────────────────────
   const validate = () => {
     const newErrors = {};
-    if (!form.email.trim()) {
-      newErrors.email = "Email is required.";
-    } else if (!/^\S+@\S+\.\S+$/.test(form.email)) {
-      newErrors.email = "Please enter a valid email address.";
+    if (!form.phone.trim()) {
+      newErrors.phone = "Phone number is required.";
+    } else if (form.phone.length < 10) {
+      newErrors.phone = "Please enter a valid phone number.";
     }
     if (!form.password) {
       newErrors.password = "Password is required.";
@@ -55,7 +55,7 @@ const Login = () => {
     setLoading(true);
 
     try {
-      await login({ email: form.email, password: form.password });
+      await login({ phone: form.phone, password: form.password });
 
       // ── Pending request auto-trigger ─────────────────────────────────────
       const pendingPropertyId = sessionStorage.getItem("pendingRequest");
@@ -107,20 +107,20 @@ const Login = () => {
             )}
 
             <form onSubmit={handleSubmit} noValidate className="space-y-5">
-              {/* Email */}
+              {/* Phone */}
               <div>
-                <label className="form-label" htmlFor="email">Email Address</label>
+                <label className="form-label" htmlFor="phone">Phone Number</label>
                 <div className="relative">
-                  <Mail size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+                  <Phone size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
                   <input
-                    id="email" type="email" name="email" value={form.email}
-                    onChange={handleChange} placeholder="you@example.com"
-                    className={`input-field pl-10 ${errors.email ? "border-red-400 focus:ring-red-300" : ""}`}
+                    id="phone" type="tel" name="phone" value={form.phone}
+                    onChange={handleChange} placeholder="01XXXXXXXXX"
+                    className={`input-field pl-10 ${errors.phone ? "border-red-400 focus:ring-red-300" : ""}`}
                   />
                 </div>
-                {errors.email && (
+                {errors.phone && (
                   <p className="mt-1.5 text-xs text-red-500 flex items-center gap-1">
-                    <AlertCircle size={12} /> {errors.email}
+                    <AlertCircle size={12} /> {errors.phone}
                   </p>
                 )}
               </div>

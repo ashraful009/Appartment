@@ -10,71 +10,49 @@ const createRequest = async (req, res) => {
       return res.status(400).json({ message: "propertyId is required." });
     }
 
-    let resolvedUserId;
-    let autoAssignedTo = null;
+    let requestData = {
+      property_id: propertyId,
+      status: "pending",
+      assigned_to: null,
+      current_holder_id: null,
+    };
 
     if (req.user) {
-      resolvedUserId = req.user.id;
+      requestData.user_id = req.user.id;
+      requestData.source = "login_request";
 
-      const requestingUser = await userRepository.findById(req.user.id, ["referred_by"]);
-      if (requestingUser?.referred_by) {
-        const seller = await whereJsonArrayContains(userRepository.db('users').where({
-          id: requestingUser.referred_by,
-        }), 'roles', 'seller').first();
-        if (seller) autoAssignedTo = seller.id;
+      const existing = await priceRequestRepository.findOne({
+        property_id: propertyId,
+        user_id: req.user.id,
+      });
+      if (existing) {
+        return res.status(409).json({ message: "You have already requested pricing for this property." });
       }
     } else {
-      const { name, email, phone } = req.body;
+      const { name, phone } = req.body;
 
-      if (!name || !email || !phone) {
+      if (!name || !phone) {
         return res.status(400).json({
-          message: "Guest requests require name, email, and phone.",
+          message: "Guest requests require name and phone.",
         });
       }
 
-      let guestUser = await userRepository.db('users').where({ email }).orWhere({ phone }).first();
-
-      if (!guestUser) {
-        const randomPassword = crypto.randomBytes(8).toString("hex");
-
-        guestUser = await userRepository.create({
-          name,
-          email: email.toLowerCase().trim(),
-          phone,
-          password: randomPassword,
-          roles: ["customer"],
-          is_guest: true,
-        });
+      requestData.user_id = null;
+      requestData.guest_name = name.trim();
+      requestData.guest_phone = phone.trim();
+      requestData.source = "guest_request";
+      
+      const existing = await priceRequestRepository.db('price_requests')
+        .where({ property_id: propertyId, guest_phone: phone.trim() })
+        .first();
+      if (existing) {
+        return res.status(409).json({ message: "You have already requested pricing for this property." });
       }
-
-      resolvedUserId = guestUser.id;
     }
-
-    const existing = await priceRequestRepository.findOne({
-      property_id: propertyId,
-      user_id: resolvedUserId,
-    });
-    if (existing) {
-      return res
-        .status(409)
-        .json({ message: "You have already requested pricing for this property." });
-    }
-
-    const requestData = {
-      property_id: propertyId,
-      user_id: resolvedUserId,
-      status: autoAssignedTo ? "assigned" : "pending",
-      assigned_to: autoAssignedTo,
-      assigned_at: autoAssignedTo ? new Date() : null,
-    };
 
     const request = await priceRequestRepository.create(requestData);
 
-    const message = autoAssignedTo
-      ? "Price request submitted and automatically assigned to your referral seller."
-      : "Price request submitted successfully.";
-
-    res.status(201).json({ message, request: { ...request, _id: request.id } });
+    res.status(201).json({ message: "Price request submitted successfully.", request: { ...request, _id: request.id } });
   } catch (error) {
     console.error("createRequest error:", error);
     if (isDuplicateKeyError(error)) {
@@ -83,6 +61,35 @@ const createRequest = async (req, res) => {
         .json({ message: "You have already requested pricing for this property." });
     }
     res.status(500).json({ message: "Failed to submit request." });
+  }
+};
+
+const createManualLead = async (req, res) => {
+  try {
+    const { name, phone, propertyId } = req.body;
+
+    if (!name || !phone) {
+      return res.status(400).json({ message: "Name and phone are required for manual leads." });
+    }
+
+    const requestData = {
+      property_id: propertyId || null,
+      user_id: null,
+      guest_name: name.trim(),
+      guest_phone: phone.trim(),
+      status: "assigned",
+      assigned_to: req.user.id,
+      current_holder_id: req.user.id,
+      assigned_at: new Date(),
+      source: "manual_add"
+    };
+
+    const request = await priceRequestRepository.create(requestData);
+
+    res.status(201).json({ message: "Manual lead added successfully.", request: { ...request, _id: request.id } });
+  } catch (error) {
+    console.error("createManualLead error:", error);
+    res.status(500).json({ message: "Failed to add manual lead." });
   }
 };
 
@@ -194,6 +201,7 @@ const updatePipeline = async (req, res) => {
 
 module.exports = {
   createRequest,
+  createManualLead,
   getStats,
   getAssignedRequests,
   requestConversion,

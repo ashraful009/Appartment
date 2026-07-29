@@ -1,5 +1,6 @@
 import React from 'react';
 import SubtreeReportCard from '../../components/hierarchy/SubtreeReportCard';
+import LeadPoolTable from '../../components/distribution/LeadPoolTable';
 
 const AreaManagerDashboard = () => {
   return (
@@ -9,7 +10,8 @@ const AreaManagerDashboard = () => {
         <p className="text-gray-500 mt-2">Regional sales leadership, seller team guidance, and customer lead performance metrics.</p>
       </div>
 
-      <SubtreeReportCard title="Area Manager Subtree & Team Analytics" />
+      <SubtreeReportCard title="Team Overview" />
+      <LeadPoolTable role="area_manager" />
     </div>
   );
 };

@@ -39,9 +39,12 @@ import MyTeam from "./pages/seller/MyTeam";
 import SellerProfile from "./pages/seller/SellerProfile";
 import SellerBookUnit from "./pages/seller/SellerBookUnit";
 import MySales from "./pages/seller/MySales";
+import MarketingLinks from "./components/seller/marketing/MarketingLinks";
 
 import CustomerProfile from "./pages/public/CustomerProfile";
 import PropertyDetails from "./pages/public/PropertyDetails";
+
+import MarketingLanding from "./pages/public/MarketingLanding";
 
 // Customer Panel
 import CustomerLayout from "./pages/customer/CustomerLayout";
@@ -113,6 +116,7 @@ function App() {
               <Route path="/login"    element={<Login />} />
               <Route path="/register" element={<Register />} />
               <Route path="/properties/filtered" element={<FilteredProperties />} />
+              <Route path="/link/:slug" element={<MarketingLanding />} />
 
               {/* Admin Panel */}
               <Route path="/admin-panel" element={<AdminLayout />}>
@@ -141,6 +145,7 @@ function App() {
               <Route path="/seller-panel" element={<SellerLayout />}>
                 <Route index element={<SellerDashboard />} />
                 <Route path="assigned" element={<AssignedLeads />} />
+                <Route path="marketing" element={<MarketingLinks />} />
                 <Route path="my-team" element={<MyTeam />} />
                 <Route path="profile" element={<SellerProfile />} />
                 <Route path="book-unit" element={<SellerBookUnit />} />

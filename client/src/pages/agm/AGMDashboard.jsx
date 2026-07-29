@@ -1,5 +1,6 @@
 import React from 'react';
 import SubtreeReportCard from '../../components/hierarchy/SubtreeReportCard';
+import LeadPoolTable from '../../components/distribution/LeadPoolTable';
 
 const AGMDashboard = () => {
   return (
@@ -9,7 +10,8 @@ const AGMDashboard = () => {
         <p className="text-gray-500 mt-2">Team leadership, sales pipeline oversight, and subordinate performance metrics.</p>
       </div>
 
-      <SubtreeReportCard title="AGM Subtree & Team Analytics" />
+      <SubtreeReportCard title="AGM Hierarchy & Performance" />
+      <LeadPoolTable role="AGM" />
     </div>
   );
 };
