@@ -50,6 +50,21 @@ const createRequest = async (req, res) => {
       }
     }
 
+    const { referralCode } = req.body;
+    if (referralCode && typeof referralCode === "string") {
+      const seller = await userRepository.db('users')
+        .where('referral_code', referralCode.trim().toUpperCase())
+        .first();
+
+      if (seller) {
+        requestData.status = "assigned";
+        requestData.assigned_to = seller.id;
+        requestData.current_holder_id = seller.id;
+        requestData.assigned_at = new Date();
+        requestData.source = "referral_link";
+      }
+    }
+
     const request = await priceRequestRepository.create(requestData);
 
     res.status(201).json({ message: "Price request submitted successfully.", request: { ...request, _id: request.id } });
@@ -122,12 +137,25 @@ const getAssignedRequests = async (req, res) => {
           'users.name as userName', 'users.email as userEmail', 'users.phone as userPhone'
       );
 
-    const formattedRequests = requests.map(r => ({
+    const formattedRequests = requests.map(r => {
+      const isRegisteredUser = Boolean(r.user_id);
+      const name = isRegisteredUser ? r.userName : r.guest_name;
+      const phone = isRegisteredUser ? r.userPhone : r.guest_phone;
+      const email = isRegisteredUser ? r.userEmail : null;
+
+      return {
         ...r,
         _id: r.id,
-        property: { _id: r.property_id, name: r.propertyName, address: r.propertyAddress, mainImage: r.propertyMainImage },
-        user: { _id: r.user_id, name: r.userName, email: r.userEmail, phone: r.userPhone }
-    }));
+        property: r.property_id ? { _id: r.property_id, name: r.propertyName, address: r.propertyAddress, mainImage: r.propertyMainImage } : null,
+        user: (isRegisteredUser || name || phone) ? {
+          _id: r.user_id,
+          name: name || "Guest Customer",
+          email: email,
+          phone: phone || "No Phone",
+          isGuest: !isRegisteredUser,
+        } : null
+      };
+    });
 
     res.status(200).json({ requests: formattedRequests });
   } catch (error) {

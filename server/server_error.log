@@ -1,0 +1,70 @@
+
+--- 2026-07-29T16:35:11.230Z: protect_auth_middleware ---
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7)
+
+--- 2026-07-29T16:35:11.244Z: protect_auth_middleware ---
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7)
+
+--- 2026-07-29T16:35:33.604Z: getActiveBanner ---
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7)
+
+--- 2026-07-29T16:35:33.626Z: getActiveBanner ---
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7)
+
+--- 2026-07-29T16:35:50.221Z: protect_auth_middleware ---
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7)
+
+--- 2026-07-29T16:35:50.228Z: protect_auth_middleware ---
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7)
+
+--- 2026-07-29T16:36:11.214Z: protect_auth_middleware ---
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7)
+
+--- 2026-07-29T16:36:11.222Z: protect_auth_middleware ---
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7)
+
+--- 2026-07-29T16:36:50.219Z: protect_auth_middleware ---
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7)
+
+--- 2026-07-29T16:36:50.227Z: protect_auth_middleware ---
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7)
+
+--- 2026-07-29T16:37:11.214Z: protect_auth_middleware ---
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7)
+
+--- 2026-07-29T16:37:11.223Z: protect_auth_middleware ---
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7)
+
+--- 2026-07-29T16:37:50.222Z: protect_auth_middleware ---
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7)
+
+--- 2026-07-29T16:37:50.230Z: protect_auth_middleware ---
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7)

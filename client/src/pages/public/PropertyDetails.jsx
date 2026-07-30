@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
+import { getValidReferralCode } from "../../App";
 import { useAuth } from "../../context/AuthContext";
 import {
   MapPin, Building2, Layers, LayoutGrid, Clock, Car, Home,
@@ -119,7 +120,8 @@ const PropertyDetails = () => {
 
     setRequesting(true);
     try {
-      await axios.post("/api/requests", { propertyId: id });
+      const referralCode = getValidReferralCode();
+      await axios.post("/api/requests", { propertyId: id, referralCode });
       setRequested(true);
       showToast("success", "Request sent! A seller will contact you shortly.");
     } catch (err) {
@@ -141,7 +143,14 @@ const PropertyDetails = () => {
 
     setGuestSubmitting(true);
     try {
-      await axios.post("/api/requests", { propertyId: id, name: name.trim(), email: email.trim(), phone: phone.trim() });
+      const referralCode = getValidReferralCode();
+      await axios.post("/api/requests", { 
+        propertyId: id, 
+        name: name.trim(), 
+        email: email.trim(), 
+        phone: phone.trim(),
+        referralCode,
+      });
       setRequested(true);
       setShowGuestForm(false);
       showToast("success", "Request submitted successfully! Our agent will contact you soon.");

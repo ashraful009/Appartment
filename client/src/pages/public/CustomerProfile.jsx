@@ -77,7 +77,6 @@ const CustomerProfile = () => {
     const file = e.target.files[0];
     if (!file) return;
 
-    
     if (file.size > 5 * 1024 * 1024) {
       toast.error("Image must be less than 5MB");
       return;
@@ -85,25 +84,23 @@ const CustomerProfile = () => {
 
     setUploadingImage(true);
     
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
+    const uploadData = new FormData();
+    uploadData.append("avatar", file);
 
     try {
-      const res = await fetch(CLOUDINARY_URL, {
-        method: "POST",
-        body: formData,
+      const { data } = await axios.post("/api/users/avatar", uploadData, {
+        headers: { "Content-Type": "multipart/form-data" },
+        withCredentials: true,
       });
-      const data = await res.json();
       
-      if (data.secure_url) {
-        setFormData((prev) => ({ ...prev, profilePhoto: data.secure_url }));
+      if (data.url) {
+        setFormData((prev) => ({ ...prev, profilePhoto: data.url }));
         toast.success("Photo uploaded! Click 'Save Changes' to update your profile.");
       } else {
         throw new Error("Failed to upload image");
       }
     } catch (error) {
-      toast.error("Error uploading image");
+      toast.error(error.response?.data?.message || "Error uploading image");
       console.error(error);
     } finally {
       setUploadingImage(false);

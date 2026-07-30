@@ -20,7 +20,7 @@ const ManualAddLeadModal = ({ isOpen, onClose, onSuccess }) => {
 
   const fetchProperties = async () => {
     try {
-      const { data } = await axios.get("/api/catalog/properties?limit=100");
+      const { data } = await axios.get("/api/properties?limit=100");
       setProperties(data.properties || data);
     } catch (err) {
       console.error("Failed to fetch properties", err);

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { X, ChevronDown, ChevronRight, User, Users, TrendingUp, AlertCircle } from "lucide-react";
+import { X, ChevronDown, ChevronRight, User, Users, TrendingUp, AlertCircle, Phone } from "lucide-react";
 
 const TreeNodeView = ({ node, depth = 0 }) => {
   const [expanded, setExpanded] = useState(depth < 2); // default expand top 2 levels
@@ -52,7 +52,15 @@ const TreeNodeView = ({ node, depth = 0 }) => {
                 {mainRole}
               </span>
             </div>
-            <p className="text-xs text-gray-500 truncate mt-0.5">{node.email}</p>
+            <div className="flex items-center gap-2 flex-wrap text-xs text-gray-500 mt-0.5">
+              <span>{node.email}</span>
+              {node.phone && (
+                <span className="inline-flex items-center gap-1 font-semibold text-gray-700 bg-gray-100 px-2 py-0.5 rounded text-[11px]">
+                  <Phone size={10} className="text-brand-600" />
+                  {node.phone}
+                </span>
+              )}
+            </div>
           </div>
         </div>
 

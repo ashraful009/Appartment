@@ -5,14 +5,15 @@ import axios from "axios";
 import {
   LayoutDashboard, UserCheck, LogOut, ChevronRight, Users2,
   Bell, X, Megaphone, AlertCircle, CheckCheck, Loader2, Copy, User, Building2, Monitor,
-  Menu
+  Menu, GitFork
 } from "lucide-react";
-
+import DrillDownModal from "../../components/hierarchy/DrillDownModal";
 
 const navItems = [
   { to: "/seller-panel", label: "Dashboard", icon: LayoutDashboard, end: true },
   { to: "/seller-panel/assigned", label: "Assigned Leads", icon: UserCheck },
   { to: "/seller-panel/marketing", label: "Marketing Links", icon: Megaphone },
+  { isDrillDown: true, label: "Tree Drill-down", icon: GitFork },
   { to: "/seller-panel/my-team", label: "My Team", icon: Users2 },
   { to: "/seller-panel/book-unit", label: "Book Unit", icon: Building2 },
   { to: "/seller-panel/my-sales", label: "My Sales & Monitoring", icon: Monitor },
@@ -168,6 +169,7 @@ const SellerLayout = () => {
   const navigate = useNavigate();
   const [copiedCode, setCopiedCode] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [showDrillDownModal, setShowDrillDownModal] = useState(false);
 
   const handleCopyCode = async () => {
     const code = user?.referralCode;
@@ -292,27 +294,44 @@ const SellerLayout = () => {
         </div>
 
         <nav className="flex-1 py-4 space-y-1 px-3 overflow-y-auto">
-          {navItems.map(({ to, label, icon: Icon, end }) => (
-            <NavLink
-              key={to} to={to} end={end}
-              onClick={() => setMobileMenuOpen(false)}
-              className={({ isActive }) =>
-                `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group ${
-                  isActive
-                    ? "bg-amber-500 text-white shadow-md"
-                    : "text-gray-400 hover:bg-gray-800 hover:text-white"
-                }`
-              }
-            >
-              {({ isActive }) => (
-                <>
+          {navItems.map(({ to, label, icon: Icon, end, isDrillDown }, idx) => {
+            if (isDrillDown) {
+              return (
+                <button
+                  key={idx}
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    setShowDrillDownModal(true);
+                  }}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 text-gray-400 hover:bg-gray-800 hover:text-white text-left"
+                >
                   <Icon size={18} className="flex-shrink-0" />
                   <span className="flex-1">{label}</span>
-                  {isActive && <ChevronRight size={14} className="opacity-70" />}
-                </>
-              )}
-            </NavLink>
-          ))}
+                </button>
+              );
+            }
+            return (
+              <NavLink
+                key={to} to={to} end={end}
+                onClick={() => setMobileMenuOpen(false)}
+                className={({ isActive }) =>
+                  `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group ${
+                    isActive
+                      ? "bg-amber-500 text-white shadow-md"
+                      : "text-gray-400 hover:bg-gray-800 hover:text-white"
+                  }`
+                }
+              >
+                {({ isActive }) => (
+                  <>
+                    <Icon size={18} className="flex-shrink-0" />
+                    <span className="flex-1">{label}</span>
+                    {isActive && <ChevronRight size={14} className="opacity-70" />}
+                  </>
+                )}
+              </NavLink>
+            );
+          })}
         </nav>
 
         <div className="px-3 pb-5 border-t border-gray-700 pt-4">
@@ -326,10 +345,14 @@ const SellerLayout = () => {
         </div>
       </aside>
 
-      
+      {/* Main Content */}
       <main className="flex-1 bg-gray-50 overflow-auto pt-14 md:pt-0 w-full min-w-0">
         <Outlet />
       </main>
+
+      {showDrillDownModal && (
+        <DrillDownModal onClose={() => setShowDrillDownModal(false)} />
+      )}
     </div>
   );
 };

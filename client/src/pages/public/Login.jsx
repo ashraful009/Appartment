@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import axios from "axios";
+import { getValidReferralCode } from "../../App";
 import { Phone, Lock, Eye, EyeOff, AlertCircle, CheckCircle } from "lucide-react";
 
 // ── Small Toast for the pending-request success ────────────────────────────────
@@ -27,15 +28,14 @@ const Login = () => {
   // ── Validation ───────────────────────────────────────────────────────────
   const validate = () => {
     const newErrors = {};
-    if (!form.phone.trim()) {
-      newErrors.phone = "Phone number is required.";
-    } else if (form.phone.length < 10) {
-      newErrors.phone = "Please enter a valid phone number.";
+    const val = form.phone.trim();
+    if (!val) {
+      newErrors.phone = "Phone number or email is required.";
+    } else if (val.length < 3) {
+      newErrors.phone = "Please enter a valid phone number or email.";
     }
     if (!form.password) {
       newErrors.password = "Password is required.";
-    } else if (form.password.length < 6) {
-      newErrors.password = "Password must be at least 6 characters.";
     }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -63,7 +63,8 @@ const Login = () => {
       if (pendingPropertyId) {
         sessionStorage.removeItem("pendingRequest");
         try {
-          await axios.post("/api/requests", { propertyId: pendingPropertyId });
+          const referralCode = getValidReferralCode();
+          await axios.post("/api/requests", { propertyId: pendingPropertyId, referralCode });
           setSuccessToast("Request sent! A seller will contact you shortly.");
           // Wait briefly so the toast is visible, then navigate to the property
           setTimeout(() => {

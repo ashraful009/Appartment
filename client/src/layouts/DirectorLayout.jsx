@@ -1,10 +1,11 @@
 import React from 'react';
 import GenericPanelLayout from './GenericPanelLayout';
-import { LayoutDashboard } from 'lucide-react';
+import { LayoutDashboard, GitFork } from 'lucide-react';
 
 const DirectorLayout = () => {
   const links = [
-    { to: "/director", label: "Dashboard", icon: LayoutDashboard, end: true }
+    { to: "/director", label: "Dashboard", icon: LayoutDashboard, end: true },
+    { isDrillDown: true, label: "Tree Drill-down", icon: GitFork },
   ];
   return <GenericPanelLayout title="Director Panel" links={links} />;
 };

@@ -36,9 +36,14 @@ const PRIORITY_COLORS = {
 
 const AssignedRow = ({ req, expanded, onToggle, onStatusChange, onUpdate, onDelegate }) => {
   const { property, user } = req;
-  const newToday = isToday(req.assignedAt);
-  const stage = req.pipelineStage || "New";
+  const newToday = isToday(req.assignedAt || req.assigned_at);
+  const stage = req.pipelineStage || req.pipeline_stage || "New";
   const priority = req.priority || "Warm";
+
+  const displayName = user?.name || req.guest_name || req.guestName || "Guest Customer";
+  const displayPhone = user?.phone || req.guest_phone || req.guestPhone || null;
+  const displayEmail = user?.email || req.guest_email || req.guestEmail || null;
+  const isGuest = !user?.name && Boolean(req.guest_name || req.guest_phone);
 
   return (
     <>
@@ -48,7 +53,7 @@ const AssignedRow = ({ req, expanded, onToggle, onStatusChange, onUpdate, onDele
           expanded ? "bg-brand-50 border-brand-200" : "hover:bg-gray-50/70 border-gray-100"
         } last:border-b-0`}
       >
-        
+        {/* Property Info */}
         <td className="px-5 py-4">
           <div className="flex items-center gap-3">
             {property?.mainImage ? (
@@ -60,7 +65,7 @@ const AssignedRow = ({ req, expanded, onToggle, onStatusChange, onUpdate, onDele
               </div>
             )}
             <div className="min-w-0">
-              <p className="font-semibold text-gray-800 text-sm truncate max-w-[130px]">{property?.name || "—"}</p>
+              <p className="font-semibold text-gray-800 text-sm truncate max-w-[130px]">{property?.name || req.propertyName || "General Inquiry"}</p>
               <p className="text-xs text-gray-400 flex items-center gap-1 mt-0.5">
                 <MapPin size={10} className="text-brand-400" />
                 <span className="truncate max-w-[110px]">{property?.address || "—"}</span>
@@ -69,14 +74,19 @@ const AssignedRow = ({ req, expanded, onToggle, onStatusChange, onUpdate, onDele
           </div>
         </td>
 
-        
+        {/* User / Guest Info */}
         <td className="px-5 py-4">
           <div className="flex items-center gap-2 flex-wrap">
             <div className="w-8 h-8 rounded-full bg-brand-100 flex items-center justify-center text-brand-700 font-bold text-xs flex-shrink-0">
-              {user?.name?.[0]?.toUpperCase() ?? "?"}
+              {displayName?.[0]?.toUpperCase() ?? "?"}
             </div>
             <div>
-              <span className="text-sm font-semibold text-gray-800">{user?.name || "—"}</span>
+              <span className="text-sm font-semibold text-gray-800">{displayName}</span>
+              {isGuest && (
+                <span className="ml-1.5 text-[10px] bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded font-bold">
+                  GUEST
+                </span>
+              )}
               {newToday && (
                 <span className="ml-2 inline-flex items-center gap-1 bg-green-500 animate-pulse text-white text-xs px-2 py-0.5 rounded-full font-semibold whitespace-nowrap">
                   NEW
@@ -86,20 +96,23 @@ const AssignedRow = ({ req, expanded, onToggle, onStatusChange, onUpdate, onDele
           </div>
         </td>
 
-        
+        {/* Contact Info */}
         <td className="px-5 py-4">
           <div className="space-y-1">
-            {user?.email && (
-              <a href={`mailto:${user.email}`} onClick={e => e.stopPropagation()}
+            {displayEmail && (
+              <a href={`mailto:${displayEmail}`} onClick={e => e.stopPropagation()}
                 className="flex items-center gap-1 text-xs text-brand-600 hover:text-brand-800 font-medium">
-                <Mail size={11} />{user.email}
+                <Mail size={11} />{displayEmail}
               </a>
             )}
-            {user?.phone && (
-              <a href={`tel:${user.phone}`} onClick={e => e.stopPropagation()}
+            {displayPhone && (
+              <a href={`tel:${displayPhone}`} onClick={e => e.stopPropagation()}
                 className="flex items-center gap-1 text-xs text-emerald-600 hover:text-emerald-800 font-semibold">
-                <Phone size={11} />{user.phone}
+                <Phone size={11} />{displayPhone}
               </a>
+            )}
+            {!displayEmail && !displayPhone && (
+              <span className="text-xs text-gray-400">—</span>
             )}
           </div>
         </td>

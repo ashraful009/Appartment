@@ -2,9 +2,11 @@ import React, { useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { LayoutDashboard, Menu, X, LogOut } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import DrillDownModal from '../components/hierarchy/DrillDownModal';
 
 const GenericPanelLayout = ({ title, links = [] }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [showDrillDownModal, setShowDrillDownModal] = useState(false);
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
@@ -55,6 +57,21 @@ const GenericPanelLayout = ({ title, links = [] }) => {
         <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
           {links.map((link, idx) => {
             const Icon = link.icon || LayoutDashboard;
+            if (link.isDrillDown || link.action === "drilldown") {
+              return (
+                <button
+                  key={idx}
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    setShowDrillDownModal(true);
+                  }}
+                  className="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all text-gray-600 hover:bg-gray-50 hover:text-gray-900 text-left"
+                >
+                  <Icon size={20} />
+                  {link.label}
+                </button>
+              );
+            }
             return (
               <NavLink
                 key={idx}
@@ -91,6 +108,10 @@ const GenericPanelLayout = ({ title, links = [] }) => {
       <main className="flex-1 bg-gray-50 overflow-auto pt-14 md:pt-0 w-full min-w-0">
         <Outlet />
       </main>
+
+      {showDrillDownModal && (
+        <DrillDownModal onClose={() => setShowDrillDownModal(false)} />
+      )}
     </div>
   );
 };

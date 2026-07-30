@@ -1,10 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const { protect, authorizeRoles } = require("../../middleware/authMiddleware");
-const { generateLink, submitLinkLead, getLinkDetails } = require("./marketingController");
 
-router.post("/link", protect, authorizeRoles("seller"), generateLink);
-router.get("/link/:slug", getLinkDetails);
-router.post("/link/:slug", submitLinkLead);
+// Legacy single-property link endpoints have been deprecated in favor of permanent homepage referral links (?ref=CODE).
 
 module.exports = router;

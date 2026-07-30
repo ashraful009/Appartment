@@ -44,8 +44,6 @@ import MarketingLinks from "./components/seller/marketing/MarketingLinks";
 import CustomerProfile from "./pages/public/CustomerProfile";
 import PropertyDetails from "./pages/public/PropertyDetails";
 
-import MarketingLanding from "./pages/public/MarketingLanding";
-
 // Customer Panel
 import CustomerLayout from "./pages/customer/CustomerLayout";
 import CustomerDashboard from "./pages/customer/CustomerDashboard";
@@ -84,6 +82,24 @@ import InvestorProperties from "./pages/investor/InvestorProperties";
 import MembershipJourney from "./pages/membership/MembershipJourney";
 import PaymentPage from "./pages/membership/PaymentPage";
 
+// Helper function to check and get valid referral code (30-day window)
+export const getValidReferralCode = () => {
+  try {
+    const raw = localStorage.getItem("seller_referral_data");
+    if (!raw) return null;
+    const data = JSON.parse(raw);
+    if (!data || !data.code || !data.savedAt) return null;
+    const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
+    if (Date.now() - data.savedAt > THIRTY_DAYS_MS) {
+      localStorage.removeItem("seller_referral_data");
+      return null;
+    }
+    return data.code;
+  } catch (e) {
+    return null;
+  }
+};
+
 const Placeholder = ({ title }) => (
   <div className="min-h-[60vh] flex items-center justify-center">
     <div className="text-center">
@@ -94,6 +110,22 @@ const Placeholder = ({ title }) => (
 );
 
 function App() {
+  React.useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const refCode = params.get("ref") || params.get("seller");
+      if (refCode && refCode.trim()) {
+        const payload = {
+          code: refCode.trim().toUpperCase(),
+          savedAt: Date.now(),
+        };
+        localStorage.setItem("seller_referral_data", JSON.stringify(payload));
+      }
+    } catch (e) {
+      console.error("Referral tracking error:", e);
+    }
+  }, []);
+
   return (
     <BrowserRouter>
       <Toaster
@@ -116,7 +148,6 @@ function App() {
               <Route path="/login"    element={<Login />} />
               <Route path="/register" element={<Register />} />
               <Route path="/properties/filtered" element={<FilteredProperties />} />
-              <Route path="/link/:slug" element={<MarketingLanding />} />
 
               {/* Admin Panel */}
               <Route path="/admin-panel" element={<AdminLayout />}>

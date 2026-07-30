@@ -82,19 +82,25 @@ const register = async (req, res) => {
 const login = async (req, res) => {
   try {
     const { phone, password } = req.body;
+    const identifier = phone ? phone.trim() : "";
 
-    if (!phone || !password) {
-      return sendError(res, "Missing fields", "Phone and password are required.", 400);
+    if (!identifier || !password) {
+      return sendError(res, "Missing fields", "Phone or email and password are required.", 400);
     }
 
-    const user = await userRepository.db('users').where({ phone }).select('*').first();
+    const user = await userRepository.db('users')
+      .where('phone', identifier)
+      .orWhere('email', identifier)
+      .select('*')
+      .first();
+
     if (!user) {
-      return sendError(res, "Unauthorized", "Invalid phone number or password.", 401);
+      return sendError(res, "Unauthorized", "Invalid phone number/email or password.", 401);
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return sendError(res, "Unauthorized", "Invalid phone number or password.", 401);
+      return sendError(res, "Unauthorized", "Invalid phone number/email or password.", 401);
     }
 
     if (user.roles && user.roles.includes("seller") && !user.referral_code) {

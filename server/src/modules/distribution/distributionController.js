@@ -24,12 +24,33 @@ const getPool = async (req, res) => {
 
     const leadsRaw = await query;
 
-    const leads = leadsRaw.map((r) => ({
-      ...r,
-      _id: r.id,
-      property: r.propertyName ? { _id: r.property_id, name: r.propertyName } : null,
-      user: r.user_id ? { _id: r.user_id, name: r.userName, phone: r.userPhone } : null,
-    }));
+    const leads = leadsRaw.map((r) => {
+      const isRegisteredUser = Boolean(r.user_id);
+      const name = isRegisteredUser ? r.userName : r.guest_name;
+      const phone = isRegisteredUser ? r.userPhone : r.guest_phone;
+      const createdAt = r.created_at || r.created_on || r.createdAt || r.assigned_at;
+
+      return {
+        ...r,
+        _id: r.id,
+        id: r.id,
+        propertyName: r.propertyName,
+        guest_name: r.guest_name,
+        guest_phone: r.guest_phone,
+        userName: r.userName,
+        userPhone: r.userPhone,
+        created_at: createdAt,
+        createdAt: createdAt,
+        property: r.propertyName ? { _id: r.property_id, id: r.property_id, name: r.propertyName } : null,
+        user: (isRegisteredUser || name || phone) ? {
+          _id: r.user_id,
+          id: r.user_id,
+          name: name || "Guest Customer",
+          phone: phone || "No Phone",
+          isGuest: !isRegisteredUser,
+        } : null,
+      };
+    });
 
     res.status(200).json({ leads });
   } catch (error) {
@@ -53,7 +74,7 @@ const getRecipients = async (req, res) => {
     else if (isAGM) targetRole = "area_manager";
     else if (isAreaManager) targetRole = "seller";
     else {
-      return res.status(200).json({ recipients: [] });
+      return res.status(200).json({ recipients: [], targetRole: "" });
     }
 
     const allUsers = await userRepository.db('users').select('id', 'name', 'roles', 'superior_id');
@@ -75,10 +96,12 @@ const getRecipients = async (req, res) => {
       return verifyDescendantAccess(req.user.id, u.id, allUsersMap);
     }).map(u => ({
       _id: u.id,
+      id: u.id,
       name: u.name,
+      role: targetRole,
     }));
 
-    res.status(200).json({ recipients });
+    res.status(200).json({ recipients, targetRole });
   } catch (error) {
     console.error("getRecipients error:", error);
     res.status(500).json({ message: "Failed to fetch recipients." });
@@ -87,9 +110,10 @@ const getRecipients = async (req, res) => {
 
 const distributeLeads = async (req, res) => {
   try {
-    const { leadIds, targetUserId } = req.body;
+    const { leadIds, leadId, targetUserId } = req.body;
+    const idsToUpdate = Array.isArray(leadIds) ? leadIds : (leadId ? [leadId] : []);
 
-    if (!leadIds || !Array.isArray(leadIds) || leadIds.length === 0) {
+    if (idsToUpdate.length === 0) {
       return res.status(400).json({ message: "leadIds array is required." });
     }
     if (!targetUserId) {
@@ -149,7 +173,7 @@ const distributeLeads = async (req, res) => {
       updateData.assigned_at = new Date();
     }
 
-    const q = priceRequestRepository.db('price_requests').whereIn('id', leadIds);
+    const q = priceRequestRepository.db('price_requests').whereIn('id', idsToUpdate);
 
     // Ensure they actually own it (or it's null for Admin)
     if (isAdmin) {
@@ -160,7 +184,11 @@ const distributeLeads = async (req, res) => {
 
     const updatedCount = await q.update(updateData);
 
-    res.status(200).json({ message: `Successfully distributed ${updatedCount} lead(s).` });
+    res.status(200).json({
+      message: `Successfully distributed ${updatedCount} lead(s) to ${targetUser.name}.`,
+      targetUserName: targetUser.name,
+      updatedCount
+    });
   } catch (error) {
     console.error("distributeLeads error:", error);
     res.status(500).json({ message: "Failed to distribute leads." });
