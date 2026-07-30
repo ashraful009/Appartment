@@ -261,13 +261,8 @@ const EditBuilding = () => {
   }
 
   return (
-    <div className="p-8 max-w-4xl">
+    <div className="p-8 max-w-4xl space-y-6">
       {toast && <Toast {...toast} onClose={() => setToast(null)} />}
-
-      <div className="mb-8">
-        <h1 className="text-2xl font-extrabold text-gray-800 flex items-center gap-2">Edit Building</h1>
-        <p className="text-gray-500 text-sm mt-1">Update property details and images.</p>
-      </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
 

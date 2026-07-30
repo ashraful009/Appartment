@@ -307,18 +307,7 @@ const BuildingAllocate = () => {
   };
 
   return (
-    <div className="p-6 md:p-8">
-      <div className="flex items-center gap-3 mb-6">
-        <div className="w-10 h-10 rounded-2xl bg-brand-600 flex items-center justify-center">
-          <Building2 size={20} className="text-white" />
-        </div>
-        <div>
-          <h1 className="text-2xl font-extrabold text-gray-900">Building Allocate</h1>
-          <p className="text-sm text-gray-500">
-            Allocate available units to investors and track every building's inventory.
-          </p>
-        </div>
-      </div>
+    <div className="p-6 md:p-8 space-y-6">
 
       
       <div className="flex gap-2 mb-5">

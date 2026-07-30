@@ -6,12 +6,7 @@ import SubtreeReportCard from "../../components/hierarchy/SubtreeReportCard";
 
 const SellerDashboard = () => {
   return (
-    <div className="p-8 space-y-8">
-      <div>
-        <h1 className="text-3xl font-extrabold text-gray-900">Seller Dashboard</h1>
-        <p className="text-gray-500 mt-1 text-sm">Monitor your targets, assigned leads, and customer hierarchy.</p>
-      </div>
-
+    <div className="p-8 space-y-6">
       <TargetProgressBar />
 
       <SubtreeReportCard title="My Customer Subtree & Lead Pipeline" />

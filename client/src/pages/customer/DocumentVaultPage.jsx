@@ -62,29 +62,11 @@ const DocumentVaultPage = () => {
 
   
   return (
-    <div className="p-6 md:p-8 max-w-6xl mx-auto">
-
-      
-      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-10">
-        <div>
-          <p className="text-xs font-bold uppercase tracking-widest text-brand-500 mb-1">
-            Customer Panel
-          </p>
-          <h1 className="text-3xl font-extrabold text-gray-900 flex items-center gap-2.5">
-            <ShieldCheck size={28} className="text-brand-600" />
-            My Document Vault
-          </h1>
-          <p className="text-gray-500 text-sm mt-1.5 max-w-lg flex items-start gap-1.5">
-            <Lock size={13} className="text-gray-400 flex-shrink-0 mt-0.5" />
-            Your documents are securely stored and shared only with your
-            assigned property agent to speed up the booking process.
-          </p>
-        </div>
-
-        
+    <div className="p-6 md:p-8 max-w-6xl mx-auto space-y-6">
+      <div className="flex justify-end">
         <button
           onClick={() => setIsModalOpen(true)}
-          className="self-start sm:self-auto inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold shadow-sm transition-colors flex-shrink-0"
+          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold shadow-sm transition-colors flex-shrink-0"
         >
           <Upload size={15} />
           Upload New Document

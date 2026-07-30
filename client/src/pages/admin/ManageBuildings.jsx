@@ -46,18 +46,8 @@ const ManageBuildings = () => {
   }
 
   return (
-    <div className="p-8 max-w-7xl mx-auto space-y-8">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
-            <Building2 className="w-8 h-8 text-indigo-600" />
-            Building Management
-          </h1>
-          <p className="text-gray-500 text-sm mt-2">
-            Manage all buildings and property listings from the admin dashboard.
-          </p>
-        </div>
-
+    <div className="p-8 max-w-7xl mx-auto space-y-6">
+      <div className="flex justify-end">
         <Link
           to="/admin-panel/buildings"
           className="flex items-center gap-2 bg-indigo-600 text-white px-5 py-2.5 rounded-xl font-semibold hover:bg-indigo-700 shadow-md transition"

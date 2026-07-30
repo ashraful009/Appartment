@@ -62,19 +62,7 @@ const SystemHierarchyView = () => {
 
   return (
     <div className="p-8 max-w-7xl mx-auto space-y-8">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 text-white p-6 rounded-2xl shadow-xl border border-gray-800">
-        <div>
-          <div className="flex items-center gap-2.5 mb-1">
-            <span className="p-1.5 bg-brand-500/20 text-brand-400 rounded-lg border border-brand-500/30">
-              <Users size={20} />
-            </span>
-            <h1 className="text-2xl font-extrabold tracking-tight">Full-System Organizational Hierarchy</h1>
-          </div>
-          <p className="text-gray-400 text-sm">
-            Comprehensive multi-root view of all Directors, reporting chains, unassigned staff, and departmental roles.
-          </p>
-        </div>
+      <div className="flex justify-end">
         <button
           onClick={fetchHierarchy}
           className="inline-flex items-center justify-center gap-2 bg-gray-800 hover:bg-gray-700 text-gray-200 border border-gray-700 text-sm font-semibold px-4 py-2.5 rounded-xl transition-all shadow-sm shrink-0 active:scale-95"

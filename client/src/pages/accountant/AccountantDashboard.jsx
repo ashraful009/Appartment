@@ -37,13 +37,7 @@ const AccountantDashboard = () => {
   const overdueMembers = members.filter((m) => m.overdueCount > 0).length;
 
   return (
-    <div className="p-6 md:p-8 max-w-4xl">
-      <div className="mb-6">
-        <h1 className="text-2xl font-extrabold text-gray-900">Accountant Dashboard</h1>
-        <p className="text-gray-500 text-sm mt-1">
-          Confirm payments and keep an eye on members' installment timing.
-        </p>
-      </div>
+    <div className="p-6 md:p-8 max-w-4xl space-y-6">
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <StatCard

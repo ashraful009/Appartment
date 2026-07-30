@@ -81,17 +81,7 @@ const SellersPerformance = () => {
 
   
   return (
-    <div className="p-8">
-      
-      <div className="mb-8">
-        <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-1">Admin Panel</p>
-        <h1 className="text-3xl font-extrabold text-gray-900">Sellers Performance</h1>
-        <p className="text-gray-500 text-sm mt-1">
-          Review and approve customer conversion and seller promotion requests.
-        </p>
-      </div>
-
-      
+    <div className="p-8 space-y-6">
       {!loading && !error && sellers.length > 0 && (
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-8">
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex items-center gap-3">

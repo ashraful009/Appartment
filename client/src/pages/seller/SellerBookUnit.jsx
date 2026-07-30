@@ -26,17 +26,7 @@ const SellerBookUnit = () => {
   }, []);
 
   return (
-    <div className="max-w-7xl mx-auto p-6 lg:p-10 space-y-8">
-      
-      <div>
-        <h1 className="text-3xl font-extrabold text-gray-900 flex items-center gap-3">
-          <Building2 className="text-brand-600" />
-          Select a Property to Book Units
-        </h1>
-        <p className="text-gray-500 text-sm mt-2 max-w-2xl">
-          Search properties, view real-time availability, and securely reserve units for your customers right from your dashboard.
-        </p>
-      </div>
+    <div className="max-w-7xl mx-auto p-6 lg:p-10 space-y-6">
 
       {loading ? (
         <div className="flex items-center justify-center p-20 text-gray-400">

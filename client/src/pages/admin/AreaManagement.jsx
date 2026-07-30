@@ -88,19 +88,8 @@ const AreaManagement = () => {
   };
 
   return (
-    <div className="max-w-3xl mx-auto p-8 space-y-8">
+    <div className="max-w-3xl mx-auto p-8 space-y-6">
       {toast && <Toast {...toast} onClose={() => setToast(null)} />}
-
-      
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
-          <MapPin className="text-indigo-600" />
-          Manage Areas
-        </h1>
-        <p className="text-gray-500 text-sm mt-2">
-          Add or remove geographic areas. These populate the "Area" dropdown in the Add Building form and the homepage filter.
-        </p>
-      </div>
 
       
       <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">

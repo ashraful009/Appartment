@@ -618,21 +618,12 @@ const BannerManagement = () => {
   const inactiveCount = banners.length - activeCount;
 
   return (
-    <div className="p-6 lg:p-8 max-w-7xl mx-auto space-y-8">
+    <div className="p-6 lg:p-8 max-w-7xl mx-auto space-y-6">
 
       {toast && <Toast {...toast} onClose={() => setToast(null)} />}
 
       
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-extrabold text-gray-900 flex items-center gap-2">
-            <ImagePlay size={24} className="text-brand-600" />
-            Banner Management
-          </h1>
-          <p className="text-gray-500 text-sm mt-1">
-            Manage homepage banners — supports both image and video with device-specific uploads.
-          </p>
-        </div>
+      <div className="flex justify-end">
 
         <button
           type="button"

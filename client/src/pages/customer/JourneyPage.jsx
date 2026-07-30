@@ -92,18 +92,7 @@ const JourneyPage = () => {
   }, []);
 
   return (
-    <div className="p-6 md:p-8 max-w-5xl mx-auto">
-
-      
-      <div className="mb-10">
-        <p className="text-xs font-bold uppercase tracking-widest text-brand-500 mb-1">
-          Customer Panel
-        </p>
-        <h1 className="text-3xl font-extrabold text-gray-900">My Journey</h1>
-        <p className="text-gray-500 text-sm mt-1.5">
-          Track your property inquiries and manage your payment schedules.
-        </p>
-      </div>
+    <div className="p-6 md:p-8 max-w-5xl mx-auto space-y-6">
 
       
       {error && (

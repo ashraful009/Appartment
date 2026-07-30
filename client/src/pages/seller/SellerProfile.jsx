@@ -116,11 +116,7 @@ const SellerProfile = () => {
   const stats = profileData?.stats || { totalAssignedLeads: 0, totalConvertedCustomers: 0 };
 
   return (
-    <div className="p-8 max-w-7xl mx-auto">
-      <div className="mb-8">
-        <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">Digital Visiting Card</h1>
-        <p className="text-gray-500 mt-2">Manage your public seller profile, custom links, and track your metrics.</p>
-      </div>
+    <div className="p-8 max-w-7xl mx-auto space-y-6">
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         

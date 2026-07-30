@@ -219,20 +219,8 @@ const AddBuilding = () => {
   };
 
   return (
-    <div className="max-w-5xl mx-auto p-8 space-y-8">
-
+    <div className="max-w-5xl mx-auto p-8 space-y-6">
       {toast && <Toast {...toast} onClose={() => setToast(null)} />}
-
-      
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
-          <Building2 className="text-indigo-600" />
-          Add New Building
-        </h1>
-        <p className="text-gray-500 text-sm mt-2">
-          Create a new building listing with images, details, and apartment sizes.
-        </p>
-      </div>
 
       
       {(() => {

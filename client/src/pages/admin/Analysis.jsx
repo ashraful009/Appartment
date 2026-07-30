@@ -261,20 +261,6 @@ const Analysis = () => {
 
   return (
     <div className="p-6 md:p-8 space-y-6">
-      
-      <div className="flex items-center gap-3">
-        <div className="w-12 h-12 rounded-2xl bg-brand-600 flex items-center justify-center shadow-lg shadow-brand-500/20">
-          <BarChart3 className="text-white" size={24} />
-        </div>
-        <div>
-          <h1 className="text-2xl md:text-3xl font-extrabold text-gray-900 tracking-tight">
-            Analysis & Operations
-          </h1>
-          <p className="text-gray-500 text-sm mt-0.5">
-            Monitor and manage payment due extensions, unit allocations, and payment resets.
-          </p>
-        </div>
-      </div>
 
       
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex flex-wrap items-center gap-4 justify-between">

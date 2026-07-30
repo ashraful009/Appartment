@@ -122,15 +122,7 @@ const UserManagement = () => {
   );
 
   return (
-    <div className="p-8">
-      
-      <div className="mb-8">
-        <h1 className="text-2xl font-extrabold text-gray-800">Manage Users</h1>
-        <p className="text-gray-500 text-sm mt-1">
-          {users.length} total users · Toggle switches to assign roles and define hierarchy reporting lines.
-        </p>
-      </div>
-
+    <div className="p-8 space-y-6">
       {error && (
         <div className="mb-6 bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm">{error}</div>
       )}

@@ -126,17 +126,7 @@ const MySales = () => {
   }
 
   return (
-    <div className="p-8 max-w-7xl mx-auto space-y-8">
-      
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
-          <FileText className="w-8 h-8 text-indigo-600" />
-          My Sales & Monitoring
-        </h1>
-        <p className="text-gray-500 text-sm mt-2 max-w-2xl">
-          Track your actively managed properties. Transfer your pre-booked units to customers or finalize bookings into sold statuses organically.
-        </p>
-      </div>
+    <div className="p-8 max-w-7xl mx-auto space-y-6">
 
       
       <div className="flex flex-wrap gap-2 border-b border-gray-200 pb-4">

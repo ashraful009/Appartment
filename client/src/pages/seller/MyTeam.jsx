@@ -31,16 +31,7 @@ const MyTeam = () => {
   const closeTimeline = useCallback(() => setTimelineModal(null), []);
 
   return (
-    <div className="p-8">
-      
-      <div className="mb-8">
-        <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-1">Seller Panel</p>
-        <h1 className="text-3xl font-extrabold text-gray-900">Team Hub</h1>
-        <p className="text-gray-500 text-sm mt-1">
-          Manage your sub-sellers, track team earnings, and broadcast updates.
-        </p>
-      </div>
-
+    <div className="p-8 space-y-6">
       {error && (
         <div className="mb-6 bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm">{error}</div>
       )}

@@ -7,38 +7,36 @@ import DelegateModal from "../../components/seller/leads/DelegateModal";
 import FollowUpTaskCard from "../../components/seller/leads/FollowUpTaskCard";
 import ManualAddLeadModal from "../../components/seller/leads/ManualAddLeadModal";
 
-
 const isToday = (dateStr) => {
   if (!dateStr) return false;
   const d = new Date(dateStr);
   const today = new Date();
   return (
     d.getFullYear() === today.getFullYear() &&
-    d.getMonth()    === today.getMonth()    &&
-    d.getDate()     === today.getDate()
+    d.getMonth() === today.getMonth() &&
+    d.getDate() === today.getDate()
   );
 };
 
-
 const AssignedLeads = () => {
-  const [requests, setRequests]             = useState([]);
-  const [loading, setLoading]               = useState(true);
-  const [error, setError]                   = useState("");
-  const [expandedId, setExpandedId]         = useState(null);
+  const [requests, setRequests] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [expandedId, setExpandedId] = useState(null);
   const [delegateTarget, setDelegateTarget] = useState(null);
-  const [todayTasks, setTodayTasks]         = useState([]);
-  const [previousTasks, setPreviousTasks]   = useState([]);
-  const [tasksLoading, setTasksLoading]     = useState(true);
+  const [todayTasks, setTodayTasks] = useState([]);
+  const [previousTasks, setPreviousTasks] = useState([]);
+  const [tasksLoading, setTasksLoading] = useState(true);
 
   useEffect(() => {
     const fetchAll = async () => {
       try {
         const [leadsRes, tasksRes] = await Promise.all([
-          axios.get("/api/requests/assigned",  { withCredentials: true }),
-          axios.get("/api/seller/tasks",        { withCredentials: true }),
+          axios.get("/api/requests/assigned", { withCredentials: true }),
+          axios.get("/api/seller/tasks", { withCredentials: true }),
         ]);
-        setRequests(leadsRes.data.requests      || []);
-        setTodayTasks(tasksRes.data.todayTasks  || []);
+        setRequests(leadsRes.data.requests || []);
+        setTodayTasks(tasksRes.data.todayTasks || []);
         setPreviousTasks(tasksRes.data.previousTasks || []);
       } catch (err) {
         setError(err?.response?.data?.message || "Failed to load data.");
@@ -58,14 +56,15 @@ const AssignedLeads = () => {
         { withCredentials: true }
       );
       if (newStatus === "Completed") {
-        setTodayTasks(prev    => prev.filter(t => t._id !== interactionId));
-        setPreviousTasks(prev => prev.filter(t => t._id !== interactionId));
+        setTodayTasks((prev) => prev.filter((t) => t._id !== interactionId));
+        setPreviousTasks((prev) => prev.filter((t) => t._id !== interactionId));
       } else {
-        const mark = (list) => list.map(t =>
-          t._id === interactionId ? { ...t, followUpStatus: newStatus } : t
-        );
-        setTodayTasks(prev    => mark(prev));
-        setPreviousTasks(prev => mark(prev));
+        const mark = (list) =>
+          list.map((t) =>
+            t._id === interactionId ? { ...t, followUpStatus: newStatus } : t
+          );
+        setTodayTasks((prev) => mark(prev));
+        setPreviousTasks((prev) => mark(prev));
       }
     } catch {
       toast.error("Failed to update task status.");
@@ -74,44 +73,44 @@ const AssignedLeads = () => {
 
   const handleExpandByLeadId = (leadId) => {
     if (!leadId) return;
-    setExpandedId(prev => (prev === leadId ? null : leadId));
+    setExpandedId((prev) => (prev === leadId ? null : leadId));
     setTimeout(() => {
-      document.getElementById(`lead-row-${leadId}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+      document
+        .getElementById(`lead-row-${leadId}`)
+        ?.scrollIntoView({ behavior: "smooth", block: "center" });
     }, 100);
   };
 
   const handleStatusChange = (requestId, newStatus, statusKey) => {
-    setRequests(prev =>
-      prev.map(r => (r._id === requestId ? { ...r, [statusKey]: newStatus } : r))
+    setRequests((prev) =>
+      prev.map((r) => (r._id === requestId ? { ...r, [statusKey]: newStatus } : r))
     );
   };
 
   const handleUpdate = (requestId, updatedReq) => {
-    setRequests(prev =>
-      prev.map(r => (r._id === requestId ? { ...r, ...updatedReq } : r))
+    setRequests((prev) =>
+      prev.map((r) => (r._id === requestId ? { ...r, ...updatedReq } : r))
     );
   };
 
-  const handleToggle    = (id)   => setExpandedId(prev => (prev === id ? null : id));
-  const handleDelegate  = (lead) => setDelegateTarget(lead);
+  const handleToggle = (id) => setExpandedId((prev) => (prev === id ? null : id));
+  const handleDelegate = (lead) => setDelegateTarget(lead);
   const handleDelegated = (leadId) => {
-    setRequests(prev => prev.filter(r => r._id !== leadId));
+    setRequests((prev) => prev.filter((r) => r._id !== leadId));
     setExpandedId(null);
   };
 
-  const todayCount  = requests.filter(r => isToday(r.assignedAt)).length;
-  const hasTasks    = todayTasks.length > 0 || previousTasks.length > 0;
-
+  const todayCount = requests.filter((r) => isToday(r.assignedAt || r.assigned_at)).length;
+  const hasTasks = todayTasks.length > 0 || previousTasks.length > 0;
   const [showAddModal, setShowAddModal] = useState(false);
 
   return (
-    <div className="p-8">
-      
-      <div className="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div className="p-8 space-y-6">
+      {/* Top Action Bar */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-extrabold text-gray-900">My Assigned Leads</h1>
           {!loading && todayCount > 0 && (
-            <div className="mt-3 inline-flex items-center gap-2 bg-green-50 border border-green-200 text-green-700 text-sm font-semibold px-4 py-2 rounded-xl">
+            <div className="inline-flex items-center gap-2 bg-green-50 border border-green-200 text-green-700 text-sm font-semibold px-4 py-2 rounded-xl">
               <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
               {todayCount} new lead{todayCount > 1 ? "s" : ""} assigned today!
             </div>
@@ -119,17 +118,19 @@ const AssignedLeads = () => {
         </div>
         <button
           onClick={() => setShowAddModal(true)}
-          className="bg-brand-600 hover:bg-brand-700 text-white font-semibold py-2 px-5 rounded-xl transition-colors shadow-sm whitespace-nowrap"
+          className="bg-brand-600 hover:bg-brand-700 text-white font-semibold py-2.5 px-5 rounded-xl transition-colors shadow-sm whitespace-nowrap"
         >
           + Add Lead
         </button>
       </div>
 
       {error && (
-        <div className="mb-6 bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm">{error}</div>
+        <div className="mb-6 bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm">
+          {error}
+        </div>
       )}
 
-      
+      {/* Follow-up Tasks */}
       {!tasksLoading && hasTasks && (
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 mb-6">
           <h2 className="text-sm font-bold text-gray-700 uppercase tracking-widest mb-4 flex items-center gap-2">
@@ -140,10 +141,10 @@ const AssignedLeads = () => {
           {previousTasks.length > 0 && (
             <div className="mb-4">
               <p className="text-xs font-semibold text-red-500 uppercase tracking-wider mb-2">
-                ️ PREVIOUS TASKS — OVERDUE ({previousTasks.length})
+                OVERDUE TASKS ({previousTasks.length})
               </p>
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-2">
-                {previousTasks.map(t => (
+                {previousTasks.map((t) => (
                   <FollowUpTaskCard
                     key={t._id}
                     task={t}
@@ -159,10 +160,10 @@ const AssignedLeads = () => {
           {todayTasks.length > 0 && (
             <div>
               <p className="text-xs font-semibold text-emerald-600 uppercase tracking-wider mb-2">
-                 TODAY'S FOLLOW-UPS ({todayTasks.length})
+                TODAY'S FOLLOW-UPS ({todayTasks.length})
               </p>
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-2">
-                {todayTasks.map(t => (
+                {todayTasks.map((t) => (
                   <FollowUpTaskCard
                     key={t._id}
                     task={t}
@@ -177,19 +178,7 @@ const AssignedLeads = () => {
         </div>
       )}
 
-      
-      {tasksLoading && (
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 mb-6">
-          <div className="h-4 bg-gray-200 rounded w-36 animate-pulse mb-4" />
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-2">
-            {[1, 2, 3].map(i => (
-              <div key={i} className="h-20 bg-gray-100 rounded-xl animate-pulse" />
-            ))}
-          </div>
-        </div>
-      )}
-
-      
+      {/* Loading State */}
       {loading && (
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
           <div className="divide-y divide-gray-50">
@@ -206,16 +195,18 @@ const AssignedLeads = () => {
         </div>
       )}
 
-      
+      {/* Empty State */}
       {!loading && requests.length === 0 && !error && (
         <div className="flex flex-col items-center justify-center py-24 text-center">
           <InboxIcon size={56} className="text-gray-200 mb-4" />
           <p className="text-lg font-semibold text-gray-500">No assigned leads yet</p>
-          <p className="text-sm text-gray-400 mt-1">The admin will assign leads to you. Check back soon.</p>
+          <p className="text-sm text-gray-400 mt-1">
+            The admin or manager will assign leads to you. Check back soon.
+          </p>
         </div>
       )}
 
-      
+      {/* Table */}
       {!loading && requests.length > 0 && (
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
           <div className="overflow-x-auto">
@@ -233,7 +224,7 @@ const AssignedLeads = () => {
                 </tr>
               </thead>
               <tbody>
-                {requests.map(req => (
+                {requests.map((req) => (
                   <React.Fragment key={req._id}>
                     <tr id={`lead-row-${req._id}`} style={{ display: "none" }} />
                     <AssignedRow
@@ -255,7 +246,6 @@ const AssignedLeads = () => {
         </div>
       )}
 
-      
       {delegateTarget && (
         <DelegateModal
           lead={delegateTarget}
@@ -268,10 +258,10 @@ const AssignedLeads = () => {
         isOpen={showAddModal}
         onClose={() => setShowAddModal(false)}
         onSuccess={() => {
-          // Re-fetch assigned leads
-          axios.get("/api/requests/assigned", { withCredentials: true })
-            .then(res => setRequests(res.data.requests || []))
-            .catch(err => console.error(err));
+          axios
+            .get("/api/requests/assigned", { withCredentials: true })
+            .then((res) => setRequests(res.data.requests || []))
+            .catch((err) => console.error(err));
         }}
       />
     </div>

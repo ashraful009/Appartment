@@ -259,20 +259,13 @@ const MembershipManagement = () => {
   }, []);
 
   return (
-    <div className="p-8">
-      <div className="flex items-start justify-between gap-4 mb-6 flex-wrap">
-        <div>
-          <h1 className="text-2xl font-extrabold text-gray-800">Memberships & Investors</h1>
-          <p className="text-gray-500 text-sm mt-1">
-            Review booking, down payment, and installment submissions per property.
-          </p>
-        </div>
+    <div className="p-8 space-y-6">
+      <div className="flex justify-end">
         <button
           onClick={() => setShowCreate(true)}
           className="inline-flex items-center gap-2 px-4 py-2 bg-brand-600 text-white text-sm font-bold rounded-xl hover:bg-brand-700"
         >
           <Plus size={16} /> Create Booking
-        </button>
       </div>
 
       {showCreate && (
