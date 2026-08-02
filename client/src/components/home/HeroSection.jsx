@@ -1,229 +1,67 @@
-import React, { useState, useEffect } from "react";
-import axios from "axios";
-import { HeroSkeleton } from "../common/SkeletonLoader";
-
-
-const FallbackHero = () => {
-  const [mount, setMount] = useState(false);
-  useEffect(() => { const t = setTimeout(() => setMount(true), 80); return () => clearTimeout(t); }, []);
-
+import React from "react";
+import bannerImg from "../../assets/banner.png";
+const HeroSection = () => {
   return (
-    <div
-      className="w-full relative overflow-hidden flex items-center justify-center"
-      style={{
-        minHeight: "clamp(320px, 60vw, 740px)",
-        background: "linear-gradient(135deg, #040810 0%, #0A1628 28%, #122040 58%, #8B600A 85%, #C9942A 100%)",
-      }}
-    >
-      
-      <div
-        className="absolute pointer-events-none"
-        style={{
-          top: "-20%", left: "-10%",
-          width: "55%", height: "70%",
-          background: "radial-gradient(ellipse at center, rgba(26,48,96,0.7) 0%, transparent 70%)",
-          filter: "blur(60px)",
-        }}
-      />
-      <div
-        className="absolute pointer-events-none"
-        style={{
-          bottom: "-20%", right: "-10%",
-          width: "50%", height: "60%",
-          background: "radial-gradient(ellipse at center, rgba(201,148,42,0.25) 0%, transparent 70%)",
-          filter: "blur(50px)",
-        }}
-      />
-      <div
-        className="absolute pointer-events-none"
-        style={{
-          top: "40%", left: "55%",
-          width: "35%", height: "40%",
-          background: "radial-gradient(ellipse at center, rgba(232,184,75,0.12) 0%, transparent 70%)",
-          filter: "blur(40px)",
-        }}
-      />
+    <section className="w-full bg-[#FAF7F0] py-4 sm:py-6 lg:py-10 px-2 sm:px-6 lg:px-12 border-b border-gray-200 overflow-hidden">
+      <div className="max-w-[1600px] mx-auto">
+        <div className="grid grid-cols-12 gap-3 sm:gap-8 items-center">
+          
+          
+          <div className="col-span-7 lg:pl-4 xl:pl-8 flex flex-col justify-center h-full py-4 lg:py-12">
 
-      
-      <div
-        className="absolute inset-0 pointer-events-none opacity-10"
-        style={{
-          backgroundImage: `
-            linear-gradient(rgba(201,148,42,0.15) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(201,148,42,0.15) 1px, transparent 1px)
-          `,
-          backgroundSize: "64px 64px",
-        }}
-      />
+            <div className="space-y-4 sm:space-y-6 lg:space-y-10 xl:space-y-12">
+              
+              <div>
+                <span className="inline-block px-2 py-1 sm:px-3 sm:py-1.5 lg:px-6 lg:py-3 bg-amber-100 text-amber-900 border-2 border-amber-300/60 rounded-md lg:rounded-xl text-xs sm:text-base lg:text-2xl xl:text-3xl font-extrabold shadow-md transform -rotate-2">
+                  সুদ বিহীন
+                </span>
+              </div>
 
-      
-      <div
-        className="relative z-10 text-center px-6"
-        style={{ maxWidth: "750px" }}
-      >
-        <div
-          className={`transition-all duration-700 ${mount ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}
-          style={{ transitionDelay: "100ms" }}
-        >
-          <div className="premium-badge mx-auto mb-6" style={{ width: "fit-content" }}>
-            <span style={{ background: "linear-gradient(90deg, #C9942A, #E8B84B)", width: "6px", height: "6px", borderRadius: "50%", display: "inline-block" }} />
-            Premium Real Estate · Dhaka
+              
+              <div className="flex flex-wrap items-end gap-2 sm:gap-4 lg:gap-6 xl:gap-8 my-2 lg:my-4">
+                
+                <span className="text-5xl sm:text-7xl md:text-8xl lg:text-[110px] xl:text-[140px] leading-none font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-b from-[#E8B84B] via-[#C9942A] to-[#89600A] drop-shadow-[0_3px_3px_rgba(0,0,0,0.3)] lg:drop-shadow-[0_8px_8px_rgba(0,0,0,0.4)]">
+                  ১২৪
+                </span>
+                
+                <span className="px-3 py-1.5 sm:px-4 sm:py-2 lg:px-8 lg:py-4 mb-1 sm:mb-2 lg:mb-4 bg-gradient-to-br from-[#063b27] to-[#042015] text-white text-sm sm:text-2xl md:text-3xl lg:text-5xl xl:text-6xl font-black rounded-lg lg:rounded-3xl shadow-[0_4px_10px_rgba(0,0,0,0.3)] lg:shadow-[0_15px_30px_rgba(0,0,0,0.4)] border border-emerald-500/30">
+                  কিস্তিতে
+                </span>
+              </div>
+
+              
+              <h1 className="text-xl sm:text-3xl md:text-5xl lg:text-6xl xl:text-[75px] font-black text-[#0A1628] leading-tight lg:leading-[1.1] [text-shadow:_1px_1px_0_#cbd5e1,_2px_2px_4px_rgba(0,0,0,0.2)] lg:[text-shadow:_2px_2px_0_#94a3b8,_4px_4px_0_#cbd5e1,_6px_6px_15px_rgba(0,0,0,0.3)]">
+                কনডোমিনিয়াম সিটিতে
+              </h1>
+              
+              <h2 className="text-lg sm:text-2xl md:text-4xl lg:text-5xl xl:text-[55px] font-extrabold text-[#122040] leading-tight lg:leading-[1.2] [text-shadow:_1px_1px_0_#cbd5e1,_1px_1px_3px_rgba(0,0,0,0.15)] lg:[text-shadow:_1px_1px_0_#94a3b8,_3px_3px_0_#cbd5e1,_5px_5px_10px_rgba(0,0,0,0.2)]">
+                আপনার ফ্ল্যাটটি বুঝে নিন।
+              </h2>
+            </div>
+
+
           </div>
-        </div>
 
-        <h1
-          className={`text-white transition-all duration-700 ${mount ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}
-          style={{
-            fontFamily: "'Cormorant Garamond', Georgia, serif",
-            fontSize: "clamp(2.5rem, 6vw, 5rem)",
-            fontWeight: 700,
-            lineHeight: 1.1,
-            letterSpacing: "-0.02em",
-            textShadow: "0 4px 40px rgba(0,0,0,0.5)",
-            transitionDelay: "200ms",
-          }}
-        >
-          Find Your{" "}
-          <em
-            style={{
-              fontStyle: "italic",
-              background: "linear-gradient(135deg, #C9942A 0%, #E8B84B 50%, #F5D98C 100%)",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-              backgroundClip: "text",
-            }}
-          >
-            Dream
-          </em>
-          <br />
-          Home in Bangladesh
-        </h1>
+          {/* Right Side - Banner Image */}
+          <div className="col-span-5 relative">
+            {/* Soft 3D Glow/Backdrop */}
+            <div className="absolute inset-0 bg-gradient-to-tr from-sky-300/30 via-emerald-300/20 to-transparent rounded-l-[100px] lg:rounded-l-[140px] rounded-r-3xl blur-2xl transform rotate-1 scale-105"></div>
+            
+            {/* 3D Image Container */}
+            <div className="relative w-full aspect-[4/5] md:aspect-[3/4] lg:aspect-[4/5] xl:aspect-[4/3] rounded-tl-[30px] rounded-bl-[30px] sm:rounded-tl-[80px] sm:rounded-bl-[80px] lg:rounded-tl-[120px] lg:rounded-bl-[120px] rounded-tr-xl rounded-br-xl sm:rounded-tr-3xl sm:rounded-br-3xl overflow-hidden shadow-[0_10px_30px_rgba(8,_112,_184,_0.15)] sm:shadow-[0_20px_50px_rgba(8,_112,_184,_0.15)] border-[3px] sm:border-[6px] border-white/90 bg-white group transform transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_30px_60px_rgba(8,_112,_184,_0.25)]">
+              <img
+                src={bannerImg}
+                alt="Nirapad Nibash Dar Al Aman Banner"
+                className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700 ease-out"
+              />
+              {/* Inner depth shadow */}
+              <div className="absolute inset-0 shadow-[inset_0_0_20px_rgba(0,0,0,0.1)] pointer-events-none"></div>
+            </div>
+          </div>
 
-        <p
-          className={`transition-all duration-700 ${mount ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}
-          style={{
-            fontFamily: "'Jost', sans-serif",
-            fontSize: "clamp(0.9rem, 2vw, 1.1rem)",
-            color: "rgba(200,211,232,0.75)",
-            marginTop: "1.25rem",
-            lineHeight: 1.7,
-            transitionDelay: "300ms",
-          }}
-        >
-          Premium apartments &amp; properties curated for your aspirations.
-          <br className="hidden sm:block" />
-          Trusted by 850+ happy families across Bangladesh.
-        </p>
-
-        <div
-          className={`flex flex-col sm:flex-row gap-4 justify-center items-center mt-10 transition-all duration-700 ${mount ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}
-          style={{ transitionDelay: "400ms" }}
-        >
-          <a
-            href="/properties"
-            className="btn-gold w-full sm:w-auto"
-            style={{ padding: "0.85rem 2.25rem", fontSize: "0.95rem" }}
-          >
-            Browse Properties
-          </a>
-          <a
-            href="/register"
-            className="btn-outline-gold w-full sm:w-auto"
-            style={{ padding: "0.85rem 2.25rem", fontSize: "0.95rem" }}
-          >
-            Join Free Today
-          </a>
         </div>
       </div>
-
-      
-      <div
-        className="absolute bottom-0 left-0 right-0 pointer-events-none"
-        style={{
-          height: "80px",
-          background: "linear-gradient(to bottom, transparent, rgba(250,247,240,1))",
-        }}
-      />
-    </div>
-  );
-};
-
-
-const HeroSection = () => {
-  const [banner, setBanner]   = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError]     = useState(false);
-
-  useEffect(() => {
-    let cancelled = false;
-    const fetchBanner = async () => {
-      try {
-        const { data } = await axios.get("/api/banners/active");
-        if (!cancelled) setBanner(data.banner);
-      } catch {
-        if (!cancelled) setError(true);
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    };
-    fetchBanner();
-    return () => { cancelled = true; };
-  }, []);
-
-  if (loading) return <HeroSkeleton />;
-  if (error || !banner) return <FallbackHero />;
-
-  const isVideo = banner.mediaType === "video";
-
-  return (
-    <div className="w-full relative overflow-hidden bg-black flex items-center justify-center">
-      
-      {isVideo ? (
-        <>
-          <video className="hidden md:block w-full h-auto object-contain" src={banner.desktopMediaUrl} autoPlay loop muted playsInline />
-          <video className="block   md:hidden w-full h-auto object-contain" src={banner.mobileMediaUrl}  autoPlay loop muted playsInline />
-        </>
-      ) : (
-        <picture className="w-full">
-          <source media="(max-width: 768px)" srcSet={banner.mobileMediaUrl} />
-          <img
-            src={banner.desktopMediaUrl}
-            alt={banner.title || "Homepage banner"}
-            className="w-full h-auto object-contain"
-            loading="eager"
-            decoding="async"
-          />
-        </picture>
-      )}
-
-      
-      {banner.title && (
-        <div className="absolute inset-0 flex items-end justify-start pointer-events-none">
-          <div className="px-6 pb-8 sm:px-10 sm:pb-10">
-            <h1
-              className="inline-block backdrop-blur-sm font-extrabold leading-tight max-w-xl px-4 py-2 rounded-xl"
-              style={{
-                fontFamily: "'Cormorant Garamond', Georgia, serif",
-                fontSize: "clamp(1.25rem, 3vw, 2.5rem)",
-                background: "rgba(250,247,240,0.85)",
-                color: "#0A1628",
-              }}
-            >
-              {banner.title}
-            </h1>
-          </div>
-        </div>
-      )}
-
-      
-      <div
-        className="absolute bottom-0 left-0 right-0 pointer-events-none"
-        style={{
-          height: "60px",
-          background: "linear-gradient(to bottom, transparent, rgba(250,247,240,1))",
-        }}
-      />
-    </div>
+    </section>
   );
 };
 

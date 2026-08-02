@@ -266,6 +266,7 @@ const MembershipManagement = () => {
           className="inline-flex items-center gap-2 px-4 py-2 bg-brand-600 text-white text-sm font-bold rounded-xl hover:bg-brand-700"
         >
           <Plus size={16} /> Create Booking
+        </button>
       </div>
 
       {showCreate && (

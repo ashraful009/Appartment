@@ -4,7 +4,8 @@ import { useAuth } from "../../context/AuthContext";
 import {
   ChevronDown, User, LogOut, Menu, X, Building2, Wallet
 } from "lucide-react";
-import { ROLE_LINKS, DropItem } from "./Navbar/NavbarConfig";
+import { ROLE_LINKS } from "./Navbar/NavbarConfig";
+import { DropItem } from "./Navbar/DropItem";
 
 const DefaultAvatar = ({ name }) => (
   <div
@@ -100,7 +101,11 @@ const Navbar = () => {
   }, []);
 
   const location = useLocation();
-  useEffect(() => { setMobileOpen(false); }, [location.pathname]);
+  const [prevPath, setPrevPath] = useState(location.pathname);
+  if (prevPath !== location.pathname) {
+    setPrevPath(location.pathname);
+    setMobileOpen(false);
+  }
 
   const handleLogout = async () => {
     await logout();

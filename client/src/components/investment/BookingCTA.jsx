@@ -45,6 +45,7 @@ const BookingCTA = ({ onSubmitted, onCancel }) => {
 
   const goPay = () => {
     if (!selectedId) return;
+    onSubmitted?.();
     navigate("/membership/pay", {
       state: {
         kind: "booking",
